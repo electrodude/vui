@@ -1,5 +1,10 @@
 #pragma once
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #include "statemachine.h"
 
 // The user must declare these
@@ -38,3 +43,7 @@ vui_state* vui_mode_new(				// create new mode
                         vui_transition func_in,		// transition while in mode
                         vui_transition func_exit	// transition on exit from mode via escape
 );
+
+#ifdef __cplusplus
+}
+#endif

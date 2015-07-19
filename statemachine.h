@@ -1,5 +1,10 @@
 #pragma once
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #ifndef MAXINPUT
 # define MAXINPUT 512
 #endif
@@ -44,24 +49,27 @@ extern vui_state* vui_curr_state;
 vui_state* vui_state_new(vui_state* parent);
 vui_state* vui_state_cow(vui_state* parent, int c);
 
-void vui_state_replace(vui_state* this, vui_transition search, vui_transition replacement);
+void vui_state_replace(vui_state* state, vui_transition search, vui_transition replacement);
 
 vui_transition vui_transition_new1(vui_state* next);
 vui_transition vui_transition_new2(vui_callback func, void* data);
 vui_transition vui_transition_new3(vui_state* next, vui_callback func, void* data);
 
 
-void vui_set_char_t(vui_state* this, int c, vui_transition next);
-void vui_set_char_s(vui_state* this, int c, vui_state* next);
+void vui_set_char_t(vui_state* state, int c, vui_transition next);
+void vui_set_char_s(vui_state* state, int c, vui_state* next);
 
-void vui_set_range_t(vui_state* this, int c1, int c2, vui_transition next);
-void vui_set_range_s(vui_state* this, int c1, int c2, vui_state* next);
+void vui_set_range_t(vui_state* state, int c1, int c2, vui_transition next);
+void vui_set_range_s(vui_state* state, int c1, int c2, vui_state* next);
 
-void vui_set_string_t(vui_state* this, char* s, vui_transition next);
-void vui_set_string_s(vui_state* this, char* s, vui_state* next);
+void vui_set_string_t(vui_state* state, char* s, vui_transition next);
+void vui_set_string_s(vui_state* state, char* s, vui_state* next);
 
 
 vui_state* vui_next(vui_state* s, int c, int act);
 void vui_input(int c);
 void vui_runstring(vui_state** sp, char* s, int act);
 
+#ifdef __cplusplus
+}
+#endif
