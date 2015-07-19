@@ -94,8 +94,6 @@ static vui_state* tfunc_cmd(vui_state* prevstate, int c, int act, void* data)
 	}
 
 
-	sprintf(&vui_cmd[cols-10], "%d, %d   ", vui_crsrx, cmd_len);
-
 	return vui_cmd_mode;
 }
 
