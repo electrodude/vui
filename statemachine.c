@@ -42,7 +42,8 @@ vui_state* vui_state_new(vui_state* parent)
 
 vui_state* vui_state_cow(vui_state* parent, int c)
 {
-	vui_state* this = parent->next[c].next;
+	vui_transition t = parent->next[c];
+	vui_state* this = t.next;
 
 	if (this == NULL) return NULL;
 
@@ -50,7 +51,10 @@ vui_state* vui_state_cow(vui_state* parent, int c)
 
 	vui_state* newthis = vui_state_new(this);
 
-	vui_set_char_t(parent, c, vui_transition_new1(newthis));
+	t.next = newthis;
+
+	vui_set_char_t(parent, c, t);
+	//vui_set_char_s(parent, c, newthis);
 
 	return newthis;
 }
@@ -79,27 +83,32 @@ void vui_state_replace(vui_state* this, vui_transition search, vui_transition re
 	{
 		vui_transition t = this->next[i];
 
-		if (t.callback == search.callback && t.data == search.data)
+		if (t.func == search.func && t.data == search.data)
 		{
 			this->next[i] = replacement;
 		}
 	}
 }
 
-vui_transition vui_transition_new(vui_callback callback, void* data)
-{
-	return (vui_transition){.next = NULL, .callback = callback, .data = data};
-}
-
 vui_transition vui_transition_new1(vui_state* next)
 {
-	return (vui_transition){.next = next, .callback = NULL, .data = NULL};
+	return (vui_transition){.next = next, .func = NULL, .data = NULL};
+}
+
+vui_transition vui_transition_new2(vui_callback func, void* data)
+{
+	return (vui_transition){.next = NULL, .func = func, .data = data};
+}
+
+vui_transition vui_transition_new3(vui_state* next, vui_callback func, void* data)
+{
+	return (vui_transition){.next = next, .func = func, .data = data};
 }
 
 
 void vui_set_char_t(vui_state* this, int c, vui_transition next)
 {
-	vui_state* nextst = vui_next(this, c, 0);
+	vui_state* nextst = next.next != NULL ? next.next : (next.func != NULL ? next.func(this, c, 0, next.data) : NULL);
 
 	if (nextst != NULL)
 	{
@@ -163,11 +172,19 @@ vui_state* vui_next(vui_state* s, int c, int act)
 {
 	vui_transition t = s->next[c];
 
-	if (t.next != NULL) return t.next;
+	//if (t.next != NULL && act == 0) return t.next;
 
-	if (t.callback == NULL) return NULL;
+	vui_state* retnext = NULL;
 
-	return t.callback(s, c, act, t.data);
+	if (t.func != NULL)
+	{
+		retnext = t.func(s, c, act, t.data);
+		return t.next != NULL ? t.next : retnext;
+	}
+	else
+	{
+		return t.next;
+	}
 }
 
 void vui_input(int c)

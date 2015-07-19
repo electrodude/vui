@@ -1,0 +1,156 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+#include <termios.h>
+#include <sys/ioctl.h>
+#include <signal.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
+#include <curses.h>
+
+#include "vui.h"
+
+
+WINDOW* statusline;
+
+int VUI_KEY_UP = KEY_UP;
+int VUI_KEY_DOWN = KEY_UP;
+int VUI_KEY_LEFT = KEY_LEFT;
+int VUI_KEY_RIGHT = KEY_RIGHT;
+int VUI_KEY_ENTER = '\n';
+int VUI_KEY_BACKSPACE = 127;
+int VUI_KEY_DELETE = 330; // = KEY_what?
+int VUI_KEY_ESCAPE = 27;
+
+int dbgfd;
+
+void wrlog(char* s)
+{
+	write(dbgfd, s, strlen(s));
+}
+
+/*
+static void sighandler(int signo)
+{
+	switch (signo)
+	{
+		case SIGWINCH:
+		{
+			break;
+		}
+
+		default:
+		{
+
+		}
+	}
+}
+*/
+
+static vui_state* transition_quit(vui_state* prevstate, int c, int act, void* data)
+{
+	if (act)
+	{
+		wrlog("quit\r\n");
+		endwin();
+		printf("Quitting!\n");
+		exit(0);
+	}
+
+	return prevstate;
+}
+
+static vui_state* transition_winch(vui_state* prevstate, int c, int act, void* data)
+{
+	int width;
+	int height;
+	getmaxyx(stdscr, height, width);
+
+	wresize(statusline, 1, width);
+
+	mvwin(statusline, height-1, 0);
+
+	vui_resize(width);
+}
+
+void vui_on_cmd_submit(char* cmd)
+{
+	wrlog("command: \"");
+	wrlog(cmd);
+	wrlog("\"\r\n");
+
+	if (!strcmp(cmd, "q"))
+	{
+		endwin();
+		printf("Quitting!\n");
+		exit(0);
+	}
+}
+
+
+int main(int argc, char** argv)
+{
+	printf("Opening log...\n");
+	dbgfd = open("log", O_WRONLY | O_APPEND);
+
+	wrlog("start\r\n");
+
+	initscr();
+	cbreak();
+	noecho();
+
+	int width, height;
+	getmaxyx(stdscr, height, width);
+
+	statusline = newwin(1, width, height-1, 0);
+
+	keypad(statusline, TRUE);
+	meta(statusline, TRUE);
+
+
+	vui_init(width);
+
+
+	vui_transition quit = vui_transition_new2(transition_quit, NULL);
+
+	vui_set_char_t(vui_normal_mode, 'Q', quit);
+
+	vui_set_string_t(vui_normal_mode, "ZZ", quit);
+
+	vui_set_char_t(vui_normal_mode, KEY_RESIZE, vui_transition_new3(vui_normal_mode, transition_winch, NULL));
+
+
+	while (1)
+	{
+		int c = wgetch(statusline);
+
+		int c2 = c >= 32 && c <= 127 ? c : '?';
+
+		char s[256];
+		sprintf(s, "char %d: %c\r\n", c, c2);
+		wrlog(s);
+
+		if (c >= 0)
+		{
+			vui_input(c);
+			mvwaddstr(statusline, 0, 0, vui_bar);
+			wmove(statusline, 0, vui_crsrx);
+			curs_set(vui_crsrx >= 0);
+			wrefresh(statusline);
+
+			if (vui_curr_state == vui_normal_mode)
+			{
+				wrlog("normal mode\r\n");
+			}
+			else if (vui_curr_state == vui_cmd_mode)
+			{
+				wrlog("cmd mode\r\n");
+			}
+		}
+	}
+
+	endwin();
+}

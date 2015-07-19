@@ -1,7 +1,7 @@
 #pragma once
 
 #ifndef MAXINPUT
-# define MAXINPUT 256
+# define MAXINPUT 512
 #endif
 
 struct vui_state;
@@ -10,7 +10,7 @@ struct vui_state;
  * \param prevstate previous state
  * \param act whether side effects should happen (as opposed to just returning the next state)
  * \param data extra data (next state, etc.)
- * \return next state
+ * \return next state (ignored if transition.next != NULL)
  *
  */
 typedef struct vui_state* (*vui_callback)(struct vui_state* prevstate, int c, int act, void* data);
@@ -19,7 +19,7 @@ typedef struct vui_transition
 {
 	struct vui_state* next;
 
-	vui_callback callback;
+	vui_callback func;
 
 	void* data;
 
@@ -46,8 +46,9 @@ vui_state* vui_state_cow(vui_state* parent, int c);
 
 void vui_state_replace(vui_state* this, vui_transition search, vui_transition replacement);
 
-vui_transition vui_transition_new(vui_callback callback, void* data);
 vui_transition vui_transition_new1(vui_state* next);
+vui_transition vui_transition_new2(vui_callback func, void* data);
+vui_transition vui_transition_new3(vui_state* next, vui_callback func, void* data);
 
 
 void vui_set_char_t(vui_state* this, int c, vui_transition next);
