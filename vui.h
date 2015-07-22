@@ -16,6 +16,8 @@ extern int VUI_KEY_ENTER;
 extern int VUI_KEY_BACKSPACE;
 extern int VUI_KEY_DELETE;
 extern int VUI_KEY_ESCAPE;
+extern int VUI_KEY_HOME;
+extern int VUI_KEY_END;
 
 extern void vui_on_cmd_submit(char* cmd);
 // end user must declare these

@@ -87,8 +87,20 @@ static vui_state* tfunc_cmd(vui_state* prevstate, int c, int act, void* data)
 	{
 
 	}
+	else if (c == VUI_KEY_HOME)
+	{
+		vui_crsrx = 1;
+	}
+	else if (c == VUI_KEY_END)
+	{
+		vui_crsrx = cmd_len + 1;
+	}
 	else if (c >= 32 && c < 127)
 	{
+		if (vui_crsrx != cmd_len)
+		{
+			memmove(&vui_cmd[vui_crsrx+1], &vui_cmd[vui_crsrx], cmd_len-vui_crsrx+1);
+		}
 		vui_cmd[vui_crsrx++] = c;
 		cmd_len++;
 	}

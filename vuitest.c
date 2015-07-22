@@ -22,8 +22,10 @@ int VUI_KEY_LEFT = KEY_LEFT;
 int VUI_KEY_RIGHT = KEY_RIGHT;
 int VUI_KEY_ENTER = '\n';
 int VUI_KEY_BACKSPACE = 127;
-int VUI_KEY_DELETE = 330; // = KEY_what?
+int VUI_KEY_DELETE = KEY_DC;
 int VUI_KEY_ESCAPE = 27;
+int VUI_KEY_HOME = KEY_HOME;
+int VUI_KEY_END = KEY_END;
 
 int dbgfd;
 
