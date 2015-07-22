@@ -121,9 +121,11 @@ static vui_state* tfunc_cmd_submit(vui_state* prevstate, int c, int act, void* d
 {
 	if (!act) return NULL;
 
-	char* cmd = malloc(cmd_len);
+	char* cmd = malloc(cmd_len+1);
 
-	strncpy(cmd, &vui_cmd[1], cmd_len);
+	memcpy(cmd, &vui_cmd[1], cmd_len);
+
+	cmd[cmd_len] = 0;
 
 	vui_on_cmd_submit(cmd);
 
