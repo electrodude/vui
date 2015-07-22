@@ -214,7 +214,7 @@ vui_state* vui_mode_new(char* cmd, char* name, char* label, int mode, vui_transi
 	}
 
 	vui_set_string_t(vui_normal_mode, cmd, func_enter);
-	vui_set_char_t(this, 27, func_exit);
+	vui_set_char_t(this, VUI_KEY_ESCAPE, func_exit);
 
 	return this;
 }
