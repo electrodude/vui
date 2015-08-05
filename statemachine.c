@@ -179,11 +179,14 @@ vui_state* vui_next(vui_state* s, int c, int act)
 	if (t.func != NULL)
 	{
 		retnext = t.func(s, c, act, t.data);
-		return t.next != NULL ? t.next : retnext;
+		return t.next  != NULL ? t.next  :
+		       retnext != NULL ? retnext :
+		       s;
 	}
 	else
 	{
-		return t.next;
+		return t.next  != NULL ? t.next  :
+		       s;
 	}
 }
 

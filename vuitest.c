@@ -29,6 +29,9 @@ int VUI_KEY_END = KEY_END;
 
 int dbgfd;
 
+vui_state* cmd_mode;
+vui_state* search_mode;
+
 void wrlog(char* s)
 {
 	write(dbgfd, s, strlen(s));
@@ -78,7 +81,7 @@ static vui_state* transition_winch(vui_state* prevstate, int c, int act, void* d
 	vui_resize(width);
 }
 
-void vui_on_cmd_submit(char* cmd)
+void on_cmd_submit(char* cmd)
 {
 	wrlog("command: \"");
 	wrlog(cmd);
@@ -90,6 +93,13 @@ void vui_on_cmd_submit(char* cmd)
 		printf("Quitting!\n");
 		exit(0);
 	}
+}
+
+void on_search_submit(char* cmd)
+{
+	wrlog("search: \"");
+	wrlog(cmd);
+	wrlog("\"\r\n");
 }
 
 
@@ -114,6 +124,10 @@ int main(int argc, char** argv)
 
 
 	vui_init(width);
+
+	cmd_mode = vui_cmd_mode_new(":", "command", ":", on_cmd_submit);
+
+	search_mode = vui_cmd_mode_new("/", "search", "/", on_search_submit);
 
 
 	vui_transition quit = vui_transition_new2(transition_quit, NULL);
@@ -147,9 +161,17 @@ int main(int argc, char** argv)
 			{
 				wrlog("normal mode\r\n");
 			}
-			else if (vui_curr_state == vui_cmd_mode)
+			else if (vui_curr_state == cmd_mode)
 			{
 				wrlog("cmd mode\r\n");
+			}
+			else if (vui_curr_state == search_mode)
+			{
+				wrlog("search mode\r\n");
+			}
+			else
+			{
+				wrlog("unknown mode\r\n");
 			}
 		}
 	}
