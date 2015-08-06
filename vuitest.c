@@ -17,7 +17,7 @@
 WINDOW* statusline;
 
 int VUI_KEY_UP = KEY_UP;
-int VUI_KEY_DOWN = KEY_UP;
+int VUI_KEY_DOWN = KEY_DOWN;
 int VUI_KEY_LEFT = KEY_LEFT;
 int VUI_KEY_RIGHT = KEY_RIGHT;
 int VUI_KEY_ENTER = '\n';

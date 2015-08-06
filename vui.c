@@ -14,8 +14,113 @@ char* vui_status;
 
 vui_state* vui_normal_mode;
 
+typedef struct hist_entry
+{
+	struct hist_entry* prev;
+	struct hist_entry* next;
+
+	char* line;
+	size_t len;
+	size_t maxlen;
+} hist_entry;
+
+hist_entry* hist_curr_entry;
+hist_entry* hist_last_entry;
+
 int cmd_base;
 int cmd_len;
+int cmd_modified;
+
+static hist_entry* hist_entry_new(void)
+{
+	hist_entry* entry = malloc(sizeof(hist_entry));
+
+	entry->prev = hist_last_entry;
+
+	if (hist_last_entry != NULL)
+	{
+		hist_last_entry->next = entry;
+	}
+
+	hist_curr_entry = hist_last_entry = entry;
+
+	entry->next = NULL;
+
+	entry->len = 1;
+	entry->maxlen = cols*2;
+	entry->line = malloc(entry->maxlen);
+
+	entry->line[0] = 0;
+
+	return entry;
+}
+
+static void hist_entry_kill(hist_entry* entry)
+{
+	// make prev and next point to each other instead of entry
+	hist_entry* oldprev = entry->prev;
+	hist_entry* oldnext = entry->next;
+
+	if (oldnext != NULL)
+	{
+		oldnext->prev = oldprev;
+	}
+
+	if (oldprev != NULL)
+	{
+		oldprev->next = oldnext;
+	}
+
+	// free entry's line
+	free(entry->line);
+
+	// free entry
+	free(entry);
+}
+
+static void hist_entry_set(hist_entry* entry, char* str, int len)
+{
+	entry->len = len + 1;
+	if (entry->maxlen < entry->len)
+	{
+		entry->maxlen = entry->len*2;
+		entry->line = realloc(entry->line, entry->maxlen);
+	}
+
+	memcpy(entry->line, str, entry->len);
+
+	entry->line[len] = 0;
+}
+
+static void hist_entry_shrink(hist_entry* entry)
+{
+	entry->maxlen = entry->len;
+
+	entry->line = realloc(entry->line, entry->maxlen);
+}
+
+static void hist_last_entry_edit(void)
+{
+	cmd_modified = 1;
+
+	if (hist_curr_entry == hist_last_entry)
+	{
+		return;
+	}
+
+	hist_entry_set(hist_last_entry, hist_curr_entry->line, hist_curr_entry->len);
+
+	hist_curr_entry = hist_last_entry;
+}
+
+static void hist_last_entry_clear(void)
+{
+	cmd_modified = 0;
+
+	hist_last_entry->len = 1;
+	hist_last_entry->line[0] = 0;
+}
+
 
 static vui_state* tfunc_normal(vui_state* prevstate, int c, int act, void* data)
 {
@@ -41,6 +146,10 @@ static vui_state* tfunc_normal_to_cmd(vui_state* prevstate, int c, int act, void
 
 	cmd_len = cmd_base - 1;
 
+	cmd_modified = 0;
+
+	hist_curr_entry = hist_last_entry;
+
 	memset(&vui_cmd[cmd_base], ' ', cols - cmd_base);
 
 	return NULL;
@@ -61,19 +170,33 @@ static vui_state* tfunc_cmd(vui_state* prevstate, int c, int act, void* data)
 
 		if (vui_crsrx > cmd_base)
 		{
+			hist_last_entry_edit();
+
 			vui_cmd[cmd_len+1] = ' ';
 			vui_crsrx--;
 			memmove(&vui_cmd[vui_crsrx], &vui_cmd[vui_crsrx+1], cmd_len-vui_crsrx+1);
 			cmd_len--;
+
+			if (!cmd_len)
+			{
+				hist_last_entry_clear();
+			}
 		}
 	}
 	else if (c == VUI_KEY_DELETE)
 	{
 		if (vui_crsrx <= cmd_len)
 		{
+			hist_last_entry_edit();
+
 			vui_cmd[cmd_len+1] = ' ';
 			memmove(&vui_cmd[vui_crsrx], &vui_cmd[vui_crsrx+1], cmd_len-vui_crsrx+1);
 			cmd_len--;
+
+			if (!cmd_len)
+			{
+				hist_last_entry_clear();
+			}
 		}
 	}
 	else if (c == VUI_KEY_LEFT)
@@ -92,11 +215,28 @@ static vui_state* tfunc_cmd(vui_state* prevstate, int c, int act, void* data)
 	}
 	else if (c == VUI_KEY_UP)
 	{
+		if (hist_curr_entry->prev != NULL && !cmd_modified)
+		{
+			hist_curr_entry = hist_curr_entry->prev;
 
+			memcpy(&vui_cmd[cmd_base], hist_curr_entry->line, hist_curr_entry->len);
+			vui_crsrx = cmd_base + hist_curr_entry->len - 1;
+			cmd_len = vui_crsrx - 1;
+			memset(&vui_cmd[vui_crsrx], ' ', cols - vui_crsrx);
+		}
 	}
 	else if (c == VUI_KEY_DOWN)
 	{
+		if (hist_curr_entry->next != NULL && !cmd_modified)
+		{
+			hist_curr_entry = hist_curr_entry->next;
 
+			memcpy(&vui_cmd[cmd_base], hist_curr_entry->line, hist_curr_entry->len);
+			vui_crsrx = cmd_base + hist_curr_entry->len - 1;
+			cmd_len = vui_crsrx - 1;
+			cmd_len = vui_crsrx - 1;
+			memset(&vui_cmd[vui_crsrx], ' ', cols - vui_crsrx);
+		}
 	}
 	else if (c == VUI_KEY_HOME)
 	{
@@ -108,6 +248,8 @@ static vui_state* tfunc_cmd(vui_state* prevstate, int c, int act, void* data)
 	}
 	else if (c >= 32 && c < 127)
 	{
+		hist_last_entry_edit();
+
 		if (vui_crsrx != cmd_len)
 		{
 			memmove(&vui_cmd[vui_crsrx + 1], &vui_cmd[vui_crsrx], cmd_len - vui_crsrx + 1);
@@ -124,8 +266,23 @@ static vui_state* tfunc_cmd_to_normal(vui_state* prevstate, int c, int act, void
 {
 	if (!act) return NULL;
 
+	if (hist_curr_entry != hist_last_entry && !cmd_modified)
+	{
+		hist_entry_kill(hist_curr_entry);
+		hist_curr_entry = hist_last_entry;
+	}
+
+	hist_entry_set(hist_curr_entry, &vui_cmd[cmd_base], cmd_len);
+
 	vui_bar = vui_status;
 	vui_crsrx = -1;
+
+	hist_entry_shrink(hist_curr_entry);
+
+	if (hist_curr_entry->line[0] != 0)
+	{
+		hist_entry_new();
+	}
 
 	return NULL;
 }
@@ -134,18 +291,27 @@ static vui_state* tfunc_cmd_submit(vui_state* prevstate, int c, int act, void* d
 {
 	if (!act) return NULL;
 
-	char* cmd = malloc(cmd_len - cmd_base + 1 + 1);
+	if (hist_curr_entry != hist_last_entry && !cmd_modified)
+	{
+		hist_entry_kill(hist_curr_entry);
+		hist_curr_entry = hist_last_entry;
+	}
 
-	memcpy(cmd, &vui_cmd[cmd_base], cmd_len - cmd_base + 1);
-
-	cmd[cmd_len] = 0;
+	hist_entry_set(hist_curr_entry, &vui_cmd[cmd_base], cmd_len);
 
 	vui_cmd_submit_callback* on_submit = *((vui_cmd_submit_callback*)data);
 
-	on_submit(cmd);
+	on_submit(hist_curr_entry->line);
 
 	vui_bar = vui_status;
 	vui_crsrx = -1;
+
+	hist_entry_shrink(hist_curr_entry);
+
+	if (hist_curr_entry->line[0] != 0)
+	{
+		hist_entry_new();
+	}
 
 	return NULL;
 }
@@ -174,6 +340,8 @@ void vui_init(int width)
 	vui_status[cols] = 0;
 
 	vui_bar = vui_status;
+
+	hist_entry_new();
 }
 
 void vui_resize(int width)
