@@ -37,6 +37,13 @@ void wrlog(char* s)
 	write(dbgfd, s, strlen(s));
 }
 
+#ifdef VUI_DEBUG
+void vui_debug(char* s)
+{
+	wrlog(s);
+}
+#endif
+
 /*
 static void sighandler(int signo)
 {

@@ -217,6 +217,13 @@ static vui_state* tfunc_cmd(vui_state* prevstate, int c, int act, void* data)
 	{
 		if (hist_curr_entry->prev != NULL && !cmd_modified)
 		{
+#ifdef VUI_DEBUG
+			if (hist_curr_entry->prev == hist_curr_entry)
+			{
+				vui_debug("own prev!\n");
+			}
+#endif
+
 			hist_curr_entry = hist_curr_entry->prev;
 
 			memcpy(&vui_cmd[cmd_base], hist_curr_entry->line, hist_curr_entry->len);
@@ -224,11 +231,24 @@ static vui_state* tfunc_cmd(vui_state* prevstate, int c, int act, void* data)
 			cmd_len = vui_crsrx - 1;
 			memset(&vui_cmd[vui_crsrx], ' ', cols - vui_crsrx);
 		}
+#ifdef VUI_DEBUG
+		else
+		{
+			vui_debug("no prev\n");
+		}
+#endif
 	}
 	else if (c == VUI_KEY_DOWN)
 	{
 		if (hist_curr_entry->next != NULL && !cmd_modified)
 		{
+#ifdef VUI_DEBUG
+			if (hist_curr_entry->next == hist_curr_entry)
+			{
+				vui_debug("own next!\n");
+			}
+#endif
+
 			hist_curr_entry = hist_curr_entry->next;
 
 			memcpy(&vui_cmd[cmd_base], hist_curr_entry->line, hist_curr_entry->len);
@@ -237,6 +257,12 @@ static vui_state* tfunc_cmd(vui_state* prevstate, int c, int act, void* data)
 			cmd_len = vui_crsrx - 1;
 			memset(&vui_cmd[vui_crsrx], ' ', cols - vui_crsrx);
 		}
+#ifdef VUI_DEBUG
+		else
+		{
+			vui_debug("no next\n");
+		}
+#endif
 	}
 	else if (c == VUI_KEY_HOME)
 	{
@@ -281,8 +307,18 @@ static vui_state* tfunc_cmd_to_normal(vui_state* prevstate, int c, int act, void
 
 	if (hist_curr_entry->line[0] != 0)
 	{
+#ifdef VUI_DEBUG
+		vui_debug("new entry\n");
+#endif
+
 		hist_entry_new();
 	}
+#ifdef VUI_DEBUG
+	else
+	{
+		vui_debug("no new entry\n");
+	}
+#endif
 
 	return NULL;
 }
@@ -310,8 +346,18 @@ static vui_state* tfunc_cmd_submit(vui_state* prevstate, int c, int act, void* d
 
 	if (hist_curr_entry->line[0] != 0)
 	{
+#ifdef VUI_DEBUG
+		vui_debug("new entry\n");
+#endif
+
 		hist_entry_new();
 	}
+#ifdef VUI_DEBUG
+	else
+	{
+		vui_debug("no new entry\n");
+	}
+#endif
 
 	return NULL;
 }

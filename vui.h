@@ -1,11 +1,11 @@
 #pragma once
 
+//#define VUI_DEBUG
+
 #ifdef __cplusplus
 extern "C"
 {
 #endif
-
-#include "statemachine.h"
 
 // The user must declare these
 extern int VUI_KEY_UP;
@@ -18,7 +18,13 @@ extern int VUI_KEY_DELETE;
 extern int VUI_KEY_ESCAPE;
 extern int VUI_KEY_HOME;
 extern int VUI_KEY_END;
+
+#ifdef VUI_DEBUG
+extern void vui_debug(char* msg);
+#endif
 // end user must declare these
+
+#include "statemachine.h"
 
 typedef void vui_cmd_submit_callback(char* cmd);
 
