@@ -2,11 +2,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include <termios.h>
-#include <sys/ioctl.h>
-#include <signal.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <fcntl.h>
 
 #include <curses.h>
@@ -43,24 +38,6 @@ void vui_debug(char* s)
 	wrlog(s);
 }
 #endif
-
-/*
-static void sighandler(int signo)
-{
-	switch (signo)
-	{
-		case SIGWINCH:
-		{
-			break;
-		}
-
-		default:
-		{
-
-		}
-	}
-}
-*/
 
 static vui_state* transition_quit(vui_state* prevstate, int c, int act, void* data)
 {

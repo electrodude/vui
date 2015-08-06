@@ -54,7 +54,6 @@ vui_state* vui_state_cow(vui_state* parent, int c)
 	t.next = newstate;
 
 	vui_set_char_t(parent, c, t);
-	//vui_set_char_s(parent, c, newstate);
 
 	return newstate;
 }
@@ -171,8 +170,6 @@ void vui_set_string_s(vui_state* state, char* s, vui_state* next)
 vui_state* vui_next(vui_state* s, int c, int act)
 {
 	vui_transition t = s->next[c];
-
-	//if (t.next != NULL && act == 0) return t.next;
 
 	vui_state* retnext = NULL;
 

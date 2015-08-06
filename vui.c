@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -379,12 +378,14 @@ void vui_init(int width)
 	vui_cmd[cols] = 0;
 	vui_status[cols] = 0;
 
+	vui_crsrx = -1;
+
 	vui_bar = vui_status;
 }
 
 void vui_resize(int width)
 {
-	// if the number of columns changed
+	// if the number of columns actually changed
 	if (width != cols)
 	{
 		vui_cmd = realloc(vui_cmd, (width+1)*sizeof(char));
