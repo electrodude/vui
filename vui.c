@@ -14,35 +14,21 @@ char* vui_status;
 
 vui_state* vui_normal_mode;
 
-typedef struct hist_entry
-{
-	struct hist_entry* prev;
-	struct hist_entry* next;
-
-	char* line;
-	size_t len;
-	size_t maxlen;
-} hist_entry;
-
-hist_entry* hist_curr_entry;
-hist_entry* hist_last_entry;
-
 int cmd_base;
 int cmd_len;
-int cmd_modified;
 
-static hist_entry* hist_entry_new(void)
+static hist_entry* hist_entry_new(vui_cmdline_def* cmdline)
 {
 	hist_entry* entry = malloc(sizeof(hist_entry));
 
-	entry->prev = hist_last_entry;
+	entry->prev = cmdline->hist_last_entry;
 
-	if (hist_last_entry != NULL)
+	if (cmdline->hist_last_entry != NULL)
 	{
-		hist_last_entry->next = entry;
+		cmdline->hist_last_entry->next = entry;
 	}
 
-	hist_curr_entry = hist_last_entry = entry;
+	cmdline->hist_curr_entry = cmdline->hist_last_entry = entry;
 
 	entry->next = NULL;
 
@@ -99,31 +85,33 @@ static void hist_entry_shrink(hist_entry* entry)
 	entry->line = realloc(entry->line, entry->maxlen);
 }
 
-static void hist_last_entry_edit(void)
+static void hist_last_entry_edit(vui_cmdline_def* cmdline)
 {
-	cmd_modified = 1;
+	cmdline->cmd_modified = 1;
 
-	if (hist_curr_entry == hist_last_entry)
+	if (cmdline->hist_curr_entry == cmdline->hist_last_entry)
 	{
 		return;
 	}
 
-	hist_entry_set(hist_last_entry, hist_curr_entry->line, hist_curr_entry->len);
+	hist_entry_set(cmdline->hist_last_entry, cmdline->hist_curr_entry->line, cmdline->hist_curr_entry->len);
 
-	hist_curr_entry = hist_last_entry;
+	cmdline->hist_curr_entry = cmdline->hist_last_entry;
 }
 
-static void hist_last_entry_clear(void)
+static void hist_last_entry_clear(vui_cmdline_def* cmdline)
 {
-	cmd_modified = 0;
+	cmdline->cmd_modified = 0;
 
-	hist_last_entry->len = 1;
-	hist_last_entry->line[0] = 0;
+	cmdline->hist_last_entry->len = 1;
+	cmdline->hist_last_entry->line[0] = 0;
 }
 
 
 static vui_state* tfunc_normal(vui_state* prevstate, int c, int act, void* data)
 {
+	vui_cmdline_def* cmdline = data;
+
 	if (!act) return NULL;
 
 	return NULL;
@@ -131,24 +119,26 @@ static vui_state* tfunc_normal(vui_state* prevstate, int c, int act, void* data)
 
 static vui_state* tfunc_normal_to_cmd(vui_state* prevstate, int c, int act, void* data)
 {
+	vui_cmdline_def* cmdline = data;
+
 	if (!act) return NULL;
 
 	vui_bar = vui_cmd;
 	vui_crsrx = 0;
 
-	char* data2 = data;
-	while (*data2)
+	char* label = cmdline->label;
+	while (*label)
 	{
-		vui_cmd[vui_crsrx++] = *data2++;
+		vui_cmd[vui_crsrx++] = *label++;
 	}
 
 	cmd_base = vui_crsrx;
 
 	cmd_len = cmd_base - 1;
 
-	cmd_modified = 0;
+	cmdline->cmd_modified = 0;
 
-	hist_curr_entry = hist_last_entry;
+	cmdline->hist_curr_entry = cmdline->hist_last_entry;
 
 	memset(&vui_cmd[cmd_base], ' ', cols - cmd_base);
 
@@ -157,6 +147,8 @@ static vui_state* tfunc_normal_to_cmd(vui_state* prevstate, int c, int act, void
 
 static vui_state* tfunc_cmd(vui_state* prevstate, int c, int act, void* data)
 {
+	vui_cmdline_def* cmdline = data;
+
 	if (!act) return (c == VUI_KEY_BACKSPACE && vui_crsrx <= cmd_base) ? NULL : vui_normal_mode;
 
 	if (c == VUI_KEY_BACKSPACE)
@@ -170,7 +162,7 @@ static vui_state* tfunc_cmd(vui_state* prevstate, int c, int act, void* data)
 
 		if (vui_crsrx > cmd_base)
 		{
-			hist_last_entry_edit();
+			hist_last_entry_edit(cmdline);
 
 			vui_cmd[cmd_len+1] = ' ';
 			vui_crsrx--;
@@ -179,7 +171,7 @@ static vui_state* tfunc_cmd(vui_state* prevstate, int c, int act, void* data)
 
 			if (!cmd_len)
 			{
-				hist_last_entry_clear();
+				hist_last_entry_clear(cmdline);
 			}
 		}
 	}
@@ -187,7 +179,7 @@ static vui_state* tfunc_cmd(vui_state* prevstate, int c, int act, void* data)
 	{
 		if (vui_crsrx <= cmd_len)
 		{
-			hist_last_entry_edit();
+			hist_last_entry_edit(cmdline);
 
 			vui_cmd[cmd_len+1] = ' ';
 			memmove(&vui_cmd[vui_crsrx], &vui_cmd[vui_crsrx+1], cmd_len-vui_crsrx+1);
@@ -195,7 +187,7 @@ static vui_state* tfunc_cmd(vui_state* prevstate, int c, int act, void* data)
 
 			if (!cmd_len)
 			{
-				hist_last_entry_clear();
+				hist_last_entry_clear(cmdline);
 			}
 		}
 	}
@@ -215,7 +207,7 @@ static vui_state* tfunc_cmd(vui_state* prevstate, int c, int act, void* data)
 	}
 	else if (c == VUI_KEY_UP)
 	{
-		if (hist_curr_entry->prev != NULL && !cmd_modified)
+		if (cmdline->hist_curr_entry->prev != NULL && !cmdline->cmd_modified)
 		{
 #ifdef VUI_DEBUG
 			if (hist_curr_entry->prev == hist_curr_entry)
@@ -224,10 +216,10 @@ static vui_state* tfunc_cmd(vui_state* prevstate, int c, int act, void* data)
 			}
 #endif
 
-			hist_curr_entry = hist_curr_entry->prev;
+			cmdline->hist_curr_entry = cmdline->hist_curr_entry->prev;
 
-			memcpy(&vui_cmd[cmd_base], hist_curr_entry->line, hist_curr_entry->len);
-			vui_crsrx = cmd_base + hist_curr_entry->len - 1;
+			memcpy(&vui_cmd[cmd_base], cmdline->hist_curr_entry->line, cmdline->hist_curr_entry->len);
+			vui_crsrx = cmd_base + cmdline->hist_curr_entry->len - 1;
 			cmd_len = vui_crsrx - 1;
 			memset(&vui_cmd[vui_crsrx], ' ', cols - vui_crsrx);
 		}
@@ -240,19 +232,19 @@ static vui_state* tfunc_cmd(vui_state* prevstate, int c, int act, void* data)
 	}
 	else if (c == VUI_KEY_DOWN)
 	{
-		if (hist_curr_entry->next != NULL && !cmd_modified)
+		if (cmdline->hist_curr_entry->next != NULL && !cmdline->cmd_modified)
 		{
 #ifdef VUI_DEBUG
-			if (hist_curr_entry->next == hist_curr_entry)
+			if (cmdline->hist_curr_entry->next == cmdline->hist_curr_entry)
 			{
 				vui_debug("own next!\n");
 			}
 #endif
 
-			hist_curr_entry = hist_curr_entry->next;
+			cmdline->hist_curr_entry = cmdline->hist_curr_entry->next;
 
-			memcpy(&vui_cmd[cmd_base], hist_curr_entry->line, hist_curr_entry->len);
-			vui_crsrx = cmd_base + hist_curr_entry->len - 1;
+			memcpy(&vui_cmd[cmd_base], cmdline->hist_curr_entry->line, cmdline->hist_curr_entry->len);
+			vui_crsrx = cmd_base + cmdline->hist_curr_entry->len - 1;
 			cmd_len = vui_crsrx - 1;
 			cmd_len = vui_crsrx - 1;
 			memset(&vui_cmd[vui_crsrx], ' ', cols - vui_crsrx);
@@ -274,7 +266,7 @@ static vui_state* tfunc_cmd(vui_state* prevstate, int c, int act, void* data)
 	}
 	else if (c >= 32 && c < 127)
 	{
-		hist_last_entry_edit();
+		hist_last_entry_edit(cmdline);
 
 		if (vui_crsrx != cmd_len)
 		{
@@ -290,28 +282,30 @@ static vui_state* tfunc_cmd(vui_state* prevstate, int c, int act, void* data)
 
 static vui_state* tfunc_cmd_to_normal(vui_state* prevstate, int c, int act, void* data)
 {
+	vui_cmdline_def* cmdline = data;
+
 	if (!act) return NULL;
 
-	if (hist_curr_entry != hist_last_entry && !cmd_modified)
+	if (cmdline->hist_curr_entry != cmdline->hist_last_entry && !cmdline->cmd_modified)
 	{
-		hist_entry_kill(hist_curr_entry);
-		hist_curr_entry = hist_last_entry;
+		hist_entry_kill(cmdline->hist_curr_entry);
+		cmdline->hist_curr_entry = cmdline->hist_last_entry;
 	}
 
-	hist_entry_set(hist_curr_entry, &vui_cmd[cmd_base], cmd_len);
+	hist_entry_set(cmdline->hist_curr_entry, &vui_cmd[cmd_base], cmd_len);
 
 	vui_bar = vui_status;
 	vui_crsrx = -1;
 
-	hist_entry_shrink(hist_curr_entry);
+	hist_entry_shrink(cmdline->hist_curr_entry);
 
-	if (hist_curr_entry->line[0] != 0)
+	if (cmdline->hist_curr_entry->line[0] != 0)
 	{
 #ifdef VUI_DEBUG
 		vui_debug("new entry\n");
 #endif
 
-		hist_entry_new();
+		hist_entry_new(cmdline);
 	}
 #ifdef VUI_DEBUG
 	else
@@ -325,32 +319,32 @@ static vui_state* tfunc_cmd_to_normal(vui_state* prevstate, int c, int act, void
 
 static vui_state* tfunc_cmd_submit(vui_state* prevstate, int c, int act, void* data)
 {
+	vui_cmdline_def* cmdline = data;
+
 	if (!act) return NULL;
 
-	if (hist_curr_entry != hist_last_entry && !cmd_modified)
+	if (cmdline->hist_curr_entry != cmdline->hist_last_entry && !cmdline->cmd_modified)
 	{
-		hist_entry_kill(hist_curr_entry);
-		hist_curr_entry = hist_last_entry;
+		hist_entry_kill(cmdline->hist_curr_entry);
+		cmdline->hist_curr_entry = cmdline->hist_last_entry;
 	}
 
-	hist_entry_set(hist_curr_entry, &vui_cmd[cmd_base], cmd_len);
+	hist_entry_set(cmdline->hist_curr_entry, &vui_cmd[cmd_base], cmd_len);
 
-	vui_cmd_submit_callback* on_submit = *((vui_cmd_submit_callback*)data);
-
-	on_submit(hist_curr_entry->line);
+	cmdline->on_submit(cmdline->hist_curr_entry->line);
 
 	vui_bar = vui_status;
 	vui_crsrx = -1;
 
-	hist_entry_shrink(hist_curr_entry);
+	hist_entry_shrink(cmdline->hist_curr_entry);
 
-	if (hist_curr_entry->line[0] != 0)
+	if (cmdline->hist_curr_entry->line[0] != 0)
 	{
 #ifdef VUI_DEBUG
 		vui_debug("new entry\n");
 #endif
 
-		hist_entry_new();
+		hist_entry_new(cmdline);
 	}
 #ifdef VUI_DEBUG
 	else
@@ -386,8 +380,6 @@ void vui_init(int width)
 	vui_status[cols] = 0;
 
 	vui_bar = vui_status;
-
-	hist_entry_new();
 }
 
 void vui_resize(int width)
@@ -442,19 +434,24 @@ vui_state* vui_mode_new(char* cmd, char* name, char* label, int mode, vui_transi
 	return this;
 }
 
-vui_state* vui_cmd_mode_new(char* cmd, char* name, char* label, void on_submit(char* cmd))
+vui_cmdline_def* vui_cmdline_mode_new(char* cmd, char* name, char* label, vui_cmdline_submit_callback on_submit)
 {
-	vui_cmd_submit_callback* on_submit_malloc = malloc(sizeof(vui_cmd_submit_callback));
-	on_submit_malloc = on_submit;
+	vui_cmdline_def* cmdline = malloc(sizeof(vui_cmdline_def));
+	cmdline->on_submit = on_submit;
+	cmdline->label = label;
 
-	vui_transition transition_normal_to_cmd = {.next = NULL, .func = tfunc_normal_to_cmd, .data = label};
-	vui_transition transition_cmd = {.next = NULL, .func = tfunc_cmd};
-	vui_transition transition_cmd_to_normal = {.next = vui_normal_mode, .func = tfunc_cmd_to_normal};
-	vui_transition transition_cmd_submit = {.next = vui_normal_mode, .func = tfunc_cmd_submit, .data = on_submit_malloc};
+	vui_transition transition_normal_to_cmd = {.next = NULL, .func = tfunc_normal_to_cmd, .data = cmdline};
+	vui_transition transition_cmd = {.next = NULL, .func = tfunc_cmd, .data = cmdline};
+	vui_transition transition_cmd_to_normal = {.next = vui_normal_mode, .func = tfunc_cmd_to_normal, .data = cmdline};
+	vui_transition transition_cmd_submit = {.next = vui_normal_mode, .func = tfunc_cmd_submit, .data = cmdline};
 
-	vui_state* vui_cmd_mode = vui_mode_new(cmd, name, "", VUI_NEW_MODE_IN_MANUAL, transition_normal_to_cmd, transition_cmd, transition_cmd_to_normal);
+	vui_state* cmdline_state = vui_mode_new(cmd, name, "", VUI_NEW_MODE_IN_MANUAL, transition_normal_to_cmd, transition_cmd, transition_cmd_to_normal);
 
-	vui_set_char_t(vui_cmd_mode, VUI_KEY_ENTER, transition_cmd_submit);
+	vui_set_char_t(cmdline_state, VUI_KEY_ENTER, transition_cmd_submit);
 
-	return vui_cmd_mode;
+	cmdline->cmdline_state = cmdline_state;
+
+	hist_entry_new(cmdline);
+
+	return cmdline;
 }

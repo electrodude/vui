@@ -26,7 +26,30 @@ extern void vui_debug(char* msg);
 
 #include "statemachine.h"
 
-typedef void vui_cmd_submit_callback(char* cmd);
+typedef struct hist_entry
+{
+	struct hist_entry* prev;
+	struct hist_entry* next;
+
+	char* line;
+	size_t len;
+	size_t maxlen;
+} hist_entry;
+
+typedef void vui_cmdline_submit_callback(char* cmd);
+
+typedef struct vui_cmdline_def
+{
+	vui_state* cmdline_state;
+	vui_cmdline_submit_callback* on_submit;
+
+	int cmd_modified;
+
+	char* label;
+
+	hist_entry* hist_curr_entry;
+	hist_entry* hist_last_entry;
+} vui_cmdline_def;
 
 extern char* vui_bar;	// Pointer to status bar - changes, you must re-check this every time!
 extern int vui_crsrx;	// Current cursor position, or -1 if hidden
@@ -51,7 +74,7 @@ vui_state* vui_mode_new(                                // create new mode
                         vui_transition func_exit        // transition on exit from mode via escape
 );
 
-vui_state* vui_cmd_mode_new(                            // create new command mode (like : or / or ?)
+vui_cmdline_def* vui_cmdline_mode_new(                  // create new command mode (like : or / or ?)
                             char* cmd,                  // default command to get to this mode
                             char* name,                 // name (internal)
                             char* label,                // mode label (e.g. : or / or ?) (can be multicharacter)

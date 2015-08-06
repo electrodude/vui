@@ -29,8 +29,8 @@ int VUI_KEY_END = KEY_END;
 
 int dbgfd;
 
-vui_state* cmd_mode;
-vui_state* search_mode;
+vui_cmdline_def* cmd_mode;
+vui_cmdline_def* search_mode;
 
 void wrlog(char* s)
 {
@@ -132,9 +132,9 @@ int main(int argc, char** argv)
 
 	vui_init(width);
 
-	cmd_mode = vui_cmd_mode_new(":", "command", ":", on_cmd_submit);
+	cmd_mode = vui_cmdline_mode_new(":", "command", ":", on_cmd_submit);
 
-	search_mode = vui_cmd_mode_new("/", "search", "/", on_search_submit);
+	search_mode = vui_cmdline_mode_new("/", "search", "/", on_search_submit);
 
 
 	vui_transition quit = vui_transition_new2(transition_quit, NULL);
@@ -168,11 +168,11 @@ int main(int argc, char** argv)
 			{
 				wrlog("normal mode\r\n");
 			}
-			else if (vui_curr_state == cmd_mode)
+			else if (vui_curr_state == cmd_mode->cmdline_state)
 			{
 				wrlog("cmd mode\r\n");
 			}
-			else if (vui_curr_state == search_mode)
+			else if (vui_curr_state == search_mode->cmdline_state)
 			{
 				wrlog("search mode\r\n");
 			}
