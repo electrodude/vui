@@ -18,7 +18,7 @@ struct vui_state;
  * \return next state (ignored if transition.next != NULL)
  *
  */
-typedef struct vui_state* (*vui_callback)(struct vui_state* prevstate, int c, int act, void* data);
+typedef struct vui_state* (*vui_callback)(struct vui_state* currstate, int c, int act, void* data);
 
 typedef struct vui_transition
 {

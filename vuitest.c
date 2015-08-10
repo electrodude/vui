@@ -39,7 +39,7 @@ void vui_debug(char* s)
 }
 #endif
 
-static vui_state* transition_quit(vui_state* prevstate, int c, int act, void* data)
+static vui_state* transition_quit(vui_state* currstate, int c, int act, void* data)
 {
 	if (act)
 	{
@@ -49,10 +49,10 @@ static vui_state* transition_quit(vui_state* prevstate, int c, int act, void* da
 		exit(0);
 	}
 
-	return prevstate;
+	return currstate;
 }
 
-static vui_state* transition_winch(vui_state* prevstate, int c, int act, void* data)
+static vui_state* transition_winch(vui_state* currstate, int c, int act, void* data)
 {
 	int width;
 	int height;
