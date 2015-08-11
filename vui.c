@@ -253,7 +253,7 @@ static vui_state* tfunc_cmd_up(vui_state* currstate, int c, int act, void* data)
 	if (cmdline->hist_curr_entry->prev != NULL && !cmdline->cmd_modified)
 	{
 #ifdef VUI_DEBUG
-		if (hist_curr_entry->prev == hist_curr_entry)
+		if (cmdline->hist_curr_entry->prev == cmdline->hist_curr_entry)
 		{
 			vui_debug("own prev!\n");
 		}
@@ -416,7 +416,7 @@ void vui_init(int width)
 
 	for (int i=0; i<MAXINPUT; i++)
 	{
-		vui_normal_mode->next[i] = transition_normal;
+		vui_set_char_t(vui_normal_mode, i, transition_normal);
 	}
 
 	cols = width;
@@ -467,24 +467,24 @@ void vui_resize(int width)
 
 vui_state* vui_mode_new(char* cmd, char* name, char* label, int mode, vui_transition func_enter, vui_transition func_in, vui_transition func_exit)
 {
-	vui_state* this = vui_state_new(NULL);
+	vui_state* state = vui_state_new(NULL);
 
-	if (func_enter.next == NULL) func_enter.next = this;
+	if (func_enter.next == NULL) func_enter.next = state;
 	if (mode != VUI_NEW_MODE_IN_MANUAL)
 	{
-		if (func_in.next == NULL) func_in.next = this;
+		if (func_in.next == NULL) func_in.next = state;
 	}
 	if (func_exit.next == NULL) func_exit.next = vui_normal_mode;
 
 	for (int i=0; i<MAXINPUT; i++)
 	{
-		this->next[i] = func_in;
+		vui_set_char_t(state, i, func_in);
 	}
 
 	vui_set_string_t(vui_normal_mode, cmd, func_enter);
-	vui_set_char_t(this, VUI_KEY_ESCAPE, func_exit);
+	vui_set_char_t(state, VUI_KEY_ESCAPE, func_exit);
 
-	return this;
+	return state;
 }
 
 vui_cmdline_def* vui_cmdline_mode_new(char* cmd, char* name, char* label, vui_cmdline_submit_callback on_submit)

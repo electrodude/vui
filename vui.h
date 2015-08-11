@@ -1,7 +1,5 @@
 #pragma once
 
-//#define VUI_DEBUG
-
 #ifdef __cplusplus
 extern "C"
 {
@@ -18,10 +16,6 @@ extern int VUI_KEY_DELETE;
 extern int VUI_KEY_ESCAPE;
 extern int VUI_KEY_HOME;
 extern int VUI_KEY_END;
-
-#ifdef VUI_DEBUG
-extern void vui_debug(char* msg);
-#endif
 // end user must declare these
 
 #include "statemachine.h"

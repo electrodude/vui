@@ -19,8 +19,7 @@ vui_state* vui_state_new(vui_state* parent)
 
 		for (int i=0; i<MAXINPUT; i++)
 		{
-			state->next[i] = parent->next[i];
-			vui_next(state, i, 0)->refs++;
+			vui_set_char_t(state, i, parent->next[i]);
 		}
 	}
 	else
@@ -32,8 +31,7 @@ vui_state* vui_state_new(vui_state* parent)
 
 		for (int i=0; i<MAXINPUT; i++)
 		{
-			state->next[i] = next;
-			state->refs++;
+			vui_set_char_t(state, i, next);
 		}
 	}
 
@@ -64,6 +62,12 @@ int vui_state_kill(vui_state* state)
 
 	if (--state->refs != 0) return 0;
 
+#ifdef VUI_DEBUG
+	char s[64];
+	snprintf(s, 64, "Killing state 0x%lX\n", state);
+	vui_debug(s);
+#endif
+
 	for (int i=0; i<MAXINPUT; i++)
 	{
 		vui_state* next = vui_next(state, i, 0);
@@ -84,7 +88,7 @@ void vui_state_replace(vui_state* state, vui_transition search, vui_transition r
 
 		if (t.func == search.func && t.data == search.data)
 		{
-			state->next[i] = replacement;
+			vui_set_char_t(state, i, replacement);
 		}
 	}
 }
@@ -107,19 +111,21 @@ vui_transition vui_transition_new3(vui_state* next, vui_callback func, void* dat
 
 void vui_set_char_t(vui_state* state, int c, vui_transition next)
 {
-	vui_state* nextst = next.next != NULL ? next.next : (next.func != NULL ? next.func(state, c, 0, next.data) : NULL);
-
-	if (nextst != NULL)
-	{
-		nextst->refs++;
-	}
-
-
 	vui_state* oldnext = vui_next(state, c, 0);
 
 	state->next[c] = next;
 
-	vui_state_kill(oldnext);
+	vui_state* newnext = vui_next(state, c, 0);
+
+	if (newnext != NULL && newnext != state)
+	{
+		newnext->refs++;
+	}
+
+	if (oldnext != state)
+	{
+		vui_state_kill(oldnext);
+	}
 }
 
 void vui_set_char_s(vui_state* state, int c, vui_state* next)

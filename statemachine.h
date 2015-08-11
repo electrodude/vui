@@ -9,6 +9,10 @@ extern "C"
 # define MAXINPUT 512
 #endif
 
+#ifdef VUI_DEBUG
+extern void vui_debug(char* msg);  // user must declare this
+#endif
+
 struct vui_state;
 
 /*
