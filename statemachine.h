@@ -55,19 +55,43 @@ vui_state* vui_state_cow(vui_state* parent, int c);
 
 void vui_state_replace(vui_state* state, vui_transition search, vui_transition replacement);
 
-vui_transition vui_transition_new1(vui_state* next);
-vui_transition vui_transition_new2(vui_callback func, void* data);
-vui_transition vui_transition_new3(vui_state* next, vui_callback func, void* data);
+
+static inline vui_transition vui_transition_new1(vui_state* next)
+{
+	return (vui_transition){.next = next, .func = NULL, .data = NULL};
+}
+
+static inline vui_transition vui_transition_new2(vui_callback func, void* data)
+{
+	return (vui_transition){.next = NULL, .func = func, .data = data};
+}
+
+static inline vui_transition vui_transition_new3(vui_state* next, vui_callback func, void* data)
+{
+	return (vui_transition){.next = next, .func = func, .data = data};
+}
 
 
 void vui_set_char_t(vui_state* state, int c, vui_transition next);
-void vui_set_char_s(vui_state* state, int c, vui_state* next);
+
+static inline void vui_set_char_s(vui_state* state, int c, vui_state* next)
+{
+	vui_set_char_t(state, c, vui_transition_new1(next));
+}
 
 void vui_set_range_t(vui_state* state, int c1, int c2, vui_transition next);
-void vui_set_range_s(vui_state* state, int c1, int c2, vui_state* next);
+
+static inline void vui_set_range_s(vui_state* state, int c1, int c2, vui_state* next)
+{
+	vui_set_range_t(state, c1, c2, vui_transition_new1(next));
+}
 
 void vui_set_string_t(vui_state* state, char* s, vui_transition next);
-void vui_set_string_s(vui_state* state, char* s, vui_state* next);
+
+static inline void vui_set_string_s(vui_state* state, char* s, vui_state* next)
+{
+	vui_set_string_t(state, s, vui_transition_new1(next));
+}
 
 
 vui_state* vui_next(vui_state* s, int c, int act);
