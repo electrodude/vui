@@ -15,8 +15,6 @@ vui_state* vui_state_new(vui_state* parent)
 
 	if (parent != NULL)
 	{
-		state->templatestate = parent->templatestate;
-
 		for (int i=0; i<MAXINPUT; i++)
 		{
 			vui_set_char_t(state, i, parent->next[i]);
@@ -26,7 +24,6 @@ vui_state* vui_state_new(vui_state* parent)
 	{
 		vui_transition next = vui_transition_new1(state);
 
-		state->templatestate = next;
 		state->refs++;
 
 		for (int i=0; i<MAXINPUT; i++)

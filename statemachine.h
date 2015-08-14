@@ -38,7 +38,6 @@ typedef struct vui_state
 {
 	struct vui_transition next[MAXINPUT];
 
-	struct vui_transition templatestate;
 
 	int refs;
 
