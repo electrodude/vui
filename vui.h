@@ -48,6 +48,8 @@ typedef struct vui_cmdline_def
 extern char* vui_bar;	// Pointer to status bar - changes, you must re-check this every time!
 extern int vui_crsrx;	// Current cursor position, or -1 if hidden
 
+extern vui_state* vui_curr_state;
+
 extern vui_state* vui_normal_mode;	// normal mode state
 
 
@@ -74,6 +76,9 @@ vui_cmdline_def* vui_cmdline_mode_new(                  // create new command mo
                             char* label,                // mode label (e.g. : or / or ?) (can be multicharacter)
                             void on_submit(char* cmd)   // callback to call on submission
 );
+
+
+void vui_input(int c);
 
 #ifdef __cplusplus
 }

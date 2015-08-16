@@ -4,8 +4,6 @@
 
 #include "statemachine.h"
 
-vui_state* vui_curr_state;
-
 
 vui_state* vui_state_new(vui_state* parent)
 {
@@ -30,6 +28,20 @@ vui_state* vui_state_new(vui_state* parent)
 		{
 			vui_set_char_t(state, i, next);
 		}
+	}
+
+	return state;
+}
+
+vui_state* vui_state_new_t(vui_transition transition)
+{
+	vui_state* state = malloc(sizeof(vui_state));
+
+	state->refs = 0;
+
+	for (int i=0; i<MAXINPUT; i++)
+	{
+		vui_set_char_t(state, i, transition);
 	}
 
 	return state;
@@ -90,6 +102,38 @@ void vui_state_replace(vui_state* state, vui_transition search, vui_transition r
 	}
 }
 
+
+static vui_state* tfunc_sameas_s(vui_state* currstate, int c, int act, void* data)
+{
+	vui_state* other = data;
+
+	if (other == currstate) // evade stack overflow
+	{
+		return currstate;
+	}
+
+	return vui_next_t(currstate, c, other->next[c], act ? act + 1 : 0);
+}
+
+vui_transition vui_transition_sameas_s(vui_state* other)
+{
+	return (vui_transition){.next = NULL, .func = tfunc_sameas_s, .data = other};
+}
+
+
+static vui_state* tfunc_sameas_t(vui_state* currstate, int c, int act, void* data)
+{
+	vui_transition* t = data;
+
+	return vui_next_t(currstate, c, *t, act ? act + 1 : 0);
+}
+
+vui_transition vui_transition_sameas_t(vui_transition* t)
+{
+	return (vui_transition){.next = NULL, .func = tfunc_sameas_t, .data = t};
+}
+
+
 void vui_set_char_t(vui_state* state, int c, vui_transition next)
 {
 	vui_state* oldnext = vui_next(state, c, 0);
@@ -139,36 +183,42 @@ void vui_set_string_t(vui_state* state, char* s, vui_transition next)
 	}
 }
 
-vui_state* vui_next(vui_state* s, int c, int act)
+vui_state* vui_next_t(vui_state* currstate, int c, vui_transition t, int act)
 {
-	vui_transition t = s->next[c];
+	vui_state* nextstate = NULL;
 
-	vui_state* retnext = NULL;
-
-	if (t.func != NULL)
+	if (t.func != NULL && (act || t.next == NULL))
 	{
-		retnext = t.func(s, c, act, t.data);
-		return t.next  != NULL ? t.next  :
-		       retnext != NULL ? retnext :
-		       s;
+		vui_state* retnext = t.func(currstate, c, act, t.data);
+		nextstate =  t.next  != NULL ? t.next  :
+		             retnext != NULL ? retnext :
+		             currstate;
 	}
 	else
 	{
-		return t.next  != NULL ? t.next  :
-		       s;
+		nextstate = t.next  != NULL ? t.next  :
+		            currstate;
 	}
+
+
+	return nextstate;
 }
 
-void vui_input(int c)
+vui_state* vui_run_c(vui_state** sp, char c, int act)
 {
-	vui_curr_state = vui_next(vui_curr_state, c, 1);
+	*sp = vui_next(*sp, c, act);
 }
 
-void vui_runstring(vui_state** sp, char* s, int act)
+vui_state* vui_run_s(vui_state** sp, char* s, int act)
 {
+	vui_state* st = *sp;
+
 	for (;*s;s++)
 	{
-		*sp = vui_next(*sp, *s, act);
+		st = vui_next(st, *s, act);
 	}
-}
 
+	*sp = st;
+
+	return st;
+}

@@ -3,19 +3,25 @@
 
 #include "vui.h"
 
-
+// extern globals
 char* vui_bar;
 int vui_crsrx;
+
+vui_state* vui_curr_state;
+
+vui_state* vui_normal_mode;
+
+// non-extern globals
 int cols;
 
 char* vui_cmd;
 char* vui_status;
 
-vui_state* vui_normal_mode;
 
 int cmd_base;
 int cmd_len;
 
+// cmdline history functions
 static hist_entry* hist_entry_new(vui_cmdline_def* cmdline)
 {
 	hist_entry* entry = malloc(sizeof(hist_entry));
@@ -107,6 +113,7 @@ static void hist_last_entry_clear(vui_cmdline_def* cmdline)
 }
 
 
+// misc callbacks
 static vui_state* tfunc_normal(vui_state* currstate, int c, int act, void* data)
 {
 	vui_cmdline_def* cmdline = data;
@@ -116,6 +123,7 @@ static vui_state* tfunc_normal(vui_state* currstate, int c, int act, void* data)
 	return NULL;
 }
 
+// cmdline callbacks
 static vui_state* tfunc_normal_to_cmd(vui_state* currstate, int c, int act, void* data)
 {
 	vui_cmdline_def* cmdline = data;
@@ -408,6 +416,7 @@ static vui_state* tfunc_cmd_enter(vui_state* currstate, int c, int act, void* da
 }
 
 
+// initialization/setup/resize
 void vui_init(int width)
 {
 	vui_normal_mode = vui_curr_state = vui_state_new(NULL);
@@ -527,4 +536,10 @@ vui_cmdline_def* vui_cmdline_mode_new(char* cmd, char* name, char* label, vui_cm
 	hist_entry_new(cmdline);
 
 	return cmdline;
+}
+
+// input
+void vui_input(int c)
+{
+	vui_run_c(&vui_curr_state, c, 1);
 }
