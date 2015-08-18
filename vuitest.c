@@ -39,21 +39,34 @@ void vui_debug(char* s)
 }
 #endif
 
-static vui_state* transition_quit(vui_state* currstate, int c, int act, void* data)
+static vui_state* tfunc_quit(vui_state* currstate, int c, int act, void* data)
 {
-	if (act)
+	if (!act) return NULL;
+
+	if (vui_count != 0)
 	{
-		wrlog("quit\r\n");
-		endwin();
-		printf("Quitting!\n");
-		exit(0);
+		char s[256];
+		snprintf(s, 256, "count: %d\r\n", vui_count);
+		wrlog(s);
+
+		vui_showcmd_reset();
+		vui_count = 0;
+
+		return vui_normal_mode;
 	}
 
-	return currstate;
+	wrlog("quit\r\n");
+	endwin();
+	printf("Quitting!\n");
+	exit(0);
 }
 
-static vui_state* transition_winch(vui_state* currstate, int c, int act, void* data)
+static vui_state* tfunc_winch(vui_state* currstate, int c, int act, void* data)
 {
+	if (!act) return NULL;
+
+	wrlog("winch \r\n");
+
 	int width;
 	int height;
 	getmaxyx(stdscr, height, width);
@@ -63,6 +76,10 @@ static vui_state* transition_winch(vui_state* currstate, int c, int act, void* d
 	mvwin(statusline, height-1, 0);
 
 	vui_resize(width);
+
+	vui_showcmd_setup(width - 20, 10);
+
+	return NULL;
 }
 
 void on_cmd_submit(char* cmd)
@@ -109,28 +126,47 @@ int main(int argc, char** argv)
 
 	vui_init(width);
 
+	vui_set_char_t(vui_normal_mode, KEY_RESIZE, vui_transition_new2(tfunc_winch, NULL));
+
+	vui_init_count();
+
+	vui_showcmd_setup(width - 20, 10);
+
 	cmd_mode = vui_cmdline_mode_new(":", "command", ":", on_cmd_submit);
 
 	search_mode = vui_cmdline_mode_new("/", "search", "/", on_search_submit);
 
 
-	vui_transition quit = vui_transition_new2(transition_quit, NULL);
+	vui_transition transition_quit = vui_transition_new2(tfunc_quit, NULL);
 
-	vui_set_char_t(vui_normal_mode, 'Q', quit);
+	vui_set_char_t(vui_normal_mode, 'Q', transition_quit);
 
-	vui_set_string_t(vui_normal_mode, "ZZ", quit);
-
-	vui_set_char_t(vui_normal_mode, KEY_RESIZE, vui_transition_new3(vui_normal_mode, transition_winch, NULL));
+	vui_set_string_t(vui_normal_mode, "ZZ", transition_quit);
 
 
 	while (1)
 	{
 		int c = wgetch(statusline);
 
-		int c2 = c >= 32 && c <= 127 ? c : '?';
+		char c2[3] = {"??"};
+		if (c >= 32 && c < 127)
+		{
+			c2[0] = c;
+			c2[1] = 0;
+		}
+		else if (c >= 0 && c < 32)
+		{
+			c2[0] = '^';
+			c2[1] = c + '@';
+		}
+		else
+		{
+			c2[0] = '?';
+			c2[1] = '?';
+		}
 
 		char s[256];
-		sprintf(s, "char %d: %c\r\n", c, c2);
+		sprintf(s, "char %d: %s\r\n", c, c2);
 		wrlog(s);
 
 		if (c >= 0)
@@ -144,6 +180,10 @@ int main(int argc, char** argv)
 			if (vui_curr_state == vui_normal_mode)
 			{
 				wrlog("normal mode\r\n");
+			}
+			else if (vui_curr_state == vui_count_mode)
+			{
+				wrlog("count mode\r\n");
 			}
 			else if (vui_curr_state == cmd_mode->cmdline_state)
 			{

@@ -5,7 +5,7 @@ extern "C"
 {
 #endif
 
-// The user must declare these
+// Begin user-declared variables
 extern int VUI_KEY_UP;
 extern int VUI_KEY_DOWN;
 extern int VUI_KEY_LEFT;
@@ -16,7 +16,7 @@ extern int VUI_KEY_DELETE;
 extern int VUI_KEY_ESCAPE;
 extern int VUI_KEY_HOME;
 extern int VUI_KEY_END;
-// end user must declare these
+// End user-declared variables
 
 #include "statemachine.h"
 
@@ -48,14 +48,24 @@ typedef struct vui_cmdline_def
 extern char* vui_bar;	// Pointer to status bar - changes, you must re-check this every time!
 extern int vui_crsrx;	// Current cursor position, or -1 if hidden
 
+extern int vui_count;
+
 extern vui_state* vui_curr_state;
 
 extern vui_state* vui_normal_mode;	// normal mode state
+extern vui_state* vui_count_mode;	// count mode
 
+void vui_showcmd_put(int c);
+
+void vui_showcmd_reset(void);
+
+void vui_showcmd_setup(int start, int length);
 
 void vui_init(int width);		// initialize vui, set width
 
 void vui_resize(int width);		// change width
+
+void vui_init_count(void);
 
 
 #define VUI_NEW_MODE_IN_MANUAL 1

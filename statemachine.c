@@ -155,7 +155,7 @@ void vui_set_char_t(vui_state* state, int c, vui_transition next)
 
 void vui_set_range_t(vui_state* state, int c1, int c2, vui_transition next)
 {
-	for (int c = c1; c != c2; c = (c+1) % MAXINPUT)
+	for (int c = c1; c != c2+1; c = (c+1) % MAXINPUT)
 	{
 		vui_set_char_t(state, c, next);
 	}
