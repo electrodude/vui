@@ -39,7 +39,7 @@ void vui_debug(char* s)
 }
 #endif
 
-static vui_state* tfunc_quit(vui_state* currstate, int c, int act, void* data)
+static vui_state* tfunc_quit(vui_state* currstate, unsigned int c, int act, void* data)
 {
 	if (!act) return NULL;
 
@@ -61,7 +61,7 @@ static vui_state* tfunc_quit(vui_state* currstate, int c, int act, void* data)
 	exit(0);
 }
 
-static vui_state* tfunc_winch(vui_state* currstate, int c, int act, void* data)
+static vui_state* tfunc_winch(vui_state* currstate, unsigned int c, int act, void* data)
 {
 	if (!act) return NULL;
 
