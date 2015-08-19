@@ -55,12 +55,14 @@ extern vui_state* vui_curr_state;
 extern vui_state* vui_normal_mode;	// normal mode state
 extern vui_state* vui_count_mode;	// count mode
 
+// showcmd
 void vui_showcmd_put(int c);
 
 void vui_showcmd_reset(void);
 
 void vui_showcmd_setup(int start, int length);
 
+// init/resize
 void vui_init(int width);		// initialize vui, set width
 
 void vui_resize(int width);		// change width
@@ -68,6 +70,7 @@ void vui_resize(int width);		// change width
 void vui_init_count(void);
 
 
+// new modes
 #define VUI_NEW_MODE_IN_MANUAL 1
 
 vui_state* vui_mode_new(                                // create new mode
@@ -87,7 +90,11 @@ vui_cmdline_def* vui_cmdline_mode_new(                  // create new command mo
                             void on_submit(char* cmd)   // callback to call on submission
 );
 
+// status line
+void vui_status_set(const char* s);
+void vui_status_clear(void);
 
+// input
 void vui_input(int c);
 
 #ifdef __cplusplus

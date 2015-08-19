@@ -199,6 +199,27 @@ static vui_state* tfunc_normal(vui_state* currstate, unsigned int c, int act, vo
 	return NULL;
 }
 
+static vui_state* tfunc_status_set(vui_state* currstate, unsigned int c, int act, void* data)
+{
+	char* s = data;
+
+	if (!act) return NULL;
+
+	vui_status_set(s);
+
+	return NULL;
+}
+
+static vui_state* tfunc_status_clear(vui_state* currstate, unsigned int c, int act, void* data)
+{
+	if (!act) return NULL;
+
+	vui_status_clear();
+
+	return NULL;
+}
+
+
 // cmdline callbacks
 static vui_state* tfunc_normal_to_cmd(vui_state* currstate, unsigned int c, int act, void* data)
 {
@@ -234,6 +255,8 @@ static vui_state* tfunc_cmd_key(vui_state* currstate, unsigned int c, int act, v
 
 	if (!act) return NULL;
 
+	vui_bar = vui_cmd;
+
 	hist_last_entry_edit(cmdline);
 
 	if (vui_crsrx != cmd_len)
@@ -259,6 +282,8 @@ static vui_state* tfunc_cmd_backspace(vui_state* currstate, unsigned int c, int 
 		return vui_normal_mode;
 	}
 
+	vui_bar = vui_cmd;
+
 	if (vui_crsrx > cmd_base)
 	{
 		hist_last_entry_edit(cmdline);
@@ -283,6 +308,8 @@ static vui_state* tfunc_cmd_delete(vui_state* currstate, unsigned int c, int act
 
 	if (!act) return NULL;
 
+	vui_bar = vui_cmd;
+
 	if (vui_crsrx <= cmd_len)
 	{
 		hist_last_entry_edit(cmdline);
@@ -306,6 +333,8 @@ static vui_state* tfunc_cmd_left(vui_state* currstate, unsigned int c, int act, 
 
 	if (!act) return NULL;
 
+	vui_bar = vui_cmd;
+
 	if (vui_crsrx > cmd_base)
 	{
 		vui_crsrx--;
@@ -320,6 +349,8 @@ static vui_state* tfunc_cmd_right(vui_state* currstate, unsigned int c, int act,
 
 	if (!act) return NULL;
 
+	vui_bar = vui_cmd;
+
 	if (vui_crsrx <= cmd_len)
 	{
 		vui_crsrx++;
@@ -333,6 +364,8 @@ static vui_state* tfunc_cmd_up(vui_state* currstate, unsigned int c, int act, vo
 	vui_cmdline_def* cmdline = data;
 
 	if (!act) return NULL;
+
+	vui_bar = vui_cmd;
 
 	if (cmdline->hist_curr_entry->prev != NULL && !cmdline->cmd_modified)
 	{
@@ -365,6 +398,8 @@ static vui_state* tfunc_cmd_down(vui_state* currstate, unsigned int c, int act, 
 	vui_cmdline_def* cmdline = data;
 
 	if (!act) return NULL;
+
+	vui_bar = vui_cmd;
 
 	if (cmdline->hist_curr_entry->next != NULL && !cmdline->cmd_modified)
 	{
@@ -399,6 +434,8 @@ static vui_state* tfunc_cmd_home(vui_state* currstate, unsigned int c, int act, 
 
 	if (!act) return NULL;
 
+	vui_bar = vui_cmd;
+
 	vui_crsrx = cmd_base;
 
 	return NULL;
@@ -410,6 +447,8 @@ static vui_state* tfunc_cmd_end(vui_state* currstate, unsigned int c, int act, v
 
 	if (!act) return NULL;
 
+	vui_bar = vui_cmd;
+
 	vui_crsrx = cmd_len + 1;
 
 	return NULL;
@@ -420,6 +459,8 @@ static vui_state* tfunc_cmd_escape(vui_state* currstate, unsigned int c, int act
 	vui_cmdline_def* cmdline = data;
 
 	if (!act) return NULL;
+
+	vui_bar = vui_cmd;
 
 	if (cmdline->hist_curr_entry != cmdline->hist_last_entry && !cmdline->cmd_modified)
 	{
@@ -595,12 +636,23 @@ vui_state* vui_mode_new(char* cmd, char* name, char* label, int mode, vui_transi
 
 	if (func_enter.next == NULL) func_enter.next = state;
 
+	if (func_enter.func == NULL)
+	{
+		func_enter.func = tfunc_status_set;
+		func_enter.data = label;
+	}
+
 	if (mode != VUI_NEW_MODE_IN_MANUAL)
 	{
 		if (func_in.next == NULL) func_in.next = state;
 	}
 
 	if (func_exit.next == NULL) func_exit.next = vui_normal_mode;
+
+	if (func_exit.func == NULL)
+	{
+		func_exit.func = tfunc_status_clear;
+	}
 
 	for (int i=0; i<VUI_MAXSTATE; i++)
 	{
@@ -654,6 +706,25 @@ vui_cmdline_def* vui_cmdline_mode_new(char* cmd, char* name, char* label, vui_cm
 	hist_entry_new(cmdline);
 
 	return cmdline;
+}
+
+void vui_status_set(const char* s)
+{
+	vui_bar = vui_status;
+	char* p = vui_status;
+	while (*s)
+	{
+		*p++ = *s++;
+	}
+	while (p < &vui_status[cols])
+	{
+		*p++ = ' ';
+	}
+}
+
+void vui_status_clear(void)
+{
+	memset(vui_status, ' ', cols);
 }
 
 // input
