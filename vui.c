@@ -204,6 +204,15 @@ static vui_state* tfunc_normal(vui_state* currstate, unsigned int c, int act, vo
 	return NULL;
 }
 
+static vui_state* tfunc_showcmd_put(vui_state* currstate, unsigned int c, int act, void* data)
+{
+	if (!act) return NULL;
+
+	vui_showcmd_put(c);
+
+	return NULL;
+}
+
 static vui_state* tfunc_status_set(vui_state* currstate, unsigned int c, int act, void* data)
 {
 	char* s = data;
@@ -654,6 +663,8 @@ static vui_state* tfunc_macro_record(vui_state* currstate, unsigned int c, int a
 	vui_debug(s);
 #endif
 
+	vui_reset();
+
 	vui_register_record(c);
 
 	return vui_return(1);
@@ -684,16 +695,27 @@ static vui_state* tfunc_macro_execute(vui_state* currstate, unsigned int c, int 
 
 static vui_state* tfunc_record_enter(vui_state* currstate, unsigned int c, int act, void* data)
 {
-	if (vui_register_recording == NULL)
+	if (act > 0)
+	{
+		vui_showcmd_put(c);
+	}
+
+	if (vui_register_recording == NULL) // begin recording
 	{
 		return state_macro_record;
 	}
-	else
+	else // end recording
 	{
+		if (act > 0)
+		{
 #ifdef VUI_DEBUG
-		vui_debug("end record\r\n");
+			vui_debug("end record\r\n");
 #endif
-		vui_register_endrecord();
+			vui_register_endrecord();
+
+			vui_reset();
+		}
+
 		return currstate;
 	}
 }
@@ -711,7 +733,7 @@ void vui_macro_init(unsigned int record, unsigned int execute)
 
 	vui_state* state_macro_execute = vui_state_new_t(transition_macro_execute);
 
-	vui_set_char_s(vui_normal_mode, execute, state_macro_execute);
+	vui_set_char_t(vui_normal_mode, execute, vui_transition_new3(state_macro_execute, tfunc_showcmd_put, NULL));
 }
 
 //
