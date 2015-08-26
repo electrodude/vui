@@ -9,6 +9,8 @@ int vui_crsrx;
 
 int vui_count;
 
+vui_state_stack* vui_stack;
+
 vui_state* vui_curr_state;
 
 vui_state* vui_normal_mode;
@@ -547,6 +549,10 @@ void vui_init(int width)
 		vui_set_char_t(vui_normal_mode, i, transition_normal);
 	}
 
+	vui_stack = vui_state_stack_new(vui_normal_mode);
+
+	vui_normal_mode->push = vui_stack;
+
 	cols = width;
 
 	vui_cmd = malloc((cols+1)*sizeof(char));
@@ -657,7 +663,7 @@ vui_register* vui_register_new(void)
 
 vui_register* vui_register_get(int c)
 {
-	vui_register** regptr = &vui_next(vui_register_container, c, -1)->data;
+	vui_register** regptr = (vui_register**)&vui_next(vui_register_container, c, -1)->data;
 
 	if (*regptr == NULL)
 	{
@@ -745,6 +751,8 @@ vui_state* vui_mode_new(char* cmd, char* name, char* label, int mode, vui_transi
 
 	vui_set_string_t(vui_normal_mode, cmd, func_enter);
 	vui_set_char_t(state, VUI_KEY_ESCAPE, func_exit);
+
+	state->push = vui_stack;
 
 	return state;
 }

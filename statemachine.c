@@ -34,6 +34,8 @@ vui_state* vui_state_new(vui_state* parent)
 		state->data = NULL;
 	}
 
+	state->push = NULL;
+
 	return state;
 }
 
@@ -49,6 +51,7 @@ vui_state* vui_state_new_t(vui_transition transition)
 	}
 
 	state->data = NULL;
+	state->push = NULL;
 
 	return state;
 }
@@ -341,6 +344,13 @@ vui_state* vui_next_t(vui_state* currstate, unsigned int c, vui_transition t, in
 		            currstate;
 	}
 
+	if (nextstate != NULL && act > 0)
+	{
+		if (nextstate->push != NULL)
+		{
+			vui_state_stack_push(nextstate->push, nextstate);
+		}
+	}
 
 	return nextstate;
 }
@@ -374,4 +384,117 @@ vui_state* vui_run_s(vui_state* st, unsigned char* s, int act)
 	}
 
 	return st;
+}
+
+
+// state stack
+
+vui_state_stack* vui_state_stack_new(vui_state* def)
+{
+	vui_state_stack* stk = malloc(sizeof(vui_state_stack));
+
+	stk->n = 0;
+	stk->maxn = 16;
+	stk->s = malloc(stk->maxn*sizeof(vui_state*));
+	stk->def = def;
+
+	return stk;
+}
+
+void vui_state_stack_push(vui_state_stack* stk, vui_state* s)
+{
+	if (vui_state_stack_peek(stk) == s) return;
+
+#ifdef VUI_DEBUG
+	char s2[64];
+	snprintf(s2, 64, "Push 0x%lX\r\n", s2);
+	vui_debug(s2);
+#endif
+
+	if (stk->n >= stk->maxn)
+	{
+		stk->maxn = stk->n*2;
+		stk->s = realloc(stk->s, stk->maxn*sizeof(vui_state*));
+	}
+
+	stk->s[stk->n++] = s;
+}
+
+vui_state* vui_state_stack_pop(vui_state_stack* stk)
+{
+	if (stk->n <= 0)
+	{
+#ifdef VUI_DEBUG
+		char s[64];
+		snprintf(s, 64, "Pop def 0x%lX\r\n", stk->def);
+		vui_debug(s);
+#endif
+
+		return stk->def;
+	}
+
+#ifdef VUI_DEBUG
+	char s[64];
+	snprintf(s, 64, "Pop 0x%lX\r\n", stk->s[stk->n-1]);
+	vui_debug(s);
+#endif
+
+	return stk->s[--stk->n];
+}
+
+vui_state* vui_state_stack_peek(vui_state_stack* stk)
+{
+	if (stk->n <= 0)
+	{
+#ifdef VUI_DEBUG
+		char s[64];
+		snprintf(s, 64, "Peek def 0x%lX\r\n", stk->def);
+		vui_debug(s);
+#endif
+
+		return stk->def;
+	}
+
+#ifdef VUI_DEBUG
+	char s[64];
+	snprintf(s, 64, "Peek 0x%lX\r\n", stk->s[stk->n-1]);
+	vui_debug(s);
+#endif
+
+	return stk->s[stk->n-1];
+}
+
+static vui_state* tfunc_stack_push(vui_state* currstate, unsigned int c, int act, void* data)
+{
+	vui_state_stack* stk = data;
+
+	if (!act) return NULL;
+
+	vui_state_stack_push(stk, currstate);
+
+	return NULL;
+}
+
+vui_transition vui_transition_stack_push(vui_state_stack* stk, vui_state* next)
+{
+	return (vui_transition){.next = next, .func = tfunc_stack_push, .data = stk};
+}
+
+static vui_state* tfunc_stack_pop(vui_state* currstate, unsigned int c, int act, void* data)
+{
+	vui_state_stack* stk = data;
+
+	if (act == 0)
+	{
+		return vui_state_stack_peek(stk);
+	}
+	else
+	{
+		return vui_state_stack_pop(stk);
+	}
+}
+
+vui_transition vui_transition_stack_pop(vui_state_stack* stk)
+{
+	return (vui_transition){.next = NULL, .func = tfunc_stack_pop, .data = stk};
 }

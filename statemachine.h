@@ -14,7 +14,15 @@ extern "C"
 extern void vui_debug(char* msg);  // user must declare this
 #endif
 
-struct vui_state;
+typedef struct vui_state vui_state;
+
+typedef struct vui_state_stack
+{
+	size_t n;
+	size_t maxn;
+	vui_state** s;
+	vui_state* def; // default
+} vui_state_stack;
 
 /*
  * \param prevstate previous state
@@ -23,11 +31,11 @@ struct vui_state;
  * \return next state (ignored if transition.next != NULL)
  *
  */
-typedef struct vui_state* (*vui_transition_callback)(struct vui_state* currstate, unsigned int c, int act, void* data);
+typedef vui_state* (*vui_transition_callback)(vui_state* currstate, unsigned int c, int act, void* data);
 
 typedef struct vui_transition
 {
-	struct vui_state* next;
+	vui_state* next;
 
 	vui_transition_callback func;
 
@@ -42,10 +50,11 @@ typedef struct vui_state
 
 	int refs;
 
+	vui_state_stack* push;
+
 	void* data;
 
 } vui_state;
-
 
 
 vui_state* vui_state_new(vui_state* parent);
@@ -110,6 +119,15 @@ static inline vui_state* vui_next_raw(vui_state* currstate, unsigned int c, int 
 vui_state* vui_run_c_p(vui_state** sp, unsigned int c, int act);
 vui_state* vui_run_s_p(vui_state** sp, unsigned char* s, int act);
 vui_state* vui_run_s(vui_state* st, unsigned char* s, int act);
+
+
+vui_state_stack* vui_state_stack_new(vui_state* def);
+void vui_state_stack_push(vui_state_stack* stk, vui_state* s);
+vui_state* vui_state_stack_pop(vui_state_stack* stk);
+vui_state* vui_state_stack_peek(vui_state_stack* stk);
+
+vui_transition vui_transition_stack_pop(vui_state_stack* stk);
+
 
 #ifdef __cplusplus
 }

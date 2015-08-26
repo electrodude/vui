@@ -57,6 +57,8 @@ extern int vui_crsrx;	// Current cursor position, or -1 if hidden
 
 extern int vui_count;
 
+extern vui_state_stack* vui_stack;
+
 extern vui_state* vui_curr_state;
 
 extern vui_state* vui_normal_mode;	// normal mode state
@@ -65,6 +67,26 @@ extern vui_state* vui_count_mode;	// count mode
 extern vui_state* vui_register_container; // macro container state
 
 extern vui_register* vui_register_recording;
+
+
+// state machine helpers
+
+static inline vui_transition vui_transition_return(void)
+{
+	return vui_transition_stack_pop(vui_stack);
+}
+
+static inline vui_state* vui_return(int pop)
+{
+	if (pop)
+	{
+		return vui_state_stack_pop(vui_stack);
+	}
+	else
+	{
+		return vui_state_stack_peek(vui_stack);
+	}
+}
 
 
 // showcmd
