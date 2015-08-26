@@ -74,6 +74,8 @@ vui_transition vui_transition_sameas_s(vui_state* other);
 vui_transition vui_transition_sameas_t(vui_transition* t);
 
 
+void vui_codepoint_to_utf8(unsigned int c, unsigned char* s);
+
 void vui_set_char_t_raw(vui_state* state, unsigned int c, vui_transition next);
 void vui_set_char_t(vui_state* state, unsigned int c, vui_transition next);
 

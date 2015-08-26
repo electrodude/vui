@@ -30,6 +30,13 @@ typedef struct hist_entry
 	size_t maxlen;
 } hist_entry;
 
+typedef struct vui_register
+{
+	size_t n;
+	size_t maxn;
+	char* s;
+} vui_register;
+
 typedef void vui_cmdline_submit_callback(char* cmd);
 
 typedef struct vui_cmdline_def
@@ -55,6 +62,11 @@ extern vui_state* vui_curr_state;
 extern vui_state* vui_normal_mode;	// normal mode state
 extern vui_state* vui_count_mode;	// count mode
 
+extern vui_state* vui_register_container; // macro container state
+
+extern vui_register* vui_register_recording;
+
+
 // showcmd
 void vui_showcmd_put(int c);
 
@@ -62,12 +74,26 @@ void vui_showcmd_reset(void);
 
 void vui_showcmd_setup(int start, int length);
 
+
 // init/resize
 void vui_init(int width);		// initialize vui, set width
 
 void vui_resize(int width);		// change width
 
-void vui_init_count(void);
+
+// count
+void vui_count_init(void);
+
+
+// registers
+void vui_register_init(void);
+
+vui_register* vui_register_new(void);
+vui_register* vui_register_get(int c);
+
+void vui_register_record(int c);
+void vui_register_endrecord(void);
+void vui_register_execute(int c);
 
 
 // new modes
@@ -90,12 +116,16 @@ vui_cmdline_def* vui_cmdline_mode_new(                  // create new command mo
                             void on_submit(char* cmd)   // callback to call on submission
 );
 
+
 // status line
 void vui_status_set(const char* s);
 void vui_status_clear(void);
 
+
 // input
-void vui_input(int c);
+void vui_input(unsigned int c);
+
+void vui_reset(void);
 
 #ifdef __cplusplus
 }

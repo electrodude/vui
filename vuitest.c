@@ -49,8 +49,7 @@ static vui_state* tfunc_quit(vui_state* currstate, unsigned int c, int act, void
 		snprintf(s, 256, "count: %d\r\n", vui_count);
 		wrlog(s);
 
-		vui_showcmd_reset();
-		vui_count = 0;
+		vui_reset();
 
 		return vui_normal_mode;
 	}
@@ -80,6 +79,48 @@ static vui_state* tfunc_winch(vui_state* currstate, unsigned int c, int act, voi
 	vui_showcmd_setup(width - 20, 10);
 
 	return NULL;
+}
+
+vui_state* state_macro_record;
+
+static vui_state* tfunc_macro_record(vui_state* currstate, unsigned int c, int act, void* data)
+{
+	char s[256];
+	snprintf(s, 256, "record %c\r\n", c);
+	wrlog(s);
+
+	vui_register_record(c);
+}
+
+static vui_state* tfunc_macro_execute(vui_state* currstate, unsigned int c, int act, void* data)
+{
+	char s[256];
+	snprintf(s, 256, "execute %c\r\n", c);
+	wrlog(s);
+
+	int count = vui_count;
+	vui_reset();
+
+	if (count < 1) count = 1;
+
+	while (count--)
+	{
+		vui_register_execute(c);
+	}
+}
+
+static vui_state* tfunc_q(vui_state* currstate, unsigned int c, int act, void* data)
+{
+	if (vui_register_recording == NULL)
+	{
+		return state_macro_record;
+	}
+	else
+	{
+		wrlog("end record\r\n");
+		vui_register_endrecord();
+		return currstate;
+	}
 }
 
 void on_cmd_submit(char* cmd)
@@ -128,7 +169,9 @@ int main(int argc, char** argv)
 
 	vui_set_char_t(vui_normal_mode, KEY_RESIZE, vui_transition_new2(tfunc_winch, NULL));
 
-	vui_init_count();
+	vui_count_init();
+
+	vui_register_init();
 
 	vui_showcmd_setup(width - 20, 10);
 
@@ -142,6 +185,19 @@ int main(int argc, char** argv)
 	vui_set_char_t(vui_normal_mode, 'Q', transition_quit);
 
 	vui_set_string_t(vui_normal_mode, "ZZ", transition_quit);
+
+	vui_transition transition_macro_record = vui_transition_new3(vui_normal_mode, tfunc_macro_record, NULL);
+	state_macro_record = vui_state_new_t(transition_macro_record);
+
+	vui_transition transition_q = vui_transition_new2(tfunc_q, NULL);
+
+	vui_set_char_t(vui_normal_mode, 'q', transition_q);
+
+	vui_transition transition_macro_execute = vui_transition_new3(vui_normal_mode, tfunc_macro_execute, NULL);
+
+	vui_state* state_macro_execute = vui_state_new_t(transition_macro_execute);
+
+	vui_set_char_s(vui_normal_mode, '@', state_macro_execute);
 
 
 	while (1)

@@ -14,6 +14,10 @@ vui_state* vui_curr_state;
 vui_state* vui_normal_mode;
 vui_state* vui_count_mode;
 
+vui_state* vui_register_container; // register container state
+
+vui_register* vui_register_recording;
+
 // non-extern globals
 int cols;
 
@@ -188,8 +192,7 @@ static vui_state* tfunc_normal(vui_state* currstate, unsigned int c, int act, vo
 
 	if (act == 1)
 	{
-		vui_count = 0;
-		vui_showcmd_reset();
+		vui_reset();
 	}
 	else if (act == 2)
 	{
@@ -532,7 +535,7 @@ static vui_state* tfunc_cmd_enter(vui_state* currstate, unsigned int c, int act,
 	return NULL;
 }
 
-// initialization/setup/resize
+// init/resize
 void vui_init(int width)
 {
 	vui_normal_mode = vui_curr_state = vui_state_new(NULL);
@@ -590,6 +593,7 @@ void vui_resize(int width)
 
 }
 
+// count
 
 static vui_state* tfunc_count_enter(vui_state* currstate, unsigned int c, int act, void* data)
 {
@@ -617,7 +621,7 @@ static vui_state* tfunc_count(vui_state* currstate, unsigned int c, int act, voi
 	return NULL;
 }
 
-void vui_init_count(void)
+void vui_count_init(void)
 {
 	vui_transition transition_count_leave = vui_transition_sameas_s(vui_normal_mode);
 
@@ -629,6 +633,86 @@ void vui_init_count(void)
 	vui_transition transition_count_enter = {.next = vui_count_mode, .func = tfunc_count_enter, .data = &vui_count};
 	vui_set_range_t(vui_normal_mode, '1', '9', transition_count_enter);
 }
+
+
+// registers
+
+void vui_register_init(void)
+{
+	vui_register_container = vui_state_new(NULL);
+	vui_register_recording = NULL;
+}
+
+vui_register* vui_register_new(void)
+{
+	vui_register* reg = malloc(sizeof(vui_register));
+
+	reg->n = 0;
+	reg->maxn = 16;
+	reg->s = malloc(reg->maxn);
+	reg->s[0] = 0;
+
+	return reg;
+}
+
+vui_register* vui_register_get(int c)
+{
+	vui_register** regptr = &vui_next(vui_register_container, c, -1)->data;
+
+	if (*regptr == NULL)
+	{
+		*regptr = vui_register_new();
+	}
+
+	return *regptr;
+}
+
+void vui_register_putc(vui_register* reg, unsigned int c)
+{
+	unsigned char s[16];
+	vui_codepoint_to_utf8(c, s);
+
+	size_t slen = strlen(s) + 1;  // include the null terminator
+
+	if (reg->maxn < reg->n + slen);
+	{
+		reg->maxn = (reg->n + slen)*2;
+		reg->s = realloc(reg->s, reg->maxn);
+	}
+
+	memcpy(&reg->s[reg->n], s, slen);
+
+	reg->n += slen - 1;  // don't include the null terminator
+}
+
+void vui_register_record(int c)
+{
+	vui_register* reg = vui_register_get(c);
+	reg->n = 0;
+	reg->s[0] = 0;
+
+	vui_register_recording = reg;
+}
+
+void vui_register_endrecord(void)
+{
+	vui_register_recording->s[--vui_register_recording->n] = 0;
+#ifdef VUI_DEBUG
+	char s[64];
+	snprintf(s, 64, "finished recording macro: %s\r\n", vui_register_recording->s);
+	vui_debug(s);
+#endif
+	vui_register_recording = NULL;
+}
+
+void vui_register_execute(int c)
+{
+	vui_register* reg = vui_register_get(c);
+	vui_run_s(vui_normal_mode, reg->s, 1);
+}
+
+
+// new modes
 
 vui_state* vui_mode_new(char* cmd, char* name, char* label, int mode, vui_transition func_enter, vui_transition func_in, vui_transition func_exit)
 {
@@ -728,7 +812,23 @@ void vui_status_clear(void)
 }
 
 // input
-void vui_input(int c)
+void vui_input(unsigned int c)
 {
+	if (vui_register_recording != NULL)
+	{
+#ifdef VUI_DEBUG
+		char s[64];
+		snprintf(s, 64, "register_putc(%d)\r\n", c);
+		vui_debug(s);
+#endif
+		vui_register_putc(vui_register_recording, c);
+	}
+
 	vui_run_c_p(&vui_curr_state, c, 1);
+}
+
+void vui_reset(void)
+{
+	vui_showcmd_reset();
+	vui_count = 0;
 }

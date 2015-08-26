@@ -141,7 +141,7 @@ vui_transition vui_transition_sameas_t(vui_transition* t)
 
 
 
-static void vui_codepoint_to_utf8(unsigned int c, unsigned char* s)
+void vui_codepoint_to_utf8(unsigned int c, unsigned char* s)
 {
 	if (c < 0x80)
 	{
@@ -317,7 +317,18 @@ vui_state* vui_next_t(vui_state* currstate, unsigned int c, vui_transition t, in
 {
 	vui_state* nextstate = NULL;
 
-	if (t.func != NULL && (act || t.next == NULL))
+	if (act == -1)
+	{
+		if (t.next != NULL)
+		{
+			return t.next;
+		}
+		else
+		{
+			return t.next = vui_state_new(NULL);
+		}
+	}
+	else if (t.func != NULL && (act || t.next == NULL))
 	{
 		vui_state* retnext = t.func(currstate, c, act, t.data);
 		nextstate =  t.next  != NULL ? t.next  :
