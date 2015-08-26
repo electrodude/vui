@@ -640,7 +640,81 @@ void vui_count_init(void)
 	vui_set_range_t(vui_normal_mode, '1', '9', transition_count_enter);
 }
 
+// macros
 
+vui_state* state_macro_record;
+
+static vui_state* tfunc_macro_record(vui_state* currstate, unsigned int c, int act, void* data)
+{
+	if (!act) return vui_return(0);
+
+#ifdef VUI_DEBUG
+	char s[256];
+	snprintf(s, 256, "record %c\r\n", c);
+	vui_debug(s);
+#endif
+
+	vui_register_record(c);
+
+	return vui_return(1);
+}
+
+static vui_state* tfunc_macro_execute(vui_state* currstate, unsigned int c, int act, void* data)
+{
+	if (!act) return vui_return(0);
+
+#ifdef VUI_DEBUG
+	char s[256];
+	snprintf(s, 256, "execute %c\r\n", c);
+	vui_debug(s);
+#endif
+
+	int count = vui_count;
+	vui_reset();
+
+	if (count < 1) count = 1;
+
+	while (count--)
+	{
+		vui_register_execute(c);
+	}
+
+	return vui_return(1);
+}
+
+static vui_state* tfunc_record_enter(vui_state* currstate, unsigned int c, int act, void* data)
+{
+	if (vui_register_recording == NULL)
+	{
+		return state_macro_record;
+	}
+	else
+	{
+#ifdef VUI_DEBUG
+		vui_debug("end record\r\n");
+#endif
+		vui_register_endrecord();
+		return currstate;
+	}
+}
+
+void vui_macro_init(unsigned int record, unsigned int execute)
+{
+	vui_transition transition_macro_record = vui_transition_new3(vui_normal_mode, tfunc_macro_record, NULL);
+	state_macro_record = vui_state_new_t(transition_macro_record);
+
+	vui_transition transition_record_enter = vui_transition_new2(tfunc_record_enter, NULL);
+
+	vui_set_char_t(vui_normal_mode, record, transition_record_enter);
+
+	vui_transition transition_macro_execute = vui_transition_new3(vui_normal_mode, tfunc_macro_execute, NULL);
+
+	vui_state* state_macro_execute = vui_state_new_t(transition_macro_execute);
+
+	vui_set_char_s(vui_normal_mode, execute, state_macro_execute);
+}
+
+//
 // registers
 
 void vui_register_init(void)
@@ -714,7 +788,7 @@ void vui_register_endrecord(void)
 void vui_register_execute(int c)
 {
 	vui_register* reg = vui_register_get(c);
-	vui_run_s(vui_normal_mode, reg->s, 1);
+	vui_run_s(vui_return(0), reg->s, 1);
 }
 
 

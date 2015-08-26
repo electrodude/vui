@@ -81,56 +81,6 @@ static vui_state* tfunc_winch(vui_state* currstate, unsigned int c, int act, voi
 	return NULL;
 }
 
-vui_state* state_macro_record;
-
-static vui_state* tfunc_macro_record(vui_state* currstate, unsigned int c, int act, void* data)
-{
-	if (!act) return vui_return(0);
-
-	char s[256];
-	snprintf(s, 256, "record %c\r\n", c);
-	wrlog(s);
-
-	vui_register_record(c);
-
-	return vui_return(1);
-}
-
-static vui_state* tfunc_macro_execute(vui_state* currstate, unsigned int c, int act, void* data)
-{
-	if (!act) return vui_return(0);
-
-	char s[256];
-	snprintf(s, 256, "execute %c\r\n", c);
-	wrlog(s);
-
-	int count = vui_count;
-	vui_reset();
-
-	if (count < 1) count = 1;
-
-	while (count--)
-	{
-		vui_register_execute(c);
-	}
-
-	return vui_return(1);
-}
-
-static vui_state* tfunc_q(vui_state* currstate, unsigned int c, int act, void* data)
-{
-	if (vui_register_recording == NULL)
-	{
-		return state_macro_record;
-	}
-	else
-	{
-		wrlog("end record\r\n");
-		vui_register_endrecord();
-		return currstate;
-	}
-}
-
 void on_cmd_submit(char* cmd)
 {
 	wrlog("command: \"");
@@ -181,6 +131,8 @@ int main(int argc, char** argv)
 
 	vui_register_init();
 
+	vui_macro_init('q', '@');
+
 	vui_showcmd_setup(width - 20, 10);
 
 	cmd_mode = vui_cmdline_mode_new(":", "command", ":", on_cmd_submit);
@@ -194,18 +146,6 @@ int main(int argc, char** argv)
 
 	vui_set_string_t(vui_normal_mode, "ZZ", transition_quit);
 
-	vui_transition transition_macro_record = vui_transition_new3(vui_normal_mode, tfunc_macro_record, NULL);
-	state_macro_record = vui_state_new_t(transition_macro_record);
-
-	vui_transition transition_q = vui_transition_new2(tfunc_q, NULL);
-
-	vui_set_char_t(vui_normal_mode, 'q', transition_q);
-
-	vui_transition transition_macro_execute = vui_transition_new3(vui_normal_mode, tfunc_macro_execute, NULL);
-
-	vui_state* state_macro_execute = vui_state_new_t(transition_macro_execute);
-
-	vui_set_char_s(vui_normal_mode, '@', state_macro_execute);
 
 
 	while (1)

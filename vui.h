@@ -106,6 +106,8 @@ void vui_resize(int width);		// change width
 // count
 void vui_count_init(void);
 
+// macros
+void vui_macro_init(unsigned int record, unsigned int execute);
 
 // registers
 void vui_register_init(void);
