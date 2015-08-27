@@ -11,19 +11,25 @@ clean:
 		rm -vf *.o libvui.a vuitest
 
 vuitest:	vuitest.o libvui.a
-		$(LD) $(LDFLAGS) $^ -o $@
+		$(LD) $^ $(LDFLAGS) -o $@
 
-libvui.a:	vui.o statemachine.o
+libvui.a:	vui.o statemachine.o stack.o string.o utf8.o
 		$(AR) $@ $^
 		$(RANLIB) $@
-
-vuitest.o:	vui.h
-
-vui.o:		vui.h statemachine.h
-
-statemachine.o:	statemachine.h
 
 %.o:		%.c
 		$(CC) $(CCFLAGS) -c $< -o $@
 
+depend:		
+		$(CC) $(CCFLAGS) -MM {vuitest,vui,statemachine,stack,string,utf8}.c
+
 .PHONY:		all clean
+
+# output of `make depend`
+
+vuitest.o: vuitest.c vui.h string.h statemachine.h stack.h
+vui.o: vui.c utf8.h vui.h string.h statemachine.h stack.h
+statemachine.o: statemachine.c utf8.h statemachine.h stack.h
+stack.o: stack.c stack.h
+string.o: string.c utf8.h string.h
+utf8.o: utf8.c utf8.h

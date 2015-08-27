@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "utf8.h"
+
 #include "vui.h"
 
 // extern globals
@@ -9,7 +11,7 @@ int vui_crsrx;
 
 int vui_count;
 
-vui_state_stack* vui_stack;
+vui_stack* vui_state_stack;
 
 vui_state* vui_curr_state;
 
@@ -18,7 +20,7 @@ vui_state* vui_count_mode;
 
 vui_state* vui_register_container; // register container state
 
-vui_register* vui_register_recording;
+vui_string* vui_register_recording;
 
 // non-extern globals
 int cols;
@@ -558,9 +560,9 @@ void vui_init(int width)
 		vui_set_char_t(vui_normal_mode, i, transition_normal);
 	}
 
-	vui_stack = vui_state_stack_new(vui_normal_mode);
+	vui_state_stack = vui_stack_new(vui_normal_mode);
 
-	vui_normal_mode->push = vui_stack;
+	vui_normal_mode->push = vui_state_stack;
 
 	cols = width;
 
@@ -638,7 +640,7 @@ static vui_state* tfunc_count(vui_state* currstate, unsigned int c, int act, voi
 
 void vui_count_init(void)
 {
-	vui_transition transition_count_leave = vui_transition_sameas_s(vui_normal_mode);
+	vui_transition transition_count_leave = vui_transition_run_c_s(vui_normal_mode);
 
 	vui_count_mode = vui_state_new_t(transition_count_leave);
 
@@ -736,7 +738,7 @@ void vui_macro_init(unsigned int record, unsigned int execute)
 	vui_set_char_t(vui_normal_mode, execute, vui_transition_new3(state_macro_execute, tfunc_showcmd_put, NULL));
 }
 
-//
+
 // registers
 
 void vui_register_init(void)
@@ -745,51 +747,21 @@ void vui_register_init(void)
 	vui_register_recording = NULL;
 }
 
-vui_register* vui_register_new(void)
+vui_string* vui_register_get(int c)
 {
-	vui_register* reg = malloc(sizeof(vui_register));
-
-	reg->n = 0;
-	reg->maxn = 16;
-	reg->s = malloc(reg->maxn);
-	reg->s[0] = 0;
-
-	return reg;
-}
-
-vui_register* vui_register_get(int c)
-{
-	vui_register** regptr = (vui_register**)&vui_next(vui_register_container, c, -1)->data;
+	vui_string** regptr = (vui_string**)&vui_next(vui_register_container, c, -1)->data;
 
 	if (*regptr == NULL)
 	{
-		*regptr = vui_register_new();
+		*regptr = vui_string_new(NULL);
 	}
 
 	return *regptr;
 }
 
-void vui_register_putc(vui_register* reg, unsigned int c)
-{
-	unsigned char s[16];
-	vui_codepoint_to_utf8(c, s);
-
-	size_t slen = strlen(s) + 1;  // include the null terminator
-
-	if (reg->maxn < reg->n + slen);
-	{
-		reg->maxn = (reg->n + slen)*2;
-		reg->s = realloc(reg->s, reg->maxn);
-	}
-
-	memcpy(&reg->s[reg->n], s, slen);
-
-	reg->n += slen - 1;  // don't include the null terminator
-}
-
 void vui_register_record(int c)
 {
-	vui_register* reg = vui_register_get(c);
+	vui_string* reg = vui_register_get(c);
 	reg->n = 0;
 	reg->s[0] = 0;
 
@@ -809,7 +781,7 @@ void vui_register_endrecord(void)
 
 void vui_register_execute(int c)
 {
-	vui_register* reg = vui_register_get(c);
+	vui_string* reg = vui_register_get(c);
 	vui_run_s(vui_return(0), reg->s, 1);
 }
 
@@ -848,7 +820,7 @@ vui_state* vui_mode_new(char* cmd, char* name, char* label, int mode, vui_transi
 	vui_set_string_t(vui_normal_mode, cmd, func_enter);
 	vui_set_char_t(state, VUI_KEY_ESCAPE, func_exit);
 
-	state->push = vui_stack;
+	state->push = vui_state_stack;
 
 	return state;
 }
@@ -925,7 +897,7 @@ void vui_input(unsigned int c)
 		snprintf(s, 64, "register_putc(%d)\r\n", c);
 		vui_debug(s);
 #endif
-		vui_register_putc(vui_register_recording, c);
+		vui_string_put(vui_register_recording, c);
 	}
 
 	vui_run_c_p(&vui_curr_state, c, 1);

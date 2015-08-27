@@ -1,11 +1,13 @@
 #pragma once
 
-//#define VUI_DEBUG
-
 #ifdef __cplusplus
 extern "C"
 {
 #endif
+
+//#define VUI_DEBUG
+
+#include "stack.h"
 
 #define VUI_STATE_BITS 8
 #define VUI_MAXSTATE (1 << VUI_STATE_BITS)
@@ -15,14 +17,6 @@ extern void vui_debug(char* msg);  // user must declare this
 #endif
 
 typedef struct vui_state vui_state;
-
-typedef struct vui_state_stack
-{
-	size_t n;
-	size_t maxn;
-	vui_state** s;
-	vui_state* def; // default
-} vui_state_stack;
 
 /*
  * \param prevstate previous state
@@ -50,7 +44,7 @@ typedef struct vui_state
 
 	int refs;
 
-	vui_state_stack* push;
+	vui_stack* push;
 
 	void* data;
 
@@ -79,8 +73,10 @@ static inline vui_transition vui_transition_new3(vui_state* next, vui_transition
 	return (vui_transition){.next = next, .func = func, .data = data};
 }
 
-vui_transition vui_transition_sameas_s(vui_state* other);
-vui_transition vui_transition_sameas_t(vui_transition* t);
+vui_transition vui_transition_run_s_s(vui_state* st, char* str);
+
+vui_transition vui_transition_run_c_s(vui_state* other);
+vui_transition vui_transition_run_c_t(vui_transition* t);
 
 
 void vui_codepoint_to_utf8(unsigned int c, unsigned char* s);
@@ -121,12 +117,8 @@ vui_state* vui_run_s_p(vui_state** sp, unsigned char* s, int act);
 vui_state* vui_run_s(vui_state* st, unsigned char* s, int act);
 
 
-vui_state_stack* vui_state_stack_new(vui_state* def);
-void vui_state_stack_push(vui_state_stack* stk, vui_state* s);
-vui_state* vui_state_stack_pop(vui_state_stack* stk);
-vui_state* vui_state_stack_peek(vui_state_stack* stk);
 
-vui_transition vui_transition_stack_pop(vui_state_stack* stk);
+vui_transition vui_transition_stack_pop(vui_stack* stk);
 
 
 #ifdef __cplusplus

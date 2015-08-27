@@ -18,6 +18,8 @@ extern int VUI_KEY_HOME;
 extern int VUI_KEY_END;
 // End user-declared variables
 
+#include "string.h"
+
 #include "statemachine.h"
 
 typedef struct hist_entry
@@ -29,13 +31,6 @@ typedef struct hist_entry
 	size_t len;
 	size_t maxlen;
 } hist_entry;
-
-typedef struct vui_register
-{
-	size_t n;
-	size_t maxn;
-	char* s;
-} vui_register;
 
 typedef void vui_cmdline_submit_callback(char* cmd);
 
@@ -57,7 +52,7 @@ extern int vui_crsrx;	// Current cursor position, or -1 if hidden
 
 extern int vui_count;
 
-extern vui_state_stack* vui_stack;
+extern vui_stack* vui_state_stack;
 
 extern vui_state* vui_curr_state;
 
@@ -66,25 +61,25 @@ extern vui_state* vui_count_mode;	// count mode
 
 extern vui_state* vui_register_container; // macro container state
 
-extern vui_register* vui_register_recording;
+extern vui_string* vui_register_recording;
 
 
 // state machine helpers
 
 static inline vui_transition vui_transition_return(void)
 {
-	return vui_transition_stack_pop(vui_stack);
+	return vui_transition_stack_pop(vui_state_stack);
 }
 
 static inline vui_state* vui_return(int pop)
 {
 	if (pop)
 	{
-		return vui_state_stack_pop(vui_stack);
+		return vui_stack_pop(vui_state_stack);
 	}
 	else
 	{
-		return vui_state_stack_peek(vui_stack);
+		return vui_stack_peek(vui_state_stack);
 	}
 }
 
@@ -112,8 +107,7 @@ void vui_macro_init(unsigned int record, unsigned int execute);
 // registers
 void vui_register_init(void);
 
-vui_register* vui_register_new(void);
-vui_register* vui_register_get(int c);
+vui_string* vui_register_get(int c);
 
 void vui_register_record(int c);
 void vui_register_endrecord(void);
