@@ -1,3 +1,5 @@
+#define _XOPEN_SOURCE 500
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -87,11 +89,30 @@ void on_cmd_submit(char* cmd)
 	wrlog(cmd);
 	wrlog("\"\r\n");
 
-	if (!strcmp(cmd, "q"))
+	char* saveptr;
+
+	char* op = strtok_r(cmd, " ", &saveptr);
+
+	if (!strcmp(op, "q"))
 	{
 		endwin();
 		printf("Quitting!\n");
 		exit(0);
+	}
+	else if (!strcmp(op, "map"))
+	{
+		char* action = strtok_r(NULL, " ", &saveptr);
+		if (action == NULL)
+		{
+			return;
+		}
+		char* reaction = strtok_r(NULL, " ", &saveptr);
+		if (reaction == NULL)
+		{
+			return;
+		}
+
+		vui_map(vui_normal_mode, action, reaction);
 	}
 }
 

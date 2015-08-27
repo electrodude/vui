@@ -83,6 +83,9 @@ static inline vui_state* vui_return(int pop)
 	}
 }
 
+void vui_map(vui_state* mode, char* action, char* reaction);
+void vui_map2(vui_state* mode, char* action, vui_state* reaction_st, char* reaction_str);
+
 
 // showcmd
 void vui_showcmd_put(int c);

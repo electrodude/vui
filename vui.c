@@ -127,7 +127,21 @@ static void hist_last_entry_clear(vui_cmdline_def* cmdline)
 }
 
 
+// state machine helpers
+
+void vui_map(vui_state* mode, char* action, char* reaction)
+{
+	vui_set_string_t(mode, action, vui_transition_run_s_s(mode, reaction));
+}
+
+void vui_map2(vui_state* mode, char* action, vui_state* reaction_st, char* reaction_str)
+{
+	vui_set_string_t(mode, action, vui_transition_run_s_s(reaction_st, reaction_str));
+}
+
+
 // showcmd functions
+
 static void vui_showcmd_putc(char c)
 {
 	if (vui_showcmd_start == -1) return;
