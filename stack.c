@@ -29,9 +29,9 @@ void vui_stack_reset(vui_stack* stk, void (*dtor)(void* stk))
 	}
 }
 
-void* vui_stack_release(vui_stack* stk, int* n)
+void** vui_stack_release(vui_stack* stk, int* n)
 {
-	void* s = realloc(stk->s, stk->n*sizeof(void*));
+	void** s = realloc(stk->s, stk->n*sizeof(void*));
 	*n = stk->n;
 	free(stk);
 
@@ -99,4 +99,19 @@ void* vui_stack_peek(vui_stack* stk)
 #endif
 
 	return stk->s[stk->n-1];
+}
+
+void* vui_stack_index(vui_stack* stk, unsigned int i)
+{
+	if (i >= stk->n)
+	{
+		return NULL;
+	}
+#ifdef VUI_DEBUG
+	char s[64];
+	snprintf(s, 64, "Index [i] = 0x%lX\r\n", i, stk->s[i]);
+	vui_debug(s);
+#endif
+
+	return stk->s[i];
 }
