@@ -16,6 +16,8 @@ vui_stack* vui_stack_new(void* def)
 
 void vui_stack_kill(vui_stack* stk)
 {
+	if (stk == NULL) return;
+
 	free(stk->s);
 
 	free(stk);
@@ -23,14 +25,29 @@ void vui_stack_kill(vui_stack* stk)
 
 void vui_stack_reset(vui_stack* stk, void (*dtor)(void* stk))
 {
-	while (stk->n > 0)
+	if (stk == NULL) return;
+
+	if (dtor != NULL)
 	{
-		dtor(stk->s[--stk->n]);
+		while (stk->n > 0)
+		{
+			dtor(stk->s[--stk->n]);
+		}
+	}
+	else
+	{
+		stk->n = 0;
 	}
 }
 
 void** vui_stack_release(vui_stack* stk, int* n)
 {
+	if (stk == NULL)
+	{
+		*n = 0;
+		return NULL;
+	}
+
 	void** s = realloc(stk->s, stk->n*sizeof(void*));
 	*n = stk->n;
 	free(stk);
@@ -40,6 +57,8 @@ void** vui_stack_release(vui_stack* stk, int* n)
 
 void vui_stack_push(vui_stack* stk, void* s)
 {
+	if (stk == NULL) return;
+
 	if (vui_stack_peek(stk) == s) return;
 
 #ifdef VUI_DEBUG
@@ -59,6 +78,8 @@ void vui_stack_push(vui_stack* stk, void* s)
 
 void* vui_stack_pop(vui_stack* stk)
 {
+	if (stk == NULL) return NULL;
+
 	if (stk->n <= 0)
 	{
 #ifdef VUI_DEBUG
@@ -81,6 +102,8 @@ void* vui_stack_pop(vui_stack* stk)
 
 void* vui_stack_peek(vui_stack* stk)
 {
+	if (stk == NULL) return NULL;
+
 	if (stk->n <= 0)
 	{
 #ifdef VUI_DEBUG
@@ -103,6 +126,8 @@ void* vui_stack_peek(vui_stack* stk)
 
 void* vui_stack_index(vui_stack* stk, unsigned int i)
 {
+	if (stk == NULL) return NULL;
+
 	if (i >= stk->n)
 	{
 		return NULL;
