@@ -58,8 +58,12 @@ typedef struct vui_state
 extern int vui_iter_gen;
 
 
-vui_state* vui_state_new(vui_state* parent);
-vui_state* vui_state_new_t(vui_transition parent);
+
+vui_state* vui_state_new(void);
+vui_state* vui_state_new_t(vui_transition next);
+vui_state* vui_state_new_s(vui_state* next);
+vui_state* vui_state_dup(vui_state* parent);
+
 vui_state* vui_state_cow(vui_state* parent, unsigned char c);
 
 void vui_state_replace(vui_state* state, vui_transition search, vui_transition replacement);

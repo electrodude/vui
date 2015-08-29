@@ -567,7 +567,7 @@ static vui_state* tfunc_cmd_enter(vui_state* currstate, unsigned int c, int act,
 // init/resize
 void vui_init(int width)
 {
-	vui_normal_mode = vui_curr_state = vui_state_new(NULL);
+	vui_normal_mode = vui_curr_state = vui_state_new();
 	vui_normal_mode->name = "vui_normal_mode";
 
 	vui_transition transition_normal = {.next = vui_normal_mode, .func = tfunc_normal};
@@ -769,7 +769,7 @@ void vui_macro_init(unsigned int record, unsigned int execute)
 
 void vui_register_init(void)
 {
-	vui_register_container = vui_state_new(NULL);
+	vui_register_container = vui_state_new();
 	vui_register_recording = NULL;
 }
 
@@ -816,7 +816,7 @@ void vui_register_execute(int c)
 
 vui_state* vui_mode_new(char* cmd, char* name, char* label, int mode, vui_transition func_enter, vui_transition func_in, vui_transition func_exit)
 {
-	vui_state* state = vui_state_new(NULL);
+	vui_state* state = vui_state_new();
 	state->name = name;
 
 	if (func_enter.next == NULL) func_enter.next = state;

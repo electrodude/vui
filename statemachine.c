@@ -8,34 +8,20 @@
 
 int vui_iter_gen = 0;
 
-vui_state* vui_state_new(vui_state* parent)
+vui_state* vui_state_new(void)
 {
 	vui_state* state = malloc(sizeof(vui_state));
 
 	state->refs = 0;
 
-	if (parent != NULL)
+	vui_transition next = vui_transition_new1(state);
+
+	for (unsigned int i=0; i<VUI_MAXSTATE; i++)
 	{
-		for (unsigned int i=0; i<VUI_MAXSTATE; i++)
-		{
-			vui_set_char_t(state, i, parent->next[i]);
-		}
-
-		state->data = parent->data;
+		vui_set_char_t(state, i, next);
 	}
-	else
-	{
-		vui_transition next = vui_transition_new1(state);
 
-		state->refs++;
-
-		for (unsigned int i=0; i<VUI_MAXSTATE; i++)
-		{
-			vui_set_char_t(state, i, next);
-		}
-
-		state->data = NULL;
-	}
+	state->data = NULL;
 
 	state->push = NULL;
 	state->name = NULL;
@@ -61,6 +47,32 @@ vui_state* vui_state_new_t(vui_transition transition)
 	return state;
 }
 
+vui_state* vui_state_new_s(vui_state* next)
+{
+	return vui_state_new_t(vui_transition_new1(next));
+}
+
+vui_state* vui_state_dup(vui_state* parent)
+{
+	vui_state* state = malloc(sizeof(vui_state));
+
+	state->refs = 0;
+
+	for (unsigned int i=0; i<VUI_MAXSTATE; i++)
+	{
+		vui_set_char_t(state, i, parent->next[i]);
+	}
+
+	state->data = parent->data;
+
+	state->push = parent->push;
+	state->name = NULL;
+
+	return state;
+}
+
+vui_transition* vui_transition_default = NULL;
+
 vui_state* vui_state_cow(vui_state* parent, unsigned char c)
 {
 	vui_transition t = parent->next[c];
@@ -70,7 +82,7 @@ vui_state* vui_state_cow(vui_state* parent, unsigned char c)
 
 	if (state->refs == 1) return state;
 
-	vui_state* newstate = vui_state_new(state);
+	vui_state* newstate = vui_state_dup(state);
 
 	t.next = newstate;
 
@@ -304,7 +316,7 @@ vui_state* vui_next_t(vui_state* currstate, unsigned char c, vui_transition t, i
 		}
 		else
 		{
-			return t.next = vui_state_new(NULL);
+			return t.next = vui_state_new();
 		}
 	}
 	else if (t.func != NULL && (act || t.next == NULL))
