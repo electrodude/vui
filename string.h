@@ -57,6 +57,8 @@ void vui_string_put(vui_string* str, unsigned int c);
 // Appends null terminator
 static inline unsigned char* vui_string_get(vui_string* str)
 {
+	if (str == NULL) return NULL;
+
 	str->s[str->n] = 0; // null-terminate the string
 	                    //  (there is room already allocated)
 	return str->s;
