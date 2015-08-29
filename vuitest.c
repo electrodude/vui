@@ -180,7 +180,7 @@ int main(int argc, char** argv)
 
 
 	FILE* f = fopen("vui.dot", "w");
-	vui_gv_write(f, vui_normal_mode);
+	vui_gv_write(f, vui_gc_roots);
 	fclose(f);
 
 	while (1)

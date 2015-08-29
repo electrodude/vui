@@ -25,7 +25,7 @@ typedef struct vui_state vui_state;
 #define VUI_ACT_EMUL    2
 
 /*
- * \param prevstate previous state
+ * \param currstate previous state
  * \param act whether side effects should happen (as opposed to just returning the next state)
  * \param data extra data (next state, etc.)
  * \return next state (ignored if transition.next != NULL)
@@ -98,13 +98,12 @@ vui_transition vui_transition_run_c_t(vui_transition* t);
 void vui_codepoint_to_utf8(unsigned int c, unsigned char* s);
 
 void vui_set_char_t(vui_state* state, unsigned char c, vui_transition next);
-void vui_set_char_t_u(vui_state* state, unsigned int c, vui_transition next);
-
 static inline void vui_set_char_s(vui_state* state, unsigned char c, vui_state* next)
 {
 	vui_set_char_t(state, c, vui_transition_new1(next));
 }
 
+void vui_set_char_t_u(vui_state* state, unsigned int c, vui_transition next);
 static inline void vui_set_char_s_u(vui_state* state, unsigned int c, vui_state* next)
 {
 	vui_set_char_t_u(state, c, vui_transition_new1(next));
@@ -123,7 +122,6 @@ static inline void vui_set_range_s_u(vui_state* state, unsigned int c1, unsigned
 }
 
 void vui_set_string_t(vui_state* state, unsigned char* s, vui_transition next);
-
 static inline void vui_set_string_s(vui_state* state, unsigned char* s, vui_state* next)
 {
 	vui_set_string_t(state, s, vui_transition_new1(next));
@@ -136,6 +134,7 @@ static inline vui_state* vui_next(vui_state* currstate, unsigned char c, int act
 {
 	return vui_next_t(currstate, c, currstate->next[c], act);
 }
+
 vui_state* vui_next_u(vui_state* currstate, unsigned int c, int act);
 
 vui_state* vui_run_c_p(vui_state** sp, unsigned char c, int act);

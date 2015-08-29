@@ -84,9 +84,7 @@ vui_state* vui_state_cow(vui_state* parent, unsigned char c)
 
 	vui_state* newstate = vui_state_dup(state);
 
-	t.next = newstate;
-
-	vui_set_char_t(parent, c, t);
+	vui_set_char_t(parent, c, vui_transition_new1(newstate));
 
 	return newstate;
 }
@@ -247,7 +245,7 @@ void vui_set_string_t(vui_state* state, unsigned char* s, vui_transition next)
 	{
 #ifdef VUI_DEBUG
 		char s2[512];
-		snprintf(s2, 256, "vui_set_string_t(0x%lX, \"%s\", {.next = 0x%lX, .func = 0x%lX, .data = 0x%lX}): bad transition!\r\n", state, s, next.next, next.func, next.data);
+		snprintf(s2, 512, "vui_set_string_t(0x%lX, \"%s\", {.next = 0x%lX, .func = 0x%lX, .data = 0x%lX}): bad transition!\r\n", state, s, next.next, next.func, next.data);
 		vui_debug(s2);
 #endif
 	}
@@ -271,9 +269,9 @@ void vui_set_string_t(vui_state* state, unsigned char* s, vui_transition next)
 
 vui_state* vui_next_u(vui_state* currstate, unsigned int c, int act)
 {
-	if (c > 0 && c < 0x80)
+	if (c >= 0 && c < 0x80)
 	{
-		return vui_next_t(currstate, c, currstate->next[c], act);
+		return vui_next(currstate, c, act);
 	}
 	else
 	{
@@ -298,7 +296,7 @@ vui_state* vui_next_t(vui_state* currstate, unsigned char c, vui_transition t, i
 {
 	vui_state* nextstate = NULL;
 
-	if (act == -1)
+	if (act == VUI_ACT_NOCALL)
 	{
 		if (t.next != NULL)
 		{
@@ -330,18 +328,27 @@ vui_state* vui_next_t(vui_state* currstate, unsigned char c, vui_transition t, i
 		}
 	}
 
+#ifdef VUI_DEBUG
+	if (act == VUI_ACT_RUN)
+	{
+		char s[64];
+		snprintf(s, 64, "destination: (0x%lX)\r\n", nextstate);
+		vui_debug(s);
+	}
+#endif
+
 	return nextstate;
 }
 
 
 vui_state* vui_run_c_p(vui_state** sp, unsigned char c, int act)
 {
-	*sp = vui_next(*sp, c, act);
+	return *sp = vui_next(*sp, c, act);
 }
 
 vui_state* vui_run_c_p_u(vui_state** sp, unsigned int c, int act)
 {
-	*sp = vui_next_u(*sp, c, act);
+	return *sp = vui_next_u(*sp, c, act);
 }
 
 vui_state* vui_run_s_p(vui_state** sp, unsigned char* s, int act)
