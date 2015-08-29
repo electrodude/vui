@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdlib.h>
+
 // String builder class
 //
 // N.B.: The null terminator is not present on str->s except after calls to

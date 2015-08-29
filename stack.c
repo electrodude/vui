@@ -1,5 +1,3 @@
-#include <stdlib.h>
-
 #include "stack.h"
 
 vui_stack* vui_stack_new(void* def)

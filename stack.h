@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdlib.h>
+
 // Stack class
 
 typedef struct vui_stack
