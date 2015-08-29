@@ -763,7 +763,7 @@ void vui_register_init(void)
 
 vui_string* vui_register_get(int c)
 {
-	vui_string** regptr = (vui_string**)&vui_next(vui_register_container, c, -1)->data;
+	vui_string** regptr = (vui_string**)&vui_next_u(vui_register_container, c, -1)->data;
 
 	if (*regptr == NULL)
 	{
@@ -914,7 +914,7 @@ void vui_input(unsigned int c)
 		vui_string_put(vui_register_recording, c);
 	}
 
-	vui_run_c_p(&vui_curr_state, c, 1);
+	vui_run_c_p_u(&vui_curr_state, c, 1);
 }
 
 void vui_reset(void)

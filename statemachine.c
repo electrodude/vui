@@ -17,7 +17,7 @@ vui_state* vui_state_new(vui_state* parent)
 	{
 		for (unsigned int i=0; i<VUI_MAXSTATE; i++)
 		{
-			vui_set_char_t_raw(state, i, parent->next[i]);
+			vui_set_char_t(state, i, parent->next[i]);
 		}
 
 		state->data = parent->data;
@@ -30,7 +30,7 @@ vui_state* vui_state_new(vui_state* parent)
 
 		for (unsigned int i=0; i<VUI_MAXSTATE; i++)
 		{
-			vui_set_char_t_raw(state, i, next);
+			vui_set_char_t(state, i, next);
 		}
 
 		state->data = NULL;
@@ -49,7 +49,7 @@ vui_state* vui_state_new_t(vui_transition transition)
 
 	for (unsigned int i=0; i<VUI_MAXSTATE; i++)
 	{
-		vui_set_char_t_raw(state, i, transition);
+		vui_set_char_t(state, i, transition);
 	}
 
 	state->data = NULL;
@@ -58,7 +58,7 @@ vui_state* vui_state_new_t(vui_transition transition)
 	return state;
 }
 
-vui_state* vui_state_cow(vui_state* parent, unsigned int c)
+vui_state* vui_state_cow(vui_state* parent, unsigned char c)
 {
 	vui_transition t = parent->next[c];
 	vui_state* state = t.next;
@@ -71,7 +71,7 @@ vui_state* vui_state_cow(vui_state* parent, unsigned int c)
 
 	t.next = newstate;
 
-	vui_set_char_t_raw(parent, c, t);
+	vui_set_char_t(parent, c, t);
 
 	return newstate;
 }
@@ -90,7 +90,7 @@ int vui_state_kill(vui_state* state)
 
 	for (int i=0; i<VUI_MAXSTATE; i++)
 	{
-		vui_state* next = vui_next(state, i, 0);
+		vui_state* next = vui_next_u(state, i, 0);
 		if (next != state)
 		{
 			vui_state_kill(next);
@@ -171,7 +171,7 @@ vui_transition vui_transition_run_c_t(vui_transition* t)
 
 
 
-void vui_set_char_t_raw(vui_state* state, unsigned int c, vui_transition next)
+void vui_set_char_t(vui_state* state, unsigned char c, vui_transition next)
 {
 	vui_state* oldnext = vui_next(state, c, 0);
 
@@ -190,15 +190,15 @@ void vui_set_char_t_raw(vui_state* state, unsigned int c, vui_transition next)
 	}
 }
 
-void vui_set_char_t(vui_state* state, unsigned int c, vui_transition next)
+void vui_set_char_t_u(vui_state* state, unsigned int c, vui_transition next)
 {
 	if (c >= 0 && c < 0x80)
 	{
-		vui_state* oldnext = vui_next(state, c, 0);
+		vui_state* oldnext = vui_next_u(state, c, 0);
 
 		state->next[c] = next;
 
-		vui_state* newnext = vui_next(state, c, 0);
+		vui_state* newnext = vui_next_u(state, c, 0);
 
 		if (newnext != NULL && newnext != state)
 		{
@@ -218,11 +218,19 @@ void vui_set_char_t(vui_state* state, unsigned int c, vui_transition next)
 	}
 }
 
-void vui_set_range_t(vui_state* state, unsigned int c1, unsigned int c2, vui_transition next)
+void vui_set_range_t(vui_state* state, unsigned char c1, unsigned char c2, vui_transition next)
+{
+	for (unsigned char c = c1; c != c2+1; c++)
+	{
+		vui_set_char_t(state, c, next);
+	}
+}
+
+void vui_set_range_t_u(vui_state* state, unsigned int c1, unsigned int c2, vui_transition next)
 {
 	for (unsigned int c = c1; c != c2+1; c++)
 	{
-		vui_set_char_t(state, c, next);
+		vui_set_char_t_u(state, c, next);
 	}
 }
 
@@ -247,12 +255,12 @@ void vui_set_string_t(vui_state* state, unsigned char* s, vui_transition next)
 		}
 		else
 		{
-			vui_set_char_t_raw(state, *s, next);
+			vui_set_char_t(state, *s, next);
 		}
 	}
 }
 
-vui_state* vui_next(vui_state* currstate, unsigned int c, int act)
+vui_state* vui_next_u(vui_state* currstate, unsigned int c, int act)
 {
 	if (c > 0 && c < 0x80)
 	{
@@ -277,7 +285,7 @@ vui_state* vui_next(vui_state* currstate, unsigned int c, int act)
 	}
 }
 
-vui_state* vui_next_t(vui_state* currstate, unsigned int c, vui_transition t, int act)
+vui_state* vui_next_t(vui_state* currstate, unsigned char c, vui_transition t, int act)
 {
 	vui_state* nextstate = NULL;
 
@@ -317,19 +325,14 @@ vui_state* vui_next_t(vui_state* currstate, unsigned int c, vui_transition t, in
 }
 
 
-vui_state* vui_next_ss(vui_state* st, unsigned char* s, int act)
-{
-	for (;*s;s++)
-	{
-		st = vui_next(st, *s, act);
-	}
-
-	return st;
-}
-
-vui_state* vui_run_c_p(vui_state** sp, unsigned int c, int act)
+vui_state* vui_run_c_p(vui_state** sp, unsigned char c, int act)
 {
 	*sp = vui_next(*sp, c, act);
+}
+
+vui_state* vui_run_c_p_u(vui_state** sp, unsigned int c, int act)
+{
+	*sp = vui_next_u(*sp, c, act);
 }
 
 vui_state* vui_run_s_p(vui_state** sp, unsigned char* s, int act)
@@ -341,7 +344,7 @@ vui_state* vui_run_s(vui_state* st, unsigned char* s, int act)
 {
 	for (;*s;s++)
 	{
-		st = vui_next_raw(st, *s, act);
+		st = vui_next(st, *s, act);
 	}
 
 	return st;

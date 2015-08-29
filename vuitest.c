@@ -146,7 +146,7 @@ int main(int argc, char** argv)
 
 	vui_init(width);
 
-	vui_set_char_t(vui_normal_mode, KEY_RESIZE, vui_transition_new2(tfunc_winch, NULL));
+	vui_set_char_t_u(vui_normal_mode, KEY_RESIZE, vui_transition_new2(tfunc_winch, NULL));
 
 	vui_count_init();
 
@@ -163,7 +163,7 @@ int main(int argc, char** argv)
 
 	vui_transition transition_quit = vui_transition_new2(tfunc_quit, NULL);
 
-	vui_set_char_t(vui_normal_mode, 'Q', transition_quit);
+	vui_set_char_t_u(vui_normal_mode, 'Q', transition_quit);
 
 	vui_set_string_t(vui_normal_mode, "ZZ", transition_quit);
 
