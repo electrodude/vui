@@ -4,6 +4,8 @@
 
 #include "utf8.h"
 
+#include "gc.h"
+
 #include "statemachine.h"
 
 int vui_iter_gen = 0;
@@ -11,6 +13,8 @@ int vui_iter_gen = 0;
 vui_state* vui_state_new(void)
 {
 	vui_state* state = malloc(sizeof(vui_state));
+
+	vui_gc_register(state);
 
 	vui_transition next = vui_transition_new1(state);
 
@@ -30,6 +34,8 @@ vui_state* vui_state_new(void)
 vui_state* vui_state_new_t(vui_transition transition)
 {
 	vui_state* state = malloc(sizeof(vui_state));
+
+	vui_gc_register(state);
 
 	for (unsigned int i=0; i<VUI_MAXSTATE; i++)
 	{
@@ -51,6 +57,8 @@ vui_state* vui_state_new_s(vui_state* next)
 vui_state* vui_state_dup(vui_state* parent)
 {
 	vui_state* state = malloc(sizeof(vui_state));
+
+	vui_gc_register(state);
 
 	for (unsigned int i=0; i<VUI_MAXSTATE; i++)
 	{
@@ -120,7 +128,19 @@ static vui_state* tfunc_run_s_s(vui_state* currstate, unsigned int c, int act, v
 {
 	vui_transition_run_s_data* tdata = data;
 
-	return vui_run_s(tdata->st, tdata->str, act ? act + 1 : 0);
+	if (act <= 0)
+	{
+		if (act == VUI_ACT_GC)
+		{
+			vui_gc_mark(tdata->st);
+		}
+
+		return vui_run_s(tdata->st, tdata->str, act);
+	}
+	else
+	{
+		return vui_run_s(tdata->st, tdata->str, VUI_ACT_EMUL);
+	}
 }
 
 vui_transition vui_transition_run_s_s(vui_state* st, char* str)
@@ -142,7 +162,19 @@ static vui_state* tfunc_run_c_s(vui_state* currstate, unsigned int c, int act, v
 		return currstate;
 	}
 
-	return vui_next_t(currstate, c, other->next[c], act ? act + 1 : 0);
+	if (act <= 0)
+	{
+		if (act == VUI_ACT_GC)
+		{
+			vui_gc_mark(other);
+		}
+
+		return vui_next_t(currstate, c, other->next[c], act);
+	}
+	else
+	{
+		return vui_next_t(currstate, c, other->next[c], VUI_ACT_EMUL);
+	}
 }
 
 vui_transition vui_transition_run_c_s(vui_state* other)
@@ -155,7 +187,14 @@ static vui_state* tfunc_run_c_t(vui_state* currstate, unsigned int c, int act, v
 {
 	vui_transition* t = data;
 
-	return vui_next_t(currstate, c, *t, act ? act + 1 : 0);
+	if (act <= 0)
+	{
+		return vui_next_t(currstate, c, *t, act);
+	}
+	else
+	{
+		return vui_next_t(currstate, c, *t, VUI_ACT_EMUL);
+	}
 }
 
 vui_transition vui_transition_run_c_t(vui_transition* t)
@@ -327,7 +366,7 @@ static vui_state* tfunc_stack_push(vui_state* currstate, unsigned int c, int act
 {
 	vui_stack* stk = data;
 
-	if (!act) return NULL;
+	if (act <= 0) return NULL;
 
 	vui_stack_push(stk, currstate);
 
@@ -343,7 +382,7 @@ static vui_state* tfunc_stack_pop(vui_state* currstate, unsigned int c, int act,
 {
 	vui_stack* stk = data;
 
-	if (act == 0)
+	if (act <= 0)
 	{
 		return vui_stack_peek(stk);
 	}

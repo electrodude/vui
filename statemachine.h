@@ -18,6 +18,12 @@ extern void vui_debug(char* msg);  // user must declare this
 
 typedef struct vui_state vui_state;
 
+#define VUI_ACT_GC     -2
+#define VUI_ACT_NOCALL -1
+#define VUI_ACT_TEST    0
+#define VUI_ACT_RUN     1
+#define VUI_ACT_EMUL    2
+
 /*
  * \param prevstate previous state
  * \param act whether side effects should happen (as opposed to just returning the next state)
@@ -49,6 +55,7 @@ typedef struct vui_state
 
 	int iter_id;
 	int iter_gen;
+	vui_state* gc_next;
 	vui_state* iter_other;
 
 } vui_state;

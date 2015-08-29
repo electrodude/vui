@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "utf8.h"
+#include "gc.h"
 
 #include "vui.h"
 
@@ -208,13 +209,13 @@ void vui_showcmd_setup(int start, int length)
 // misc callbacks
 static vui_state* tfunc_normal(vui_state* currstate, unsigned int c, int act, void* data)
 {
-	if (!act) return NULL;
+	if (act <= 0) return NULL;
 
-	if (act == 1)
+	if (act == VUI_ACT_RUN)
 	{
 		vui_reset();
 	}
-	else if (act == 2)
+	else if (act == VUI_ACT_EMUL)
 	{
 		vui_showcmd_put(c);
 	}
@@ -224,7 +225,7 @@ static vui_state* tfunc_normal(vui_state* currstate, unsigned int c, int act, vo
 
 static vui_state* tfunc_showcmd_put(vui_state* currstate, unsigned int c, int act, void* data)
 {
-	if (!act) return NULL;
+	if (act <= 0) return NULL;
 
 	vui_showcmd_put(c);
 
@@ -235,7 +236,7 @@ static vui_state* tfunc_status_set(vui_state* currstate, unsigned int c, int act
 {
 	char* s = data;
 
-	if (!act) return NULL;
+	if (act <= 0) return NULL;
 
 	vui_status_set(s);
 
@@ -244,7 +245,7 @@ static vui_state* tfunc_status_set(vui_state* currstate, unsigned int c, int act
 
 static vui_state* tfunc_status_clear(vui_state* currstate, unsigned int c, int act, void* data)
 {
-	if (!act) return NULL;
+	if (act <= 0) return NULL;
 
 	vui_status_clear();
 
@@ -257,7 +258,7 @@ static vui_state* tfunc_normal_to_cmd(vui_state* currstate, unsigned int c, int 
 {
 	vui_cmdline_def* cmdline = data;
 
-	if (!act) return cmdline->cmdline_state;
+	if (act <= 0) return cmdline->cmdline_state;
 
 	vui_bar = vui_cmd;
 	vui_crsrx = 0;
@@ -285,7 +286,7 @@ static vui_state* tfunc_cmd_key(vui_state* currstate, unsigned int c, int act, v
 {
 	vui_cmdline_def* cmdline = data;
 
-	if (!act) return NULL;
+	if (act <= 0) return NULL;
 
 	vui_bar = vui_cmd;
 
@@ -305,7 +306,15 @@ static vui_state* tfunc_cmd_backspace(vui_state* currstate, unsigned int c, int 
 {
 	vui_cmdline_def* cmdline = data;
 
-	if (!act) return (vui_crsrx <= cmd_base) ? NULL : vui_normal_mode;
+	if (act <= 0)
+	{
+		if (act == VUI_ACT_GC)
+		{
+			vui_gc_mark(vui_normal_mode);
+		}
+
+		return (vui_crsrx <= cmd_base) ? NULL : vui_normal_mode;
+	}
 
 	if (cmd_len <= 0)
 	{
@@ -338,7 +347,7 @@ static vui_state* tfunc_cmd_delete(vui_state* currstate, unsigned int c, int act
 {
 	vui_cmdline_def* cmdline = data;
 
-	if (!act) return NULL;
+	if (act <= 0) return NULL;
 
 	vui_bar = vui_cmd;
 
@@ -363,7 +372,7 @@ static vui_state* tfunc_cmd_left(vui_state* currstate, unsigned int c, int act, 
 {
 	vui_cmdline_def* cmdline = data;
 
-	if (!act) return NULL;
+	if (act <= 0) return NULL;
 
 	vui_bar = vui_cmd;
 
@@ -379,7 +388,7 @@ static vui_state* tfunc_cmd_right(vui_state* currstate, unsigned int c, int act,
 {
 	vui_cmdline_def* cmdline = data;
 
-	if (!act) return NULL;
+	if (act <= 0) return NULL;
 
 	vui_bar = vui_cmd;
 
@@ -395,7 +404,7 @@ static vui_state* tfunc_cmd_up(vui_state* currstate, unsigned int c, int act, vo
 {
 	vui_cmdline_def* cmdline = data;
 
-	if (!act) return NULL;
+	if (act <= 0) return NULL;
 
 	vui_bar = vui_cmd;
 
@@ -429,7 +438,7 @@ static vui_state* tfunc_cmd_down(vui_state* currstate, unsigned int c, int act, 
 {
 	vui_cmdline_def* cmdline = data;
 
-	if (!act) return NULL;
+	if (act <= 0) return NULL;
 
 	vui_bar = vui_cmd;
 
@@ -464,7 +473,7 @@ static vui_state* tfunc_cmd_home(vui_state* currstate, unsigned int c, int act, 
 {
 	vui_cmdline_def* cmdline = data;
 
-	if (!act) return NULL;
+	if (act <= 0) return NULL;
 
 	vui_bar = vui_cmd;
 
@@ -477,7 +486,7 @@ static vui_state* tfunc_cmd_end(vui_state* currstate, unsigned int c, int act, v
 {
 	vui_cmdline_def* cmdline = data;
 
-	if (!act) return NULL;
+	if (act <= 0) return NULL;
 
 	vui_bar = vui_cmd;
 
@@ -490,7 +499,7 @@ static vui_state* tfunc_cmd_escape(vui_state* currstate, unsigned int c, int act
 {
 	vui_cmdline_def* cmdline = data;
 
-	if (!act) return NULL;
+	if (act <= 0) return NULL;
 
 	vui_bar = vui_cmd;
 
@@ -529,7 +538,7 @@ static vui_state* tfunc_cmd_enter(vui_state* currstate, unsigned int c, int act,
 {
 	vui_cmdline_def* cmdline = data;
 
-	if (!act) return NULL;
+	if (act <= 0) return NULL;
 
 	if (cmdline->hist_curr_entry != cmdline->hist_last_entry && !cmdline->cmd_modified)
 	{
@@ -567,8 +576,12 @@ static vui_state* tfunc_cmd_enter(vui_state* currstate, unsigned int c, int act,
 // init/resize
 void vui_init(int width)
 {
+	vui_gc_roots = vui_stack_new(NULL);
+
 	vui_normal_mode = vui_curr_state = vui_state_new();
 	vui_normal_mode->name = "vui_normal_mode";
+
+	vui_stack_push(vui_gc_roots, vui_normal_mode);
 
 	vui_transition transition_normal = {.next = vui_normal_mode, .func = tfunc_normal};
 
@@ -633,7 +646,7 @@ static vui_state* tfunc_count_enter(vui_state* currstate, unsigned int c, int ac
 {
 	int* count = data;
 
-	if (!act) return NULL;
+	if (act <= 0) return NULL;
 
 	vui_showcmd_put(c);
 
@@ -646,7 +659,7 @@ static vui_state* tfunc_count(vui_state* currstate, unsigned int c, int act, voi
 {
 	int* count = data;
 
-	if (!act) return NULL;
+	if (act <= 0) return NULL;
 
 	vui_showcmd_put(c);
 
@@ -675,7 +688,7 @@ vui_state* state_macro_record;
 
 static vui_state* tfunc_macro_record(vui_state* currstate, unsigned int c, int act, void* data)
 {
-	if (!act) return vui_return(0);
+	if (act <= 0) return vui_return(0);
 
 #ifdef VUI_DEBUG
 	char s[256];
@@ -692,7 +705,7 @@ static vui_state* tfunc_macro_record(vui_state* currstate, unsigned int c, int a
 
 static vui_state* tfunc_macro_execute(vui_state* currstate, unsigned int c, int act, void* data)
 {
-	if (!act) return vui_return(0);
+	if (act <= 0) return vui_return(0);
 
 #ifdef VUI_DEBUG
 	char s[256];
@@ -718,6 +731,10 @@ static vui_state* tfunc_record_enter(vui_state* currstate, unsigned int c, int a
 	if (act > 0)
 	{
 		vui_showcmd_put(c);
+	}
+	else if (act == VUI_ACT_GC)
+	{
+		vui_gc_mark(state_macro_record);
 	}
 
 	if (vui_register_recording == NULL) // begin recording

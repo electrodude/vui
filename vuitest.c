@@ -9,6 +9,7 @@
 #include <curses.h>
 
 #include "vui.h"
+#include "gc.h"
 
 #include "graphviz.h"
 
@@ -45,7 +46,7 @@ void vui_debug(char* s)
 
 static vui_state* tfunc_quit(vui_state* currstate, unsigned int c, int act, void* data)
 {
-	if (!act) return vui_return(0);
+	if (act <= 0) return vui_return(0);
 
 	if (vui_count != 0)
 	{
@@ -61,12 +62,17 @@ static vui_state* tfunc_quit(vui_state* currstate, unsigned int c, int act, void
 	wrlog("quit\r\n");
 	endwin();
 	printf("Quitting!\n");
+#if 0
+	vui_stack_reset(vui_gc_roots, NULL);
+
+	vui_gc_run();
+#endif
 	exit(0);
 }
 
 static vui_state* tfunc_winch(vui_state* currstate, unsigned int c, int act, void* data)
 {
-	if (!act) return NULL;
+	if (act <= 0) return NULL;
 
 	wrlog("winch \r\n");
 
@@ -168,6 +174,9 @@ int main(int argc, char** argv)
 	vui_set_char_t_u(vui_normal_mode, 'Q', transition_quit);
 
 	vui_set_string_t(vui_normal_mode, "ZZ", transition_quit);
+
+
+	vui_gc_run();
 
 
 	FILE* f = fopen("vui.dot", "w");
