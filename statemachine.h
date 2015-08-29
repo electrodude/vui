@@ -41,8 +41,6 @@ typedef struct vui_state
 {
 	struct vui_transition next[VUI_MAXSTATE];
 
-	int refs;
-
 	vui_stack* push;
 
 	void* data;

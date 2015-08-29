@@ -12,8 +12,6 @@ vui_state* vui_state_new(void)
 {
 	vui_state* state = malloc(sizeof(vui_state));
 
-	state->refs = 0;
-
 	vui_transition next = vui_transition_new1(state);
 
 	for (unsigned int i=0; i<VUI_MAXSTATE; i++)
@@ -32,8 +30,6 @@ vui_state* vui_state_new(void)
 vui_state* vui_state_new_t(vui_transition transition)
 {
 	vui_state* state = malloc(sizeof(vui_state));
-
-	state->refs = 0;
 
 	for (unsigned int i=0; i<VUI_MAXSTATE; i++)
 	{
@@ -55,8 +51,6 @@ vui_state* vui_state_new_s(vui_state* next)
 vui_state* vui_state_dup(vui_state* parent)
 {
 	vui_state* state = malloc(sizeof(vui_state));
-
-	state->refs = 0;
 
 	for (unsigned int i=0; i<VUI_MAXSTATE; i++)
 	{
@@ -80,8 +74,6 @@ vui_state* vui_state_cow(vui_state* parent, unsigned char c)
 
 	if (state == NULL) return NULL;
 
-	if (state->refs == 1) return state;
-
 	vui_state* newstate = vui_state_dup(state);
 
 	t.next = newstate;
@@ -91,26 +83,15 @@ vui_state* vui_state_cow(vui_state* parent, unsigned char c)
 	return newstate;
 }
 
-int vui_state_kill(vui_state* state)
+void vui_state_kill(vui_state* state)
 {
-	if (state == NULL) return 0;
-
-	if (--state->refs != 0) return 0;
+	if (state == NULL) return;
 
 #ifdef VUI_DEBUG
 	char s[64];
 	snprintf(s, 64, "Killing state 0x%lX\r\n", state);
 	vui_debug(s);
 #endif
-
-	for (int i=0; i<VUI_MAXSTATE; i++)
-	{
-		vui_state* next = vui_next_u(state, i, 0);
-		if (next != state)
-		{
-			vui_state_kill(next);
-		}
-	}
 
 	free(state);
 }
@@ -184,46 +165,16 @@ vui_transition vui_transition_run_c_t(vui_transition* t)
 
 
 
-
-
 void vui_set_char_t(vui_state* state, unsigned char c, vui_transition next)
 {
-	vui_state* oldnext = vui_next(state, c, 0);
-
 	state->next[c] = next;
-
-	vui_state* newnext = vui_next(state, c, 0);
-
-	if (newnext != NULL && newnext != state)
-	{
-		newnext->refs++;
-	}
-
-	if (oldnext != state)
-	{
-		vui_state_kill(oldnext);
-	}
 }
 
 void vui_set_char_t_u(vui_state* state, unsigned int c, vui_transition next)
 {
 	if (c >= 0 && c < 0x80)
 	{
-		vui_state* oldnext = vui_next_u(state, c, 0);
-
-		state->next[c] = next;
-
-		vui_state* newnext = vui_next_u(state, c, 0);
-
-		if (newnext != NULL && newnext != state)
-		{
-			newnext->refs++;
-		}
-
-		if (oldnext != state)
-		{
-			vui_state_kill(oldnext);
-		}
+		vui_set_char_t(state, c, next);
 	}
 	else
 	{
