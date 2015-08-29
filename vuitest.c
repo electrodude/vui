@@ -10,6 +10,8 @@
 
 #include "vui.h"
 
+#include "graphviz.h"
+
 
 WINDOW* statusline;
 
@@ -168,6 +170,9 @@ int main(int argc, char** argv)
 	vui_set_string_t(vui_normal_mode, "ZZ", transition_quit);
 
 
+	FILE* f = fopen("vui.dot", "w");
+	vui_gv_write(f, vui_normal_mode);
+	fclose(f);
 
 	while (1)
 	{

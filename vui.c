@@ -1,3 +1,5 @@
+#define _XOPEN_SOURCE 500
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -566,6 +568,7 @@ static vui_state* tfunc_cmd_enter(vui_state* currstate, unsigned int c, int act,
 void vui_init(int width)
 {
 	vui_normal_mode = vui_curr_state = vui_state_new(NULL);
+	vui_normal_mode->name = "vui_normal_mode";
 
 	vui_transition transition_normal = {.next = vui_normal_mode, .func = tfunc_normal};
 
@@ -657,6 +660,7 @@ void vui_count_init(void)
 	vui_transition transition_count_leave = vui_transition_run_c_s(vui_normal_mode);
 
 	vui_count_mode = vui_state_new_t(transition_count_leave);
+	vui_count_mode->name = "vui_count_mode";
 
 	vui_transition transition_count = {.next = vui_count_mode, .func = tfunc_count, .data = &vui_count};
 	vui_set_range_t(vui_count_mode, '0', '9', transition_count);
@@ -741,6 +745,10 @@ void vui_macro_init(unsigned int record, unsigned int execute)
 	vui_transition transition_macro_record = vui_transition_new3(vui_normal_mode, tfunc_macro_record, NULL);
 	state_macro_record = vui_state_new_t(transition_macro_record);
 
+	char sr[16];
+	vui_codepoint_to_utf8(record, sr);
+	state_macro_record->name = strdup(sr);
+
 	vui_transition transition_record_enter = vui_transition_new2(tfunc_record_enter, NULL);
 
 	vui_set_char_t(vui_normal_mode, record, transition_record_enter);
@@ -748,6 +756,10 @@ void vui_macro_init(unsigned int record, unsigned int execute)
 	vui_transition transition_macro_execute = vui_transition_new3(vui_normal_mode, tfunc_macro_execute, NULL);
 
 	vui_state* state_macro_execute = vui_state_new_t(transition_macro_execute);
+
+	char se[16];
+	vui_codepoint_to_utf8(execute, se);
+	state_macro_execute->name = strdup(se);
 
 	vui_set_char_t(vui_normal_mode, execute, vui_transition_new3(state_macro_execute, tfunc_showcmd_put, NULL));
 }
@@ -805,6 +817,7 @@ void vui_register_execute(int c)
 vui_state* vui_mode_new(char* cmd, char* name, char* label, int mode, vui_transition func_enter, vui_transition func_in, vui_transition func_exit)
 {
 	vui_state* state = vui_state_new(NULL);
+	state->name = name;
 
 	if (func_enter.next == NULL) func_enter.next = state;
 

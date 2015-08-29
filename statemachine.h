@@ -41,14 +41,21 @@ typedef struct vui_state
 {
 	struct vui_transition next[VUI_MAXSTATE];
 
-
 	int refs;
 
 	vui_stack* push;
 
 	void* data;
 
+	char* name;
+
+	int iter_id;
+	int iter_gen;
+	vui_state* iter_other;
+
 } vui_state;
+
+extern int vui_iter_gen;
 
 
 vui_state* vui_state_new(vui_state* parent);

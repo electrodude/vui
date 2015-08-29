@@ -6,6 +6,7 @@
 
 #include "statemachine.h"
 
+int vui_iter_gen = 0;
 
 vui_state* vui_state_new(vui_state* parent)
 {
@@ -37,6 +38,7 @@ vui_state* vui_state_new(vui_state* parent)
 	}
 
 	state->push = NULL;
+	state->name = NULL;
 
 	return state;
 }
@@ -54,6 +56,7 @@ vui_state* vui_state_new_t(vui_transition transition)
 
 	state->data = NULL;
 	state->push = NULL;
+	state->name = NULL;
 
 	return state;
 }
@@ -251,6 +254,10 @@ void vui_set_string_t(vui_state* state, unsigned char* s, vui_transition next)
 		if (s[1])
 		{
 			vui_state* nextst = vui_state_cow(state, *s);
+			if (nextst->name == NULL)
+			{
+				nextst->name = "string";
+			}
 			vui_set_string_t(nextst, s+1, next);
 		}
 		else
