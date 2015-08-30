@@ -324,7 +324,7 @@ vui_state* vui_next_t(vui_state* currstate, unsigned char c, vui_transition t, i
 	{
 		if (nextstate->push != NULL)
 		{
-			vui_stack_push(nextstate->push, nextstate);
+			vui_stack_push_nodup(nextstate->push, nextstate);
 		}
 	}
 

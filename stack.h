@@ -29,8 +29,11 @@ void vui_stack_reset(vui_stack* stk, void (*dtor)(void* stk));
 void** vui_stack_release(vui_stack* stk, int* n);
 
 // Pushes an element onto the top of the stack
-// Does nothing if `s == stk->def`.
 void vui_stack_push(vui_stack* stk, void* s);
+
+// Pushes an element onto the top of the stack
+// Does nothing if `s == vui_stack_peek(stk)`.
+void vui_stack_push_nodup(vui_stack* stk, void* s);
 
 // Pops the top element off of the stack
 void* vui_stack_pop(vui_stack* stk);

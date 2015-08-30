@@ -57,7 +57,26 @@ void vui_stack_push(vui_stack* stk, void* s)
 {
 	if (stk == NULL) return;
 
-	if (vui_stack_peek(stk) == s) return;
+#ifdef VUI_DEBUG
+	char s2[64];
+	snprintf(s2, 64, "Push 0x%lX\r\n", s2);
+	vui_debug(s2);
+#endif
+
+	if (stk->n >= stk->maxn)
+	{
+		stk->maxn = stk->n*2;
+		stk->s = realloc(stk->s, stk->maxn*sizeof(void*));
+	}
+
+	stk->s[stk->n++] = s;
+}
+
+void vui_stack_push_nodup(vui_stack* stk, void* s)
+{
+	if (stk == NULL) return;
+
+	if (s == vui_stack_peek(stk)) return;
 
 #ifdef VUI_DEBUG
 	char s2[64];
