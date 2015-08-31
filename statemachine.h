@@ -69,8 +69,6 @@ vui_state* vui_state_new_t(vui_transition next);
 vui_state* vui_state_new_s(vui_state* next);
 vui_state* vui_state_dup(vui_state* parent);
 
-vui_state* vui_state_cow(vui_state* parent, unsigned char c);
-
 void vui_state_replace(vui_state* state, vui_transition search, vui_transition replacement);
 
 

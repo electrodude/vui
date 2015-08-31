@@ -75,20 +75,6 @@ vui_state* vui_state_dup(vui_state* parent)
 
 vui_transition* vui_transition_default = NULL;
 
-vui_state* vui_state_cow(vui_state* parent, unsigned char c)
-{
-	vui_transition t = parent->next[c];
-	vui_state* state = t.next;
-
-	if (state == NULL) return NULL;
-
-	vui_state* newstate = vui_state_dup(state);
-
-	vui_set_char_t(parent, c, vui_transition_new1(newstate));
-
-	return newstate;
-}
-
 void vui_state_kill(vui_state* state)
 {
 	if (state == NULL) return;
@@ -253,7 +239,15 @@ void vui_set_string_t(vui_state* state, unsigned char* s, vui_transition next)
 	{
 		if (s[1])
 		{
-			vui_state* nextst = vui_state_cow(state, *s);
+			vui_transition t = state->next[*s];
+			vui_state* state2 = t.next;
+
+			if (state2 == NULL) return;
+
+			vui_state* nextst = vui_state_dup(state2);
+
+			vui_set_char_t(state, *s, vui_transition_new1(nextst));
+
 			if (nextst->name == NULL)
 			{
 				nextst->name = "string";
