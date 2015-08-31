@@ -6,23 +6,32 @@
 
 typedef struct vui_stack
 {
-	size_t n;     // current size of stack
-	size_t maxn;  // number of allocated slots
-	void** s;     // pointer to stack buffer
-	void* def;    // default in case of underflow
+	size_t n;                  // current size of stack
+	size_t maxn;               // number of allocated slots
+	void** s;                  // pointer to stack buffer
+	void* def;                 // default in case of underflow
+	void (*dtor)(void* stk);   // element destructor function
+	                            // (on trunc or reset)
 } vui_stack;
 
 // Create a new stack
-// Takes one argument: what to return on underflow
-vui_stack* vui_stack_new(void* def);
+vui_stack* vui_stack_new(void);
 
 // Destroys a stack and its internal buffer
 // Does not free any elements, but calling `vui_stack_reset` first does
 void vui_stack_kill(vui_stack* stk);
 
+// Resets stack size to n
+// Does nothing if stack is already the same size or smaller
+// Calls dtor(elem) on each element as it is removed, from top to bottom
+void vui_stack_trunc(vui_stack* stk, int n);
+
 // Resets stack size to 0
 // Calls dtor(elem) on each element as it is removed, from top to bottom
-void vui_stack_reset(vui_stack* stk, void (*dtor)(void* stk));
+static inline void vui_stack_reset(vui_stack* stk)
+{
+	vui_stack_trunc(stk, 0);
+}
 
 // Destroys a stack, returning its internal buffer and writing the number of elements to *n
 // The caller assumes responsibilty for free()ing the returned buffer.

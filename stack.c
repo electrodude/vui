@@ -1,13 +1,14 @@
 #include "stack.h"
 
-vui_stack* vui_stack_new(void* def)
+vui_stack* vui_stack_new(void)
 {
 	vui_stack* stk = malloc(sizeof(vui_stack));
 
 	stk->n = 0;
 	stk->maxn = 16;
 	stk->s = malloc(stk->maxn*sizeof(void*));
-	stk->def = def;
+	stk->def = NULL;
+	stk->dtor = NULL;
 
 	return stk;
 }
@@ -21,15 +22,15 @@ void vui_stack_kill(vui_stack* stk)
 	free(stk);
 }
 
-void vui_stack_reset(vui_stack* stk, void (*dtor)(void* stk))
+void vui_stack_trunc(vui_stack* stk, int n)
 {
 	if (stk == NULL) return;
 
-	if (dtor != NULL)
+	if (stk->dtor != NULL)
 	{
-		while (stk->n > 0)
+		while (stk->n > n)
 		{
-			dtor(stk->s[--stk->n]);
+			stk->dtor(stk->s[--stk->n]);
 		}
 	}
 	else
@@ -78,19 +79,7 @@ void vui_stack_push_nodup(vui_stack* stk, void* s)
 
 	if (s == vui_stack_peek(stk)) return;
 
-#ifdef VUI_DEBUG
-	char s2[64];
-	snprintf(s2, 64, "Push 0x%lX\r\n", s2);
-	vui_debug(s2);
-#endif
-
-	if (stk->n >= stk->maxn)
-	{
-		stk->maxn = stk->n*2;
-		stk->s = realloc(stk->s, stk->maxn*sizeof(void*));
-	}
-
-	stk->s[stk->n++] = s;
+	vui_stack_push(stk, s);
 }
 
 void* vui_stack_pop(vui_stack* stk)

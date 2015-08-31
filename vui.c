@@ -576,7 +576,7 @@ static vui_state* tfunc_cmd_enter(vui_state* currstate, unsigned int c, int act,
 // init/resize
 void vui_init(int width)
 {
-	vui_gc_roots = vui_stack_new(NULL);
+	vui_gc_roots = vui_stack_new();
 
 	vui_normal_mode = vui_curr_state = vui_state_new();
 	vui_normal_mode->name = "vui_normal_mode";
@@ -590,7 +590,8 @@ void vui_init(int width)
 		vui_set_char_t(vui_normal_mode, i, transition_normal);
 	}
 
-	vui_state_stack = vui_stack_new(vui_normal_mode);
+	vui_state_stack = vui_stack_new();
+	vui_state_stack->def = vui_normal_mode;
 
 	vui_normal_mode->push = vui_state_stack;
 

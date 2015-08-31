@@ -9,7 +9,7 @@ vui_stack* vui_gc_roots;
 
 void vui_gc_init(void)
 {
-	vui_gc_roots = vui_stack_new(NULL);
+	vui_gc_roots = vui_stack_new();
 }
 
 void vui_gc_register(vui_state* st)
