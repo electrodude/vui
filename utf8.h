@@ -1,3 +1,3 @@
 #pragma once
 
-void vui_codepoint_to_utf8(unsigned int c, unsigned char* s);
+unsigned char* vui_utf8_encode(unsigned int c, unsigned char* s);

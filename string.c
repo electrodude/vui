@@ -79,7 +79,7 @@ void vui_string_put(vui_string* str, unsigned int c)
 	if (str == NULL) return;
 
 	unsigned char s[16];
-	vui_codepoint_to_utf8(c, s);
+	vui_utf8_encode(c, s);
 
 	vui_string_puts(str, s);
 }

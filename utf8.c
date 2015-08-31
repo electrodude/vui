@@ -1,7 +1,7 @@
 #include "utf8.h"
 
 
-void vui_codepoint_to_utf8(unsigned int c, unsigned char* s)
+unsigned char* vui_utf8_encode(unsigned int c, unsigned char* s)
 {
 	if (c < 0x80)
 	{
@@ -75,4 +75,6 @@ void vui_codepoint_to_utf8(unsigned int c, unsigned char* s)
 #endif
 
 	*s = 0;
+
+	return s;
 }

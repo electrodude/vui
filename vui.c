@@ -763,7 +763,7 @@ void vui_macro_init(unsigned int record, unsigned int execute)
 	state_macro_record = vui_state_new_t(transition_macro_record);
 
 	char sr[16];
-	vui_codepoint_to_utf8(record, sr);
+	vui_utf8_encode(record, sr);
 	state_macro_record->name = strdup(sr);
 
 	vui_transition transition_record_enter = vui_transition_new2(tfunc_record_enter, NULL);
@@ -775,7 +775,7 @@ void vui_macro_init(unsigned int record, unsigned int execute)
 	vui_state* state_macro_execute = vui_state_new_t(transition_macro_execute);
 
 	char se[16];
-	vui_codepoint_to_utf8(execute, se);
+	vui_utf8_encode(execute, se);
 	state_macro_execute->name = strdup(se);
 
 	vui_set_char_t_u(vui_normal_mode, execute, vui_transition_new3(state_macro_execute, tfunc_showcmd_put, NULL));

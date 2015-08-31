@@ -202,7 +202,7 @@ void vui_set_char_t_u(vui_state* state, unsigned int c, vui_transition next)
 	else
 	{
 		unsigned char s[16];
-		vui_codepoint_to_utf8(c, s);
+		vui_utf8_encode(c, s);
 		vui_set_string_t(state, s, next);
 	}
 }
@@ -270,7 +270,7 @@ vui_state* vui_next_u(vui_state* currstate, unsigned int c, int act)
 	else
 	{
 		unsigned char s[16];
-		vui_codepoint_to_utf8(c, s);
+		vui_utf8_encode(c, s);
 #if 0
 		unsigned char* s2 = s;
 
