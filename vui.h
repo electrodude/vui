@@ -20,6 +20,8 @@ extern int VUI_KEY_END;
 
 #include "string.h"
 
+#include "translator.h"
+
 #include "statemachine.h"
 
 typedef struct hist_entry
@@ -32,12 +34,14 @@ typedef struct hist_entry
 	size_t maxlen;
 } hist_entry;
 
-typedef void vui_cmdline_submit_callback(char* cmd);
+typedef void vui_cmdline_submit_callback(vui_stack* cmd);
 
 typedef struct vui_cmdline_def
 {
 	vui_state* cmdline_state;
 	vui_cmdline_submit_callback* on_submit;
+
+	vui_translator* tr;
 
 	int cmd_modified;
 
@@ -120,21 +124,22 @@ void vui_register_execute(int c);
 // new modes
 #define VUI_NEW_MODE_IN_MANUAL 1
 
-vui_state* vui_mode_new(                                // create new mode
-                        char* cmd,                      // default command to get to this mode
-                        char* name,                     // mode name
-                        char* label,                    // mode label (e.g. -- INSERT --)
-                        int mode,                       // flags
-                        vui_transition func_enter,      // transition on entry into mode
-                        vui_transition func_in,         // transition while in mode
-                        vui_transition func_exit        // transition on exit from mode via escape
+vui_state* vui_mode_new(                                           // create new mode
+                        char* cmd,                                 // default command to get to this mode
+                        char* name,                                // mode name
+                        char* label,                               // mode label (e.g. -- INSERT --)
+                        int mode,                                  // flags
+                        vui_transition func_enter,                 // transition on entry into mode
+                        vui_transition func_in,                    // transition while in mode
+                        vui_transition func_exit                   // transition on exit from mode via escape
 );
 
-vui_cmdline_def* vui_cmdline_mode_new(                  // create new command mode (like : or / or ?)
-                            char* cmd,                  // default command to get to this mode
-                            char* name,                 // name (internal)
-                            char* label,                // mode label (e.g. : or / or ?) (can be multicharacter)
-                            void on_submit(char* cmd)   // callback to call on submission
+vui_cmdline_def* vui_cmdline_mode_new(                             // create new command mode (like : or / or ?)
+                            char* cmd,                             // default command to get to this mode
+                            char* name,                            // name (internal)
+                            char* label,                           // mode label (e.g. : or / or ?) (can be multicharacter)
+                            vui_translator* tr,                    // parser
+                            vui_cmdline_submit_callback on_submit; // callback to call on submission
 );
 
 

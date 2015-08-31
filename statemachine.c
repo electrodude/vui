@@ -1,3 +1,5 @@
+#define _XOPEN_SOURCE 500
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,11 +12,18 @@
 
 int vui_iter_gen = 0;
 
-vui_state* vui_state_new(void)
+static inline vui_state* vui_state_new_raw(void)
 {
 	vui_state* state = malloc(sizeof(vui_state));
 
 	vui_gc_register(state);
+
+	return state;
+}
+
+vui_state* vui_state_new(void)
+{
+	vui_state* state = vui_state_new_raw();
 
 	vui_transition next = vui_transition_new1(state);
 
@@ -33,9 +42,25 @@ vui_state* vui_state_new(void)
 
 vui_state* vui_state_new_t(vui_transition transition)
 {
-	vui_state* state = malloc(sizeof(vui_state));
+	vui_state* state = vui_state_new_raw();
 
-	vui_gc_register(state);
+	for (unsigned int i=0; i<VUI_MAXSTATE; i++)
+	{
+		vui_set_char_t(state, i, transition);
+	}
+
+	state->data = NULL;
+	state->push = NULL;
+	state->name = NULL;
+
+	return state;
+}
+
+vui_state* vui_state_new_t_self(vui_transition transition)
+{
+	vui_state* state = vui_state_new_raw();
+
+	transition.next = state;
 
 	for (unsigned int i=0; i<VUI_MAXSTATE; i++)
 	{
@@ -56,9 +81,7 @@ vui_state* vui_state_new_s(vui_state* next)
 
 vui_state* vui_state_dup(vui_state* parent)
 {
-	vui_state* state = malloc(sizeof(vui_state));
-
-	vui_gc_register(state);
+	vui_state* state = vui_state_new_raw();
 
 	for (unsigned int i=0; i<VUI_MAXSTATE; i++)
 	{
@@ -274,6 +297,114 @@ void vui_set_string_t(vui_state* state, unsigned char* s, vui_transition next)
 	}
 }
 
+void vui_set_string_t2(vui_state* state, unsigned char* s, vui_transition next)
+{
+	vui_transition t = state->next[*s];
+
+	if (t.next == NULL)
+	{
+#ifdef VUI_DEBUG
+		char s2[512];
+		snprintf(s2, 512, "vui_set_string_t(0x%lX, \"%s\", {.next = 0x%lX, .func = 0x%lX, .data = 0x%lX}): bad transition!\r\n", state, s, next.next, next.func, next.data);
+		vui_debug(s2);
+#endif
+	}
+	else
+	{
+		if (s[1])
+		{
+			vui_transition t = state->next[*s];
+			vui_state* state2 = t.next;
+
+			if (state2 == NULL) return;
+
+			vui_state* nextst = vui_state_dup(state2);
+
+			t.next = nextst;
+
+			vui_set_char_t(state, *s, t);
+
+			if (nextst->name == NULL)
+			{
+				//nextst->name = "string";
+				char n[3];
+				if (*s < 128)
+				{
+					n[0] = *s;
+					n[1] = 0;
+				}
+				else
+				{
+					n[0] = '?';
+					n[1] = '?';
+					n[2] = 0;
+				}
+				nextst->name = strdup(n);
+			}
+			vui_set_string_t2(nextst, s+1, next);
+		}
+		else
+		{
+			vui_set_char_t(state, *s, next);
+		}
+	}
+}
+
+void vui_set_string_t3(vui_state* state, unsigned char* s, vui_transition mid, vui_transition next)
+{
+	vui_transition t = state->next[*s];
+
+	if (t.next == NULL)
+	{
+#ifdef VUI_DEBUG
+		char s2[512];
+		snprintf(s2, 512, "vui_set_string_t(0x%lX, \"%s\", {.next = 0x%lX, .func = 0x%lX, .data = 0x%lX}): bad transition!\r\n", state, s, next.next, next.func, next.data);
+		vui_debug(s2);
+#endif
+	}
+	else
+	{
+		if (s[1])
+		{
+			vui_transition t = state->next[*s];
+			vui_state* state2 = t.next;
+
+			if (state2 == NULL) return;
+
+			vui_state* nextst = vui_state_dup(state2);
+
+			t = mid;
+
+			t.next = nextst;
+
+			vui_set_char_t(state, *s, t);
+
+			if (nextst->name == NULL)
+			{
+				//nextst->name = "string";
+				char n[3];
+				if (*s < 128)
+				{
+					n[0] = *s;
+					n[1] = 0;
+				}
+				else
+				{
+					n[0] = '?';
+					n[1] = '?';
+					n[2] = 0;
+				}
+				nextst->name = strdup(n);
+			}
+			vui_set_string_t3(nextst, s+1, mid, next);
+		}
+		else
+		{
+			vui_set_char_t(state, *s, next);
+		}
+	}
+}
+
 vui_state* vui_next_u(vui_state* currstate, unsigned int c, int act)
 {
 	if (c >= 0 && c < 0x80)
@@ -302,6 +433,7 @@ vui_state* vui_next_u(vui_state* currstate, unsigned int c, int act)
 vui_state* vui_next_t(vui_state* currstate, unsigned char c, vui_transition t, int act)
 {
 	vui_state* nextstate = NULL;
+
 
 	if (act == VUI_ACT_NOCALL)
 	{

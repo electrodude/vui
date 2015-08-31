@@ -548,7 +548,14 @@ static vui_state* tfunc_cmd_enter(vui_state* currstate, unsigned int c, int act,
 
 	hist_entry_set(cmdline->hist_curr_entry, &vui_cmd[cmd_base], cmd_len);
 
-	cmdline->on_submit(cmdline->hist_curr_entry->line);
+	if (cmdline->tr != NULL)
+	{
+		cmdline->on_submit(vui_translator_run(cmdline->tr, cmdline->hist_curr_entry->line));
+	}
+	else
+	{
+		cmdline->on_submit(cmdline->hist_curr_entry->line);
+	}
 
 	vui_bar = vui_status;
 	vui_crsrx = -1;
@@ -576,12 +583,10 @@ static vui_state* tfunc_cmd_enter(vui_state* currstate, unsigned int c, int act,
 // init/resize
 void vui_init(int width)
 {
-	vui_gc_roots = vui_stack_new();
-
 	vui_normal_mode = vui_curr_state = vui_state_new();
 	vui_normal_mode->name = "vui_normal_mode";
 
-	vui_stack_push(vui_gc_roots, vui_normal_mode);
+	vui_normal_mode->root++;
 
 	vui_transition transition_normal = {.next = vui_normal_mode, .func = tfunc_normal};
 
@@ -870,11 +875,12 @@ vui_state* vui_mode_new(char* cmd, char* name, char* label, int mode, vui_transi
 	return state;
 }
 
-vui_cmdline_def* vui_cmdline_mode_new(char* cmd, char* name, char* label, vui_cmdline_submit_callback on_submit)
+vui_cmdline_def* vui_cmdline_mode_new(char* cmd, char* name, char* label, vui_translator* tr, vui_cmdline_submit_callback on_submit)
 {
 	vui_cmdline_def* cmdline = malloc(sizeof(vui_cmdline_def));
 	cmdline->on_submit = on_submit;
 	cmdline->label = label;
+	cmdline->tr = tr;
 
 	vui_state* cmdline_state = vui_state_new();
 	cmdline_state->name = name;

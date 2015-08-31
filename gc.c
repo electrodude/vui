@@ -5,13 +5,6 @@ void vui_state_kill(vui_state* state);
 
 vui_state vui_gc_dummystate;
 
-vui_stack* vui_gc_roots;
-
-void vui_gc_init(void)
-{
-	vui_gc_roots = vui_stack_new();
-}
-
 void vui_gc_register(vui_state* st)
 {
 	if (vui_gc_dummystate.gc_next == NULL)
@@ -29,14 +22,19 @@ void vui_gc_run(void)
 {
 	vui_iter_gen++;
 
-	for (int i=0; i < vui_gc_roots->n; i++)
-	{
-		vui_state* root = vui_gc_roots->s[i];
+	vui_state* curr = &vui_gc_dummystate;
 
-		vui_gc_mark(root);
+	while (curr->gc_next != NULL)
+	{
+		if (curr->gc_next->root)
+		{
+			vui_gc_mark(curr->gc_next);
+		}
+
+		curr = curr->gc_next;
 	}
 
-	vui_state* curr = &vui_gc_dummystate;
+	curr = &vui_gc_dummystate;
 
 	while (curr->gc_next != NULL)
 	{

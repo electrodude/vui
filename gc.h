@@ -3,9 +3,7 @@
 #include "stack.h"
 #include "statemachine.h"
 
-extern vui_stack* vui_gc_roots;
-
-void vui_gc_init(void);
+extern vui_state vui_gc_dummystate;
 
 void vui_gc_register(vui_state* st);
 

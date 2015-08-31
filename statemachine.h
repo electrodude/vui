@@ -45,7 +45,9 @@ typedef struct vui_transition
 
 typedef struct vui_state
 {
-	struct vui_transition next[VUI_MAXSTATE];
+	vui_transition next[VUI_MAXSTATE];
+
+	unsigned int root;
 
 	vui_stack* push;
 
@@ -66,6 +68,7 @@ extern int vui_iter_gen;
 
 vui_state* vui_state_new(void);
 vui_state* vui_state_new_t(vui_transition next);
+vui_state* vui_state_new_t_self(vui_transition transition);
 vui_state* vui_state_new_s(vui_state* next);
 vui_state* vui_state_dup(vui_state* parent);
 
@@ -124,6 +127,9 @@ static inline void vui_set_string_s(vui_state* state, unsigned char* s, vui_stat
 {
 	vui_set_string_t(state, s, vui_transition_new1(next));
 }
+
+void vui_set_string_t2(vui_state* state, unsigned char* s, vui_transition next);
+void vui_set_string_t3(vui_state* state, unsigned char* s, vui_transition mid, vui_transition next);
 
 
 

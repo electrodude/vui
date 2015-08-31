@@ -1,3 +1,5 @@
+#include "gc.h"
+
 #include "graphviz.h"
 
 int gv_id = 0;
@@ -18,7 +20,11 @@ void vui_gv_putc(FILE* f, int c)
 	{
 		if (c == '\'')
 		{
-			fprintf(f, "'\\%c'", c);
+			fprintf(f, "'\\''");
+		}
+		else if (c == '\\')
+		{
+			fprintf(f, "\\\\\\\\");
 		}
 		else
 		{
@@ -40,6 +46,45 @@ void vui_gv_putc(FILE* f, int c)
 	else
 	{
 		fprintf(f, "%d", c);
+	}
+}
+
+void vui_gv_puts(FILE* f, unsigned char* s)
+{
+	while (*s)
+	{
+		char c = *s++;
+		if (c >= 32 && c < 127)
+		{
+			if (c == '\'')
+			{
+				fprintf(f, "\\'");
+			}
+			else if (c == '\\')
+			{
+				fprintf(f, "\\\\\\\\");
+			}
+			else
+			{
+				fprintf(f, "%c", c);
+			}
+		}
+		else if (c == '\n')
+		{
+			fprintf(f, "\\\\n");
+		}
+		else if (c == '\r')
+		{
+			fprintf(f, "\\\\r");
+		}
+		else if (c == '\t')
+		{
+			fprintf(f, "\\\\t");
+		}
+		else
+		{
+			fprintf(f, "%d", c);
+		}
 	}
 }
 
@@ -82,7 +127,7 @@ void vui_gv_print_s(FILE* f, vui_state* s)
 
 	if (s->name != NULL)
 	{
-		fprintf(f, "%s", s->name);
+		vui_gv_puts(f, s->name);
 	}
 	else
 	{

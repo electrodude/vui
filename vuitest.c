@@ -9,6 +9,7 @@
 #include <curses.h>
 
 #include "vui.h"
+#include "translator.h"
 #include "gc.h"
 
 #include "graphviz.h"
@@ -62,11 +63,7 @@ static vui_state* tfunc_quit(vui_state* currstate, unsigned int c, int act, void
 	wrlog("quit\r\n");
 	endwin();
 	printf("Quitting!\n");
-#if 0
-	vui_stack_reset(vui_gc_roots, NULL);
 
-	vui_gc_run();
-#endif
 	exit(0);
 }
 
@@ -91,15 +88,23 @@ static vui_state* tfunc_winch(vui_state* currstate, unsigned int c, int act, voi
 	return NULL;
 }
 
-void on_cmd_submit(char* cmd)
+void on_cmd_submit(vui_stack* cmd)
 {
-	wrlog("command: \"");
-	wrlog(cmd);
-	wrlog("\"\r\n");
+#define arg(i) vui_string_get(vui_stack_index(cmd, i))
 
-	char* saveptr;
+	char* op = arg(0);
 
-	char* op = strtok_r(cmd, " ", &saveptr);
+	if (op != NULL)
+	{
+		wrlog("op: \"");
+		wrlog(op);
+		wrlog("\"\r\n");
+	}
+	else
+	{
+		wrlog("op: NULL\r\n");
+		return;
+	}
 
 	if (!strcmp(op, "q"))
 	{
@@ -109,7 +114,7 @@ void on_cmd_submit(char* cmd)
 	}
 	else if (!strcmp(op, "map"))
 	{
-		char* action = strtok_r(NULL, " ", &saveptr);
+		char* action = arg(1);
 		if (action == NULL)
 		{
 			wrlog("action: NULL\r\n");
@@ -121,7 +126,7 @@ void on_cmd_submit(char* cmd)
 			wrlog(action);
 			wrlog("\"\r\n");
 		}
-		char* reaction = strtok_r(NULL, " ", &saveptr);
+		char* reaction = arg(2);
 		if (reaction == NULL)
 		{
 			wrlog("reaction: NULL\r\n");
@@ -136,6 +141,7 @@ void on_cmd_submit(char* cmd)
 
 		vui_map(vui_normal_mode, action, reaction);
 	}
+#undef arg
 }
 
 void on_search_submit(char* cmd)
@@ -178,9 +184,31 @@ int main(int argc, char** argv)
 
 	vui_showcmd_setup(width - 20, 10);
 
-	cmd_mode = vui_cmdline_mode_new(":", "command", ":", on_cmd_submit);
+	vui_translator_init();
 
-	search_mode = vui_cmdline_mode_new("/", "search", "/", on_search_submit);
+
+	vui_translator* cmd_tr = vui_translator_new();
+
+	vui_state* cmd_tr_start = cmd_tr->st_start;
+	cmd_tr_start->name = "cmd_tr";
+
+
+	vui_state* cmd_tr_q = vui_state_new_deadend();
+
+	vui_set_string_t3(cmd_tr_start, "q", vui_transition_translator_putc(cmd_tr, NULL), vui_transition_translator_putc(cmd_tr, cmd_tr_q));
+
+
+	vui_state* cmd_tr_map = vui_translator_key_escaper(cmd_tr, vui_translator_key_escaper(cmd_tr, vui_state_new_deadend()));
+
+	vui_set_string_t3(cmd_tr_start, "map ", vui_transition_translator_putc(cmd_tr, NULL), vui_transition_translator_push(cmd_tr, cmd_tr_map));
+
+
+	cmd_tr_start->root++;
+
+
+	cmd_mode = vui_cmdline_mode_new(":", "command", ":", cmd_tr, on_cmd_submit);
+
+	search_mode = vui_cmdline_mode_new("/", "search", "/", NULL, on_search_submit);
 
 
 	vui_transition transition_quit = vui_transition_new2(tfunc_quit, NULL);
@@ -192,9 +220,11 @@ int main(int argc, char** argv)
 
 	vui_gc_run();
 
-
 	FILE* f = fopen("vui.dot", "w");
-	vui_gv_write(f, vui_gc_roots);
+	vui_stack* gv_roots = vui_stack_new();
+	vui_stack_push(gv_roots, vui_normal_mode);
+	vui_stack_push(gv_roots, cmd_tr_start);
+	vui_gv_write(f, gv_roots);
 	fclose(f);
 
 	while (1)
