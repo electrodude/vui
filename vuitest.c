@@ -112,12 +112,26 @@ void on_cmd_submit(char* cmd)
 		char* action = strtok_r(NULL, " ", &saveptr);
 		if (action == NULL)
 		{
+			wrlog("action: NULL\r\n");
 			return;
+		}
+		else
+		{
+			wrlog("action: \"");
+			wrlog(action);
+			wrlog("\"\r\n");
 		}
 		char* reaction = strtok_r(NULL, " ", &saveptr);
 		if (reaction == NULL)
 		{
+			wrlog("reaction: NULL\r\n");
 			return;
+		}
+		else
+		{
+			wrlog("reaction: \"");
+			wrlog(reaction);
+			wrlog("\"\r\n");
 		}
 
 		vui_map(vui_normal_mode, action, reaction);
@@ -210,12 +224,15 @@ int main(int argc, char** argv)
 
 		if (c >= 0)
 		{
+			endwin();
+
 			vui_input(c);
 			mvwaddstr(statusline, 0, 0, vui_bar);
 			wmove(statusline, 0, vui_crsrx);
 			curs_set(vui_crsrx >= 0);
 			wrefresh(statusline);
 
+#if 0
 			if (vui_curr_state == vui_normal_mode)
 			{
 				wrlog("normal mode\r\n");
@@ -232,6 +249,13 @@ int main(int argc, char** argv)
 			{
 				wrlog("search mode\r\n");
 			}
+#else
+			if (vui_curr_state->name != NULL)
+			{
+				wrlog(vui_curr_state->name);
+				wrlog("\r\n");
+			}
+#endif
 			else
 			{
 				wrlog("unknown mode\r\n");

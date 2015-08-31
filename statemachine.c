@@ -250,7 +250,20 @@ void vui_set_string_t(vui_state* state, unsigned char* s, vui_transition next)
 
 			if (nextst->name == NULL)
 			{
-				nextst->name = "string";
+				//nextst->name = "string";
+				char n[3];
+				if (*s < 128)
+				{
+					n[0] = *s;
+					n[1] = 0;
+				}
+				else
+				{
+					n[0] = '?';
+					n[1] = '?';
+					n[2] = 0;
+				}
+				nextst->name = strdup(n);
 			}
 			vui_set_string_t(nextst, s+1, next);
 		}
