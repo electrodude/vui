@@ -839,7 +839,17 @@ void vui_register_execute(int c)
 
 vui_state* vui_mode_new(char* cmd, char* name, char* label, int mode, vui_transition func_enter, vui_transition func_in, vui_transition func_exit)
 {
-	vui_state* state = vui_state_new();
+	vui_state* state;
+
+	if (mode & VUI_MODE_NEW_INHERIT)
+	{
+		state = vui_state_dup(vui_normal_mode);
+	}
+	else
+	{
+		state = vui_state_new();
+	}
+
 	state->name = name;
 
 	if (func_enter.next == NULL) func_enter.next = state;
@@ -850,7 +860,7 @@ vui_state* vui_mode_new(char* cmd, char* name, char* label, int mode, vui_transi
 		func_enter.data = label;
 	}
 
-	if (mode != VUI_NEW_MODE_IN_MANUAL)
+	if (!(mode & VUI_MODE_NEW_MANUAL_IN))
 	{
 		if (func_in.next == NULL) func_in.next = state;
 	}

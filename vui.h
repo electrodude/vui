@@ -122,7 +122,8 @@ void vui_register_execute(int c);
 
 
 // new modes
-#define VUI_NEW_MODE_IN_MANUAL 1
+#define VUI_MODE_NEW_MANUAL_IN 0x1
+#define VUI_MODE_NEW_INHERIT   0x2
 
 vui_state* vui_mode_new(                                           // create new mode
                         char* cmd,                                 // default command to get to this mode
