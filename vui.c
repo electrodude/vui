@@ -694,7 +694,7 @@ vui_state* state_macro_record;
 
 static vui_state* tfunc_macro_record(vui_state* currstate, unsigned int c, int act, void* data)
 {
-	if (act <= 0) return vui_return(0);
+	if (act <= 0) return vui_return(act);
 
 #ifdef VUI_DEBUG
 	char s[256];
@@ -706,12 +706,12 @@ static vui_state* tfunc_macro_record(vui_state* currstate, unsigned int c, int a
 
 	vui_register_record(c);
 
-	return vui_return(1);
+	return vui_return(act);
 }
 
 static vui_state* tfunc_macro_execute(vui_state* currstate, unsigned int c, int act, void* data)
 {
-	if (act <= 0) return vui_return(0);
+	if (act <= 0) return vui_return(act);
 
 #ifdef VUI_DEBUG
 	char s[256];
@@ -729,7 +729,7 @@ static vui_state* tfunc_macro_execute(vui_state* currstate, unsigned int c, int 
 		vui_register_execute(c);
 	}
 
-	return vui_return(1);
+	return vui_return(act);
 }
 
 static vui_state* tfunc_record_enter(vui_state* currstate, unsigned int c, int act, void* data)

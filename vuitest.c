@@ -47,7 +47,7 @@ void vui_debug(char* s)
 
 static vui_state* tfunc_quit(vui_state* currstate, unsigned int c, int act, void* data)
 {
-	if (act <= 0) return vui_return(0);
+	if (act <= 0) return vui_return(act);
 
 	if (vui_count != 0)
 	{
@@ -57,7 +57,7 @@ static vui_state* tfunc_quit(vui_state* currstate, unsigned int c, int act, void
 
 		vui_reset();
 
-		return vui_return(1);
+		return vui_return(act);
 	}
 
 	wrlog("quit\r\n");

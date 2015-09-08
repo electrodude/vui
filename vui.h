@@ -75,9 +75,9 @@ static inline vui_transition vui_transition_return(void)
 	return vui_transition_stack_pop(vui_state_stack);
 }
 
-static inline vui_state* vui_return(int pop)
+static inline vui_state* vui_return(int act)
 {
-	if (pop)
+	if (act > 0)
 	{
 		return vui_stack_pop(vui_state_stack);
 	}
