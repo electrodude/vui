@@ -122,14 +122,19 @@ static inline void vui_set_range_s_u(vui_state* state, unsigned int c1, unsigned
 	vui_set_range_t_u(state, c1, c2, vui_transition_new1(next));
 }
 
+void vui_set_string_t_nocall(vui_state* state, unsigned char* s, vui_transition next);
+static inline void vui_set_string_s_nocall(vui_state* state, unsigned char* s, vui_state* next)
+{
+	vui_set_string_t_nocall(state, s, vui_transition_new1(next));
+}
+
 void vui_set_string_t(vui_state* state, unsigned char* s, vui_transition next);
-static inline void vui_set_string_s(vui_state* state, unsigned char* s, vui_state* next)
+static inline void vui_set_string_s2(vui_state* state, unsigned char* s, vui_state* next)
 {
 	vui_set_string_t(state, s, vui_transition_new1(next));
 }
 
-void vui_set_string_t2(vui_state* state, unsigned char* s, vui_transition next);
-void vui_set_string_t3(vui_state* state, unsigned char* s, vui_transition mid, vui_transition next);
+void vui_set_string_t_mid(vui_state* state, unsigned char* s, vui_transition mid, vui_transition next);
 
 
 

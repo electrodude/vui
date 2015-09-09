@@ -195,12 +195,12 @@ int main(int argc, char** argv)
 
 	vui_state* cmd_tr_q = vui_state_new_deadend();
 
-	vui_set_string_t3(cmd_tr_start, "q", vui_transition_translator_putc(cmd_tr, NULL), vui_transition_translator_putc(cmd_tr, cmd_tr_q));
+	vui_set_string_t_mid(cmd_tr_start, "q", vui_transition_translator_putc(cmd_tr, NULL), vui_transition_translator_putc(cmd_tr, cmd_tr_q));
 
 
 	vui_state* cmd_tr_map = vui_translator_key_escaper(cmd_tr, vui_translator_key_escaper(cmd_tr, vui_state_new_deadend()));
 
-	vui_set_string_t3(cmd_tr_start, "map ", vui_transition_translator_putc(cmd_tr, NULL), vui_transition_translator_push(cmd_tr, cmd_tr_map));
+	vui_set_string_t_mid(cmd_tr_start, "map ", vui_transition_translator_putc(cmd_tr, NULL), vui_transition_translator_push(cmd_tr, cmd_tr_map));
 
 
 	cmd_tr_start->root++;
@@ -215,7 +215,7 @@ int main(int argc, char** argv)
 
 	vui_set_char_t_u(vui_normal_mode, 'Q', transition_quit);
 
-	vui_set_string_t(vui_normal_mode, "ZZ", transition_quit);
+	vui_set_string_t_nocall(vui_normal_mode, "ZZ", transition_quit);
 
 
 	vui_gc_run();

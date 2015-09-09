@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "utf8.h"
+#include "string.h"
 
 #include "gc.h"
 
@@ -35,7 +36,7 @@ vui_state* vui_state_new(void)
 	state->data = NULL;
 
 	state->push = NULL;
-	state->name = NULL;
+	state->name = strdup("new");
 
 	return state;
 }
@@ -51,7 +52,7 @@ vui_state* vui_state_new_t(vui_transition transition)
 
 	state->data = NULL;
 	state->push = NULL;
-	state->name = NULL;
+	state->name = strdup("new_t");
 
 	return state;
 }
@@ -69,14 +70,31 @@ vui_state* vui_state_new_t_self(vui_transition transition)
 
 	state->data = NULL;
 	state->push = NULL;
-	state->name = NULL;
+	state->name = strdup("new_t_self");
 
 	return state;
 }
 
 vui_state* vui_state_new_s(vui_state* next)
 {
-	return vui_state_new_t(vui_transition_new1(next));
+	vui_state* state = vui_state_new_t(vui_transition_new1(next));
+
+	free(state->name);
+
+	vui_string name;
+	vui_string_new(&name);
+	vui_string_puts(&name, "to ");
+	if (next != NULL)
+	{
+		vui_string_puts(&name, next->name);
+	}
+	else
+	{
+		vui_string_puts(&name, "NULL");
+	}
+	state->name = vui_string_get(&name);
+
+	return state;
 }
 
 vui_state* vui_state_dup(vui_state* parent)
@@ -91,12 +109,15 @@ vui_state* vui_state_dup(vui_state* parent)
 	state->data = parent->data;
 
 	state->push = parent->push;
-	state->name = NULL;
+
+	vui_string name;
+	vui_string_new(&name);
+	vui_string_puts(&name, "dup ");
+	vui_string_puts(&name, parent->name);
+	state->name = vui_string_get(&name);
 
 	return state;
 }
-
-vui_transition* vui_transition_default = NULL;
 
 void vui_state_kill(vui_state* state)
 {
@@ -226,7 +247,7 @@ void vui_set_char_t_u(vui_state* state, unsigned int c, vui_transition next)
 	{
 		unsigned char s[16];
 		vui_utf8_encode(c, s);
-		vui_set_string_t(state, s, next);
+		vui_set_string_t_nocall(state, s, next);
 	}
 }
 
@@ -243,6 +264,54 @@ void vui_set_range_t_u(vui_state* state, unsigned int c1, unsigned int c2, vui_t
 	for (unsigned int c = c1; c != c2+1; c++)
 	{
 		vui_set_char_t_u(state, c, next);
+	}
+}
+
+void vui_set_string_t_nocall(vui_state* state, unsigned char* s, vui_transition next)
+{
+	vui_transition t = state->next[*s];
+
+	if (t.next == NULL)
+	{
+#ifdef VUI_DEBUG
+		char s2[512];
+		snprintf(s2, 512, "vui_set_string_t_nocall(0x%lX, \"%s\", {.next = 0x%lX, .func = 0x%lX, .data = 0x%lX}): bad transition!\r\n", state, s, next.next, next.func, next.data);
+		vui_debug(s2);
+#endif
+	}
+	else
+	{
+		if (s[1])
+		{
+			vui_transition t = state->next[*s];
+			vui_state* state2 = t.next;
+
+			if (state2 == NULL) return;
+
+			vui_state* nextst = vui_state_dup(state2);
+
+			vui_set_char_t(state, *s, vui_transition_new1(nextst));
+
+			vui_string name;
+			vui_string_new(&name);
+			vui_string_puts(&name, "string ");
+			if (s[1] < 128)
+			{
+				vui_string_putc(&name, s[1]);
+			}
+			else
+			{
+				vui_string_puts(&name, "??");
+			}
+			free(nextst->name);
+			nextst->name = vui_string_get(&name);
+
+			vui_set_string_t_nocall(nextst, s+1, next);
+		}
+		else
+		{
+			vui_set_char_t(state, *s, next);
+		}
 	}
 }
 
@@ -269,25 +338,23 @@ void vui_set_string_t(vui_state* state, unsigned char* s, vui_transition next)
 
 			vui_state* nextst = vui_state_dup(state2);
 
-			vui_set_char_t(state, *s, vui_transition_new1(nextst));
+			t.next = nextst;
 
-			if (nextst->name == NULL)
+			vui_set_char_t(state, *s, t);
+
+			vui_string name;
+			vui_string_new(&name);
+			if (s[1] < 128)
 			{
-				//nextst->name = "string";
-				char n[3];
-				if (*s < 128)
-				{
-					n[0] = *s;
-					n[1] = 0;
-				}
-				else
-				{
-					n[0] = '?';
-					n[1] = '?';
-					n[2] = 0;
-				}
-				nextst->name = strdup(n);
+				vui_string_putc(&name, s[1]);
 			}
+			else
+			{
+				vui_string_puts(&name, "??");
+			}
+			free(nextst->name);
+			nextst->name = vui_string_get(&name);
+			
 			vui_set_string_t(nextst, s+1, next);
 		}
 		else
@@ -297,7 +364,7 @@ void vui_set_string_t(vui_state* state, unsigned char* s, vui_transition next)
 	}
 }
 
-void vui_set_string_t2(vui_state* state, unsigned char* s, vui_transition next)
+void vui_set_string_t_mid(vui_state* state, unsigned char* s, vui_transition mid, vui_transition next)
 {
 	vui_transition t = state->next[*s];
 
@@ -305,60 +372,7 @@ void vui_set_string_t2(vui_state* state, unsigned char* s, vui_transition next)
 	{
 #ifdef VUI_DEBUG
 		char s2[512];
-		snprintf(s2, 512, "vui_set_string_t(0x%lX, \"%s\", {.next = 0x%lX, .func = 0x%lX, .data = 0x%lX}): bad transition!\r\n", state, s, next.next, next.func, next.data);
-		vui_debug(s2);
-#endif
-	}
-	else
-	{
-		if (s[1])
-		{
-			vui_transition t = state->next[*s];
-			vui_state* state2 = t.next;
-
-			if (state2 == NULL) return;
-
-			vui_state* nextst = vui_state_dup(state2);
-
-			t.next = nextst;
-
-			vui_set_char_t(state, *s, t);
-
-			if (nextst->name == NULL)
-			{
-				//nextst->name = "string";
-				char n[3];
-				if (*s < 128)
-				{
-					n[0] = *s;
-					n[1] = 0;
-				}
-				else
-				{
-					n[0] = '?';
-					n[1] = '?';
-					n[2] = 0;
-				}
-				nextst->name = strdup(n);
-			}
-			vui_set_string_t2(nextst, s+1, next);
-		}
-		else
-		{
-			vui_set_char_t(state, *s, next);
-		}
-	}
-}
-
-void vui_set_string_t3(vui_state* state, unsigned char* s, vui_transition mid, vui_transition next)
-{
-	vui_transition t = state->next[*s];
-
-	if (t.next == NULL)
-	{
-#ifdef VUI_DEBUG
-		char s2[512];
-		snprintf(s2, 512, "vui_set_string_t(0x%lX, \"%s\", {.next = 0x%lX, .func = 0x%lX, .data = 0x%lX}): bad transition!\r\n", state, s, next.next, next.func, next.data);
+		snprintf(s2, 512, "vui_set_string_t_mid(0x%lX, \"%s\", {.next = 0x%lX, .func = 0x%lX, .data = 0x%lX}): bad transition!\r\n", state, s, next.next, next.func, next.data);
 		vui_debug(s2);
 #endif
 	}
@@ -379,24 +393,20 @@ void vui_set_string_t3(vui_state* state, unsigned char* s, vui_transition mid, v
 
 			vui_set_char_t(state, *s, t);
 
-			if (nextst->name == NULL)
+			vui_string name;
+			vui_string_new(&name);
+			if (s[1] < 128)
 			{
-				//nextst->name = "string";
-				char n[3];
-				if (*s < 128)
-				{
-					n[0] = *s;
-					n[1] = 0;
-				}
-				else
-				{
-					n[0] = '?';
-					n[1] = '?';
-					n[2] = 0;
-				}
-				nextst->name = strdup(n);
+				vui_string_putc(&name, s[1]);
 			}
-			vui_set_string_t3(nextst, s+1, mid, next);
+			else
+			{
+				vui_string_puts(&name, "??");
+			}
+			free(nextst->name);
+			nextst->name = vui_string_get(&name);
+
+			vui_set_string_t_mid(nextst, s+1, mid, next);
 		}
 		else
 		{

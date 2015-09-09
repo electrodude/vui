@@ -850,6 +850,7 @@ vui_state* vui_mode_new(char* cmd, char* name, char* label, int mode, vui_transi
 		state = vui_state_new();
 	}
 
+	free(state->name);
 	state->name = name;
 
 	if (func_enter.next == NULL) func_enter.next = state;
@@ -877,7 +878,7 @@ vui_state* vui_mode_new(char* cmd, char* name, char* label, int mode, vui_transi
 		vui_set_char_t(state, i, func_in);
 	}
 
-	vui_set_string_t(vui_normal_mode, cmd, func_enter);
+	vui_set_string_t_nocall(vui_normal_mode, cmd, func_enter);
 	vui_set_char_t_u(state, VUI_KEY_ESCAPE, func_exit);
 
 	state->push = vui_state_stack;
@@ -898,7 +899,7 @@ vui_cmdline_def* vui_cmdline_mode_new(char* cmd, char* name, char* label, vui_tr
 
 	vui_transition transition_normal_to_cmd = {.next = cmdline_state, .func = tfunc_normal_to_cmd, .data = cmdline};
 
-	vui_set_string_t(vui_normal_mode, cmd, transition_normal_to_cmd);
+	vui_set_string_t_nocall(vui_normal_mode, cmd, transition_normal_to_cmd);
 
 	vui_transition transition_cmd_key = {.next = cmdline_state, .func = tfunc_cmd_key, .data = cmdline};
 	vui_transition transition_cmd_escape = {.next = vui_normal_mode, .func = tfunc_cmd_escape, .data = cmdline};
