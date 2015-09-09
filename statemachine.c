@@ -19,6 +19,8 @@ static inline vui_state* vui_state_new_raw(void)
 
 	vui_gc_register(state);
 
+	state->gv_norank = 0;
+
 	return state;
 }
 
@@ -28,10 +30,7 @@ vui_state* vui_state_new(void)
 
 	vui_transition next = vui_transition_new1(state);
 
-	for (unsigned int i=0; i<VUI_MAXSTATE; i++)
-	{
-		vui_set_char_t(state, i, next);
-	}
+	vui_state_fill(state, next);
 
 	state->data = NULL;
 
@@ -45,10 +44,7 @@ vui_state* vui_state_new_t(vui_transition transition)
 {
 	vui_state* state = vui_state_new_raw();
 
-	for (unsigned int i=0; i<VUI_MAXSTATE; i++)
-	{
-		vui_set_char_t(state, i, transition);
-	}
+	vui_state_fill(state, transition);
 
 	state->data = NULL;
 	state->push = NULL;
@@ -63,10 +59,7 @@ vui_state* vui_state_new_t_self(vui_transition transition)
 
 	transition.next = state;
 
-	for (unsigned int i=0; i<VUI_MAXSTATE; i++)
-	{
-		vui_set_char_t(state, i, transition);
-	}
+	vui_state_fill(state, transition);
 
 	state->data = NULL;
 	state->push = NULL;
@@ -101,20 +94,7 @@ vui_state* vui_state_dup(vui_state* parent)
 {
 	vui_state* state = vui_state_new_raw();
 
-	for (unsigned int i=0; i<VUI_MAXSTATE; i++)
-	{
-		vui_set_char_t(state, i, parent->next[i]);
-	}
-
-	state->data = parent->data;
-
-	state->push = parent->push;
-
-	vui_string name;
-	vui_string_new(&name);
-	vui_string_puts(&name, "dup ");
-	vui_string_puts(&name, parent->name);
-	state->name = vui_string_get(&name);
+	vui_state_cp(state, parent);
 
 	return state;
 }
@@ -142,6 +122,31 @@ void vui_state_replace(vui_state* state, vui_transition search, vui_transition r
 		{
 			vui_set_char_t(state, i, replacement);
 		}
+	}
+}
+
+void vui_state_cp(vui_state* dest, const vui_state* src)
+{
+	for (unsigned int i=0; i<VUI_MAXSTATE; i++)
+	{
+		vui_set_char_t(dest, i, src->next[i]);
+	}
+
+	dest->data = src->data;
+	dest->push = src->push;
+
+	vui_string name;
+	vui_string_new(&name);
+	vui_string_puts(&name, "dup ");
+	vui_string_puts(&name, src->name);
+	dest->name = vui_string_get(&name);
+}
+
+void vui_state_fill(vui_state* dest, vui_transition t)
+{
+	for (unsigned int i=0; i<VUI_MAXSTATE; i++)
+	{
+		vui_set_char_t(dest, i, t);
 	}
 }
 

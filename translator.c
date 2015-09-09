@@ -1,4 +1,7 @@
+#define _XOPEN_SOURCE 500
+
 #include <stdlib.h>
+#include <string.h>
 
 #include "utf8.h"
 #include "vui.h"
@@ -50,7 +53,7 @@ vui_state* vui_translator_tfunc_push(vui_state* currstate, unsigned int c, int a
 {
 	vui_translator* tr = data;
 
-	if (!act) return NULL;
+	if (act <= 0) return NULL;
 
 	vui_string_shrink(tr->str); // shrink the previous string
 
@@ -63,24 +66,22 @@ vui_state* vui_translator_tfunc_putc(vui_state* currstate, unsigned int c, int a
 {
 	vui_translator* tr = data;
 
-	if (!act) return NULL;
+	if (act <= 0) return NULL;
 
 	vui_string_putc(tr->str, c);
 
 	return NULL;
 }
 
-static inline unsigned char* vui_utf8_encode_alloc(unsigned int c)
-{
-	char* s = malloc(16);
-	vui_utf8_encode(c, s);
-	return s;
-}
 
 
 vui_state* vui_translator_key_escaper(vui_translator* tr, vui_state* next)
 {
 	vui_state* escaper = vui_state_new_putc(tr);
+
+	escaper->name = strdup("escaper");
+
+	escaper->gv_norank = 1;
 
 	vui_transition leave = vui_transition_translator_push(tr, next);
 	vui_set_char_t(escaper, ' ', leave);

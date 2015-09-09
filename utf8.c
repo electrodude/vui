@@ -1,3 +1,5 @@
+#include <stdlib.h>
+
 #include "utf8.h"
 
 
@@ -77,4 +79,10 @@ unsigned char* vui_utf8_encode(unsigned int c, unsigned char* s)
 	*s = 0;
 
 	return s;
+}
+
+unsigned char* vui_utf8_encode_alloc(unsigned int c)
+{
+	unsigned char* s = malloc(16);
+	return realloc(s, vui_utf8_encode(c, s) - s);
 }

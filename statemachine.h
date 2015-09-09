@@ -51,6 +51,8 @@ typedef struct vui_state
 
 	vui_stack* push;
 
+	int gv_norank;
+
 	void* data;
 
 	char* name;
@@ -65,7 +67,6 @@ typedef struct vui_state
 extern int vui_iter_gen;
 
 
-
 vui_state* vui_state_new(void);
 vui_state* vui_state_new_t(vui_transition next);
 vui_state* vui_state_new_t_self(vui_transition transition);
@@ -73,6 +74,9 @@ vui_state* vui_state_new_s(vui_state* next);
 vui_state* vui_state_dup(vui_state* parent);
 
 void vui_state_replace(vui_state* state, vui_transition search, vui_transition replacement);
+
+void vui_state_cp(vui_state* dest, const vui_state* src);
+void vui_state_fill(vui_state* dest, vui_transition t);
 
 
 static inline vui_transition vui_transition_new1(vui_state* next)

@@ -113,6 +113,11 @@ void vui_gv_print_s(FILE* f, vui_state* s)
 
 	s->iter_id = gv_id++;
 
+	if (s->gv_norank)
+	{
+		return;
+	}
+
 	for (int i = 0; i < VUI_MAXSTATE; i++)
 	{
 		vui_state* next = vui_next(s, i, VUI_ACT_TEST);
@@ -147,7 +152,12 @@ void vui_gv_print_s(FILE* f, vui_state* s)
 
 			int firstmatch = 1;
 
-			fprintf(f, "\"];\n\t\"%d\" -> \"%d\" [label=\"", s->iter_id, next->iter_id);
+			fprintf(f, "\"];\n\t\"%d\" -> \"%d\" [", s->iter_id, next->iter_id);
+			if (next->push != NULL || next->root || next->gv_norank)
+			{
+				fprintf(f, "constraint = false, ");
+			}
+			fprintf(f, "label=\"");
 
 			for (int j = 0; j < VUI_MAXSTATE; j++)
 			{

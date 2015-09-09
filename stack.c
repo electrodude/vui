@@ -80,7 +80,7 @@ void vui_stack_push(vui_stack* stk, void* s)
 	vui_debug(s2);
 #endif
 
-	if (stk->n >= stk->maxn)
+	if (stk->maxn < stk->n + 1)
 	{
 		stk->maxn = stk->n*2;
 		stk->s = realloc(stk->s, stk->maxn*sizeof(void*));
