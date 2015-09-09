@@ -15,10 +15,18 @@ typedef struct vui_string
 	unsigned char* s; // pointer to buffer
 } vui_string;
 
+// Create a new string, given how many bytes to preallocate
+// if str == NULL, malloc the string
+// otherwise, put it at *str
+vui_string* vui_string_new_prealloc(vui_string* str, size_t n);
+
 // Create a new string
 // if str == NULL, malloc the string
 // otherwise, put it at *str
-vui_string* vui_string_new(vui_string* str);
+static inline vui_string* vui_string_new(vui_string* str)
+{
+	return vui_string_new_prealloc(str, 16);
+}
 
 // Destroy a string and its buffer
 void vui_string_kill(vui_string* str);
@@ -39,7 +47,9 @@ static inline void vui_string_reset(vui_string* str)
 
 // realloc() internal buffer to be as small as possible
 // Appends null terminator
-void vui_string_shrink(vui_string* str);
+// Returns pointer to internal buffer
+// The pointer is only valid until the next call to `vui_string_put*`.
+char* vui_string_shrink(vui_string* str);
 
 
 // Append a character
@@ -48,13 +58,16 @@ void vui_string_putc(vui_string* str, unsigned char c);
 // Append a null-terminated string
 void vui_string_puts(vui_string* str, unsigned char* s);
 
+// Append a vui_string
+void vui_string_append(vui_string* str, vui_string* str2);
+
 // Append a codepoint to be encoded as UTF-8
 void vui_string_put(vui_string* str, unsigned int c);
 
 
-// Get pointer to internal buffer
-// The pointer is only valid until the next call to `vui_string_put*`.
 // Appends null terminator
+// Returns pointer to internal buffer
+// The pointer is only valid until the next call to `vui_string_put*`.
 static inline unsigned char* vui_string_get(vui_string* str)
 {
 	if (str == NULL) return NULL;

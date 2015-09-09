@@ -1,11 +1,13 @@
+#include <string.h>
+
 #include "stack.h"
 
-vui_stack* vui_stack_new(void)
+vui_stack* vui_stack_new_prealloc(size_t maxn)
 {
 	vui_stack* stk = malloc(sizeof(vui_stack));
 
 	stk->n = 0;
-	stk->maxn = 16;
+	stk->maxn = maxn;
 	stk->s = malloc(stk->maxn*sizeof(void*));
 	stk->def = NULL;
 	stk->dtor = NULL;
@@ -22,7 +24,7 @@ void vui_stack_kill(vui_stack* stk)
 	free(stk);
 }
 
-void vui_stack_trunc(vui_stack* stk, int n)
+void vui_stack_trunc(vui_stack* stk, size_t n)
 {
 	if (stk == NULL) return;
 
@@ -39,7 +41,7 @@ void vui_stack_trunc(vui_stack* stk, int n)
 	}
 }
 
-void** vui_stack_release(vui_stack* stk, int* n)
+void** vui_stack_release(vui_stack* stk, size_t* n)
 {
 	if (stk == NULL)
 	{
@@ -47,12 +49,26 @@ void** vui_stack_release(vui_stack* stk, int* n)
 		return NULL;
 	}
 
-	void** s = realloc(stk->s, stk->n*sizeof(void*));
+	vui_stack_shrink(stk);
+
+	void** s = stk->s;
 	*n = stk->n;
+
 	free(stk);
 
 	return s;
 }
+
+
+void* vui_stack_shrink(vui_stack* stk)
+{
+	if (stk == NULL) return NULL;
+
+	stk->s = realloc(stk->s, stk->n*sizeof(void*));
+
+	return stk->s;
+}
+
 
 void vui_stack_push(vui_stack* stk, void* s)
 {
@@ -71,6 +87,27 @@ void vui_stack_push(vui_stack* stk, void* s)
 	}
 
 	stk->s[stk->n++] = s;
+}
+
+void vui_stack_append(vui_stack* stk, vui_stack* stk2)
+{
+	if (stk == NULL) return;
+
+	if (stk2 == NULL) return;
+
+	size_t n = stk->n + stk2->n;
+	// make room for stk2
+	if (stk->maxn < n);
+	{
+		stk->maxn = n*2;
+		stk->s = realloc(stk->s, stk->maxn);
+	}
+
+	memcpy(&stk->s[stk->n], stk2->s, stk2->n*sizeof(void*));
+
+	stk->n = n;
+
+	vui_stack_kill(stk2);
 }
 
 void vui_stack_push_nodup(vui_stack* stk, void* s)

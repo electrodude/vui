@@ -14,8 +14,14 @@ typedef struct vui_stack
 	                            // (on trunc or reset)
 } vui_stack;
 
+// Create a new stack, given how many slots to preallocate
+vui_stack* vui_stack_new_prealloc(size_t maxn);
+
 // Create a new stack
-vui_stack* vui_stack_new(void);
+static inline vui_stack* vui_stack_new(void)
+{
+	return vui_stack_new_prealloc(16);
+}
 
 // Destroys a stack and its internal buffer
 // Does not free any elements, but calling `vui_stack_reset` first does
@@ -24,7 +30,7 @@ void vui_stack_kill(vui_stack* stk);
 // Resets stack size to n
 // Does nothing if stack is already the same size or smaller
 // Calls dtor(elem) on each element as it is removed, from top to bottom
-void vui_stack_trunc(vui_stack* stk, int n);
+void vui_stack_trunc(vui_stack* stk, size_t n);
 
 // Resets stack size to 0
 // Calls dtor(elem) on each element as it is removed, from top to bottom
@@ -35,10 +41,16 @@ static inline void vui_stack_reset(vui_stack* stk)
 
 // Destroys a stack, returning its internal buffer and writing the number of elements to *n
 // The caller assumes responsibilty for free()ing the returned buffer.
-void** vui_stack_release(vui_stack* stk, int* n);
+void** vui_stack_release(vui_stack* stk, size_t* n);
+
+// realloc() internal buffer to be as small as possible
+void* vui_stack_shrink(vui_stack* stk);
 
 // Pushes an element onto the top of the stack
 void vui_stack_push(vui_stack* stk, void* s);
+
+// Append a vui_stack
+void vui_stack_append(vui_stack* stk, vui_stack* stk2);
 
 // Pushes an element onto the top of the stack
 // Does nothing if `s == vui_stack_peek(stk)`.
