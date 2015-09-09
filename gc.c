@@ -1,20 +1,22 @@
+#include <stdio.h>
+
 #include "gc.h"
 
 // not in statemachine.h so people don't call it
 void vui_state_kill(vui_state* state);
 
-vui_state vui_gc_dummystate;
+vui_state* vui_gc_first;
 
 void vui_gc_register(vui_state* st)
 {
-	if (vui_gc_dummystate.gc_next == NULL)
+	if (vui_gc_first == NULL)
 	{
-		vui_gc_dummystate.gc_next = st;
+		vui_gc_first = st;
 	}
 	else
 	{
-		st->gc_next = vui_gc_dummystate.gc_next;
-		vui_gc_dummystate.gc_next = st;
+		st->gc_next = vui_gc_first;
+		vui_gc_first = st;
 	}
 }
 
@@ -22,32 +24,32 @@ void vui_gc_run(void)
 {
 	vui_iter_gen++;
 
-	vui_state* curr = &vui_gc_dummystate;
+	vui_state** curr = &vui_gc_first;
 
-	while (curr->gc_next != NULL)
+	while (*curr != NULL)
 	{
-		if (curr->gc_next->root)
+		if ((*curr)->root)
 		{
-			vui_gc_mark(curr->gc_next);
+			vui_gc_mark(*curr);
 		}
 
-		curr = curr->gc_next;
+		*curr = (*curr)->gc_next;
 	}
 
-	curr = &vui_gc_dummystate;
+	curr = &vui_gc_first;
 
-	while (curr->gc_next != NULL)
+	while (*curr != NULL)
 	{
-		if (curr->gc_next->iter_gen != vui_iter_gen)
+		if ((*curr)->iter_gen != vui_iter_gen)
 		{
-			vui_state* condemned = curr->gc_next;
-			curr->gc_next = condemned->gc_next;
+			vui_state* condemned = *curr;
+			*curr = condemned->gc_next;
 
 			vui_state_kill(condemned);
 		}
 		else
 		{
-			curr = curr->gc_next;
+			*curr = (*curr)->gc_next;
 		}
 	}
 }
