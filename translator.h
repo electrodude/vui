@@ -4,6 +4,8 @@
 #include "string.h"
 #include "statemachine.h"
 
+#include "fragment.h"
+
 typedef struct vui_translator
 {
 	vui_state* st_start;
@@ -22,6 +24,8 @@ vui_stack* vui_translator_run(vui_translator* tr, char* in);
 // transition helpers
 vui_state* vui_translator_tfunc_push(vui_state* currstate, unsigned int c, int act, void* data);
 vui_state* vui_translator_tfunc_putc(vui_state* currstate, unsigned int c, int act, void* data);
+vui_state* vui_translator_tfunc_pop(vui_state* currstate, unsigned int c, int act, void* data);
+vui_state* vui_translator_tfunc_puts(vui_state* currstate, unsigned int c, int act, void* data);
 
 static inline vui_transition vui_transition_translator_push(vui_translator* tr, vui_state* next)
 {
@@ -31,6 +35,16 @@ static inline vui_transition vui_transition_translator_push(vui_translator* tr, 
 static inline vui_transition vui_transition_translator_putc(vui_translator* tr, vui_state* next)
 {
 	return vui_transition_new3(next, vui_translator_tfunc_putc, tr);
+}
+
+static inline vui_transition vui_transition_translator_pop(vui_translator* tr, vui_state* next)
+{
+	return vui_transition_new3(next, vui_translator_tfunc_pop, tr);
+}
+
+static inline vui_transition vui_transition_translator_puts(vui_translator* tr, vui_state* next)
+{
+	return vui_transition_new3(next, vui_translator_tfunc_puts, tr);
 }
 
 // state constructors
@@ -45,4 +59,8 @@ static inline vui_state* vui_state_new_putc(vui_translator* tr)
 }
 
 
-vui_state* vui_translator_key_escaper(vui_translator* tr, vui_state* next);
+vui_frag* vui_frag_accept_escaped(vui_translator* tr);
+
+vui_frag* vui_frag_deadend(void);
+
+vui_frag* vui_frag_accept_any(vui_translator* tr);

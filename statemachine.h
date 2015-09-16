@@ -88,6 +88,11 @@ static inline vui_transition vui_transition_new3(vui_state* next, vui_transition
 	return (vui_transition){.next = next, .func = func, .data = data};
 }
 
+vui_state* vui_tfunc_multi(vui_state* currstate, unsigned int c, int act, void* data);
+vui_transition vui_transition_multi(vui_stack* funcs, vui_state* next);
+
+void vui_transition_multi_push(vui_stack* funcs, vui_transition t);
+
 vui_transition vui_transition_run_s_s(vui_state* st, char* str);
 
 vui_transition vui_transition_run_c_s(vui_state* other);

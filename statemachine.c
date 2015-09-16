@@ -150,6 +150,48 @@ void vui_state_fill(vui_state* dest, vui_transition t)
 	}
 }
 
+vui_state* vui_tfunc_multi(vui_state* currstate, unsigned int c, int act, void* data)
+{
+	vui_stack* funcs = data;
+
+	for (size_t i = 0; i < funcs->n; i++)
+	{
+		vui_transition* t = funcs->s[i];
+		t->func(currstate, c, act, t->data);
+	}
+}
+
+vui_transition vui_transition_multi(vui_stack* funcs, vui_state* next)
+{
+	if (funcs->n > 1)
+	{
+		return (vui_transition){.next = next, .func = vui_tfunc_multi, .data = funcs};
+	}
+	else if (funcs->n == 1)
+	{
+		vui_transition t = *(vui_transition*)funcs->s[0];
+
+		t.next = next;
+
+		return t;
+	}
+	else
+	{
+		return vui_transition_new1(next);
+	}
+}
+
+void vui_transition_multi_push(vui_stack* funcs, vui_transition t)
+{
+	vui_transition* t2 = malloc(sizeof(vui_transition));
+
+	t2->next = NULL;
+	t2->func = t.func;
+	t2->data = t.data;
+
+	vui_stack_push(funcs, t2);
+}
+
 
 typedef struct vui_transition_run_s_data
 {

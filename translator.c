@@ -73,9 +73,43 @@ vui_state* vui_translator_tfunc_putc(vui_state* currstate, unsigned int c, int a
 	return NULL;
 }
 
+vui_state* vui_translator_tfunc_pop(vui_state* currstate, unsigned int c, int act, void* data)
+{
+	vui_translator* tr = data;
 
+	if (act <= 0) return NULL;
 
-vui_state* vui_translator_key_escaper(vui_translator* tr, vui_state* next)
+	vui_string_kill(vui_stack_pop(tr->stk));
+	tr->str = vui_stack_peek(tr->stk);
+
+	return NULL;
+}
+
+vui_state* vui_translator_tfunc_puts(vui_state* currstate, unsigned int c, int act, void* data)
+{
+	vui_translator* tr = data;
+
+	if (act <= 0) return NULL;
+
+	vui_string* str = vui_stack_pop(tr->stk);
+	tr->str = vui_stack_peek(tr->stk);
+	vui_string_append(tr->str, str);
+
+	return NULL;
+}
+
+static inline vui_transition t_escaper_end(vui_state* lt, vui_translator* tr, vui_state* returnto, unsigned char* action, unsigned char* reaction)
+{
+	vui_transition lt_mid = vui_transition_translator_putc(tr, NULL);
+
+	vui_stack* lt_end_funcs = vui_stack_new();
+	vui_transition_multi_push(lt_end_funcs, vui_transition_translator_pop(tr, NULL));
+	vui_transition_multi_push(lt_end_funcs, vui_transition_run_s_s(vui_state_new_t_self(vui_transition_translator_putc(tr, NULL)), reaction));
+
+	vui_set_string_t_mid(lt, action, lt_mid, vui_transition_multi(lt_end_funcs, returnto));
+}
+
+vui_frag* vui_frag_accept_escaped(vui_translator* tr)
 {
 	vui_state* escaper = vui_state_new_putc(tr);
 
@@ -83,37 +117,69 @@ vui_state* vui_translator_key_escaper(vui_translator* tr, vui_state* next)
 
 	escaper->gv_norank = 1;
 
-	vui_transition leave = vui_transition_translator_push(tr, next);
+	vui_stack* exits = vui_stack_new();
+
+	vui_state* exit = vui_state_new();
+
+	vui_transition leave = vui_transition_translator_push(tr, exit);
 	vui_set_char_t(escaper, ' ', leave);
+
+	vui_stack_push(exits, exit);
 
 	vui_state* eschelper = vui_state_new_t(vui_transition_translator_putc(tr, escaper));
 
-	vui_map2(escaper, "\\<", eschelper, "<");
+	vui_stack* lt_abort_funcs = vui_stack_new();
+	vui_transition_multi_push(lt_abort_funcs, vui_transition_translator_putc(tr, NULL));
+	vui_transition_multi_push(lt_abort_funcs, vui_transition_translator_puts(tr, NULL));
 
-	vui_map2(escaper, "<cr>", eschelper, "\n");
-	vui_map2(escaper, "<enter>", eschelper, "\n");
-	vui_map2(escaper, "\\n", eschelper, "\n");
-	vui_map2(escaper, "<tab>", eschelper, "\n");
-	vui_map2(escaper, "\\t", eschelper, "\t");
-	vui_map2(escaper, "<left>", eschelper, vui_utf8_encode_alloc(VUI_KEY_LEFT));
-	vui_map2(escaper, "<l>", eschelper, vui_utf8_encode_alloc(VUI_KEY_LEFT));
-	vui_map2(escaper, "<right>", eschelper, vui_utf8_encode_alloc(VUI_KEY_RIGHT));
-	vui_map2(escaper, "<r>", eschelper, vui_utf8_encode_alloc(VUI_KEY_RIGHT));
-	vui_map2(escaper, "<up>", eschelper, vui_utf8_encode_alloc(VUI_KEY_UP));
-	vui_map2(escaper, "<u>", eschelper, vui_utf8_encode_alloc(VUI_KEY_UP));
-	vui_map2(escaper, "<down>", eschelper, vui_utf8_encode_alloc(VUI_KEY_DOWN));
-	vui_map2(escaper, "<d>", eschelper, vui_utf8_encode_alloc(VUI_KEY_DOWN));
-	vui_map2(escaper, "<home>", eschelper, vui_utf8_encode_alloc(VUI_KEY_HOME));
-	vui_map2(escaper, "<end>", eschelper, vui_utf8_encode_alloc(VUI_KEY_END));
-	vui_map2(escaper, "<backspace>", eschelper, vui_utf8_encode_alloc(VUI_KEY_BACKSPACE));
-	vui_map2(escaper, "<bs>", eschelper, vui_utf8_encode_alloc(VUI_KEY_BACKSPACE));
-	vui_map2(escaper, "<delete>", eschelper, vui_utf8_encode_alloc(VUI_KEY_DELETE));
-	vui_map2(escaper, "<del>", eschelper, vui_utf8_encode_alloc(VUI_KEY_DELETE));
-	vui_map2(escaper, "<escape>", eschelper, "\x27");
-	vui_map2(escaper, "<esc>", eschelper, "\x27");
-	vui_map2(escaper, "<space>", eschelper, " ");
-	vui_map2(escaper, "\\ ", eschelper, " ");
-	vui_map2(escaper, "\\\\", eschelper, "\\");
+	vui_stack* lt_enter_funcs = vui_stack_new();
+	vui_transition_multi_push(lt_enter_funcs, vui_transition_translator_push(tr, NULL));
+	vui_transition_multi_push(lt_enter_funcs, vui_transition_translator_putc(tr, NULL));
 
-	return escaper;
+	vui_state* lt = vui_state_new_t(vui_transition_multi(lt_abort_funcs, escaper));
+	vui_set_char_t(escaper, '<', vui_transition_multi(lt_enter_funcs, lt));
+
+	t_escaper_end(lt, tr, escaper, "cr>", "\n");
+	t_escaper_end(lt, tr, escaper, "enter>", "\n");
+	t_escaper_end(lt, tr, escaper, "tab>", "\t");
+	t_escaper_end(lt, tr, escaper, "lt>", "<");
+	t_escaper_end(lt, tr, escaper, "left>", vui_utf8_encode_alloc(VUI_KEY_LEFT));
+	t_escaper_end(lt, tr, escaper, "l>", vui_utf8_encode_alloc(VUI_KEY_LEFT));
+	t_escaper_end(lt, tr, escaper, "right>", vui_utf8_encode_alloc(VUI_KEY_RIGHT));
+	t_escaper_end(lt, tr, escaper, "r>", vui_utf8_encode_alloc(VUI_KEY_RIGHT));
+	t_escaper_end(lt, tr, escaper, "up>", vui_utf8_encode_alloc(VUI_KEY_UP));
+	t_escaper_end(lt, tr, escaper, "u>", vui_utf8_encode_alloc(VUI_KEY_UP));
+	t_escaper_end(lt, tr, escaper, "down>", vui_utf8_encode_alloc(VUI_KEY_DOWN));
+	t_escaper_end(lt, tr, escaper, "d>", vui_utf8_encode_alloc(VUI_KEY_DOWN));
+	t_escaper_end(lt, tr, escaper, "home>", vui_utf8_encode_alloc(VUI_KEY_HOME));
+	t_escaper_end(lt, tr, escaper, "end>", vui_utf8_encode_alloc(VUI_KEY_END));
+	t_escaper_end(lt, tr, escaper, "backspace>", vui_utf8_encode_alloc(VUI_KEY_BACKSPACE));
+	t_escaper_end(lt, tr, escaper, "bs>", vui_utf8_encode_alloc(VUI_KEY_BACKSPACE));
+	t_escaper_end(lt, tr, escaper, "delete>", vui_utf8_encode_alloc(VUI_KEY_DELETE));
+	t_escaper_end(lt, tr, escaper, "del>", vui_utf8_encode_alloc(VUI_KEY_DELETE));
+	t_escaper_end(lt, tr, escaper, "escape>", "\x27");
+	t_escaper_end(lt, tr, escaper, "esc>", "\x27");
+	t_escaper_end(lt, tr, escaper, "space>", " ");
+	t_escaper_end(lt, tr, escaper, "sp>", " ");
+
+	vui_state* bsl = vui_state_new_t(vui_transition_multi(lt_abort_funcs, escaper));
+	vui_set_char_t(escaper, '\\', vui_transition_multi(lt_enter_funcs, bsl));
+
+	t_escaper_end(bsl, tr, escaper, "n", "\n");
+	t_escaper_end(bsl, tr, escaper, "t", "\t");
+	t_escaper_end(bsl, tr, escaper, "\\", "\n");
+	t_escaper_end(bsl, tr, escaper, " ", " ");
+	t_escaper_end(bsl, tr, escaper, "<", "<");
+
+	return vui_frag_new_stk(escaper, exits);
+}
+
+vui_frag* vui_frag_deadend(void)
+{
+	return vui_frag_new(vui_state_new_deadend(), NULL, 0);
+}
+
+vui_frag* vui_frag_accept_any(vui_translator* tr)
+{
+	return vui_frag_new(vui_state_new_t_self(vui_transition_translator_putc(tr, NULL)), NULL, 0);
 }

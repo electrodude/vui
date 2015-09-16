@@ -11,6 +11,7 @@
 #include "debug.h"
 
 #include "vui.h"
+#include "combinator.h"
 #include "translator.h"
 #include "gc.h"
 
@@ -200,7 +201,9 @@ int main(int argc, char** argv)
 	vui_set_string_t_mid(cmd_tr_start, "q", vui_transition_translator_putc(cmd_tr, NULL), vui_transition_translator_putc(cmd_tr, cmd_tr_q));
 
 
-	vui_state* cmd_tr_map = vui_translator_key_escaper(cmd_tr, vui_translator_key_escaper(cmd_tr, vui_state_new_deadend()));
+	vui_state* cmd_tr_map = vui_frag_release(
+	                                         vui_frag_cat(vui_frag_accept_escaped(cmd_tr), vui_frag_accept_escaped(cmd_tr)),
+						 vui_state_new_deadend());
 
 	vui_set_string_t_mid(cmd_tr_start, "map ", vui_transition_translator_putc(cmd_tr, NULL), vui_transition_translator_push(cmd_tr, cmd_tr_map));
 
