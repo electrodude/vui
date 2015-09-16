@@ -1,8 +1,8 @@
 #define _XOPEN_SOURCE 500
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
+
+#include "debug.h"
 
 #include "utf8.h"
 #include "string.h"
@@ -103,7 +103,7 @@ void vui_state_kill(vui_state* state)
 {
 	if (state == NULL) return;
 
-#ifdef VUI_DEBUG
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_STATEMACHINE)
 	char s[64];
 	snprintf(s, 64, "Killing state 0x%lX\r\n", state);
 	vui_debug(s);
@@ -278,7 +278,7 @@ void vui_set_string_t_nocall(vui_state* state, unsigned char* s, vui_transition 
 
 	if (t.next == NULL)
 	{
-#ifdef VUI_DEBUG
+#if defined(VUI_DEBUG)
 		char s2[512];
 		snprintf(s2, 512, "vui_set_string_t_nocall(0x%lX, \"%s\", {.next = 0x%lX, .func = 0x%lX, .data = 0x%lX}): bad transition!\r\n", state, s, next.next, next.func, next.data);
 		vui_debug(s2);
@@ -326,7 +326,7 @@ void vui_set_string_t(vui_state* state, unsigned char* s, vui_transition next)
 
 	if (t.next == NULL)
 	{
-#ifdef VUI_DEBUG
+#if defined(VUI_DEBUG)
 		char s2[512];
 		snprintf(s2, 512, "vui_set_string_t(0x%lX, \"%s\", {.next = 0x%lX, .func = 0x%lX, .data = 0x%lX}): bad transition!\r\n", state, s, next.next, next.func, next.data);
 		vui_debug(s2);
@@ -375,7 +375,7 @@ void vui_set_string_t_mid(vui_state* state, unsigned char* s, vui_transition mid
 
 	if (t.next == NULL)
 	{
-#ifdef VUI_DEBUG
+#if defined(VUI_DEBUG)
 		char s2[512];
 		snprintf(s2, 512, "vui_set_string_t_mid(0x%lX, \"%s\", {.next = 0x%lX, .func = 0x%lX, .data = 0x%lX}): bad transition!\r\n", state, s, next.next, next.func, next.data);
 		vui_debug(s2);
@@ -482,7 +482,7 @@ vui_state* vui_next_t(vui_state* currstate, unsigned char c, vui_transition t, i
 		}
 	}
 
-#ifdef VUI_DEBUG
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_STATEMACHINE)
 	if (act == VUI_ACT_RUN)
 	{
 		char s[64];

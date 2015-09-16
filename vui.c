@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include "debug.h"
 
 #include "utf8.h"
 #include "gc.h"
@@ -410,7 +411,7 @@ static vui_state* tfunc_cmd_up(vui_state* currstate, unsigned int c, int act, vo
 
 	if (cmdline->hist_curr_entry->prev != NULL && !cmdline->cmd_modified)
 	{
-#ifdef VUI_DEBUG
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
 		if (cmdline->hist_curr_entry->prev == cmdline->hist_curr_entry)
 		{
 			vui_debug("own prev!\n");
@@ -424,7 +425,7 @@ static vui_state* tfunc_cmd_up(vui_state* currstate, unsigned int c, int act, vo
 		cmd_len = vui_crsrx - 1;
 		memset(&vui_cmd[vui_crsrx], ' ', cols - vui_crsrx);
 	}
-#ifdef VUI_DEBUG
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
 	else
 	{
 		vui_debug("no prev\n");
@@ -444,7 +445,7 @@ static vui_state* tfunc_cmd_down(vui_state* currstate, unsigned int c, int act, 
 
 	if (cmdline->hist_curr_entry->next != NULL && !cmdline->cmd_modified)
 	{
-#ifdef VUI_DEBUG
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
 		if (cmdline->hist_curr_entry->next == cmdline->hist_curr_entry)
 		{
 			vui_debug("own next!\n");
@@ -459,7 +460,7 @@ static vui_state* tfunc_cmd_down(vui_state* currstate, unsigned int c, int act, 
 		cmd_len = vui_crsrx - 1;
 		memset(&vui_cmd[vui_crsrx], ' ', cols - vui_crsrx);
 	}
-#ifdef VUI_DEBUG
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
 	else
 	{
 		vui_debug("no next\n");
@@ -518,13 +519,13 @@ static vui_state* tfunc_cmd_escape(vui_state* currstate, unsigned int c, int act
 
 	if (cmdline->hist_curr_entry->line[0] != 0)
 	{
-#ifdef VUI_DEBUG
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
 		vui_debug("new entry\n");
 #endif
 
 		hist_entry_new(cmdline);
 	}
-#ifdef VUI_DEBUG
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
 	else
 	{
 		vui_debug("no new entry\n");
@@ -564,13 +565,13 @@ static vui_state* tfunc_cmd_enter(vui_state* currstate, unsigned int c, int act,
 
 	if (cmdline->hist_curr_entry->line[0] != 0)
 	{
-#ifdef VUI_DEBUG
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
 		vui_debug("new entry\n");
 #endif
 
 		hist_entry_new(cmdline);
 	}
-#ifdef VUI_DEBUG
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
 	else
 	{
 		vui_debug("no new entry\n");
@@ -696,7 +697,7 @@ static vui_state* tfunc_macro_record(vui_state* currstate, unsigned int c, int a
 {
 	if (act <= 0) return vui_return(act);
 
-#ifdef VUI_DEBUG
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
 	char s[256];
 	snprintf(s, 256, "record %c\r\n", c);
 	vui_debug(s);
@@ -713,7 +714,7 @@ static vui_state* tfunc_macro_execute(vui_state* currstate, unsigned int c, int 
 {
 	if (act <= 0) return vui_return(act);
 
-#ifdef VUI_DEBUG
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
 	char s[256];
 	snprintf(s, 256, "execute %c\r\n", c);
 	vui_debug(s);
@@ -751,7 +752,7 @@ static vui_state* tfunc_record_enter(vui_state* currstate, unsigned int c, int a
 	{
 		if (act > 0)
 		{
-#ifdef VUI_DEBUG
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
 			vui_debug("end record\r\n");
 #endif
 			vui_register_endrecord();
@@ -820,7 +821,7 @@ void vui_register_record(int c)
 void vui_register_endrecord(void)
 {
 	vui_register_recording->s[--vui_register_recording->n] = 0;
-#ifdef VUI_DEBUG
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
 	char s[64];
 	snprintf(s, 64, "finished recording macro: %s\r\n", vui_register_recording->s);
 	vui_debug(s);
@@ -963,7 +964,7 @@ void vui_input(unsigned int c)
 {
 	if (vui_register_recording != NULL)
 	{
-#ifdef VUI_DEBUG
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
 		char s[64];
 		snprintf(s, 64, "register_putc(%d)\r\n", c);
 		vui_debug(s);

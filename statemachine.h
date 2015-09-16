@@ -5,16 +5,10 @@ extern "C"
 {
 #endif
 
-//#define VUI_DEBUG
-
 #include "stack.h"
 
 #define VUI_STATE_BITS 8
 #define VUI_MAXSTATE (1 << VUI_STATE_BITS)
-
-#ifdef VUI_DEBUG
-extern void vui_debug(char* msg);  // user must declare this
-#endif
 
 typedef struct vui_state vui_state;
 

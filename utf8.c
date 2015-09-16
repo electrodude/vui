@@ -1,5 +1,7 @@
 #include <stdlib.h>
 
+#include "debug.h"
+
 #include "utf8.h"
 
 
@@ -67,7 +69,7 @@ unsigned char* vui_utf8_encode(unsigned int c, unsigned char* s)
 		*s++ = 128 | ((c >>  0) & 0x3F);
 	}
 #endif
-#ifdef VUI_DEBUG
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_UTF8)
 	else
 	{
 		char s[256];

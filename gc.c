@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include "debug.h"
 
 #include "gc.h"
 
@@ -62,7 +62,7 @@ void vui_gc_mark(vui_state* st)
 
 	st->iter_gen = vui_iter_gen;
 
-#ifdef VUI_DEBUG
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_GC)
 	char s[256];
 	snprintf(s, 256, "vui_gc_mark(0x%lX)\r\n", st);
 	vui_debug(s);

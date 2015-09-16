@@ -8,6 +8,8 @@
 
 #include <curses.h>
 
+#include "debug.h"
+
 #include "vui.h"
 #include "translator.h"
 #include "gc.h"

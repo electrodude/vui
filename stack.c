@@ -1,5 +1,7 @@
 #include <string.h>
 
+#include "debug.h"
+
 #include "stack.h"
 
 vui_stack* vui_stack_new_prealloc(size_t maxn)
@@ -74,7 +76,7 @@ void vui_stack_push(vui_stack* stk, void* s)
 {
 	if (stk == NULL) return;
 
-#ifdef VUI_DEBUG
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_STACK)
 	char s2[64];
 	snprintf(s2, 64, "Push 0x%lX\r\n", s2);
 	vui_debug(s2);
@@ -125,7 +127,7 @@ void* vui_stack_pop(vui_stack* stk)
 
 	if (stk->n <= 0)
 	{
-#ifdef VUI_DEBUG
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_STACK)
 		char s[64];
 		snprintf(s, 64, "Pop def 0x%lX\r\n", stk->def);
 		vui_debug(s);
@@ -134,7 +136,7 @@ void* vui_stack_pop(vui_stack* stk)
 		return stk->def;
 	}
 
-#ifdef VUI_DEBUG
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_STACK)
 	char s[64];
 	snprintf(s, 64, "Pop 0x%lX\r\n", stk->s[stk->n-1]);
 	vui_debug(s);
@@ -149,7 +151,7 @@ void* vui_stack_peek(vui_stack* stk)
 
 	if (stk->n <= 0)
 	{
-#ifdef VUI_DEBUG
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_STACK)
 		char s[64];
 		snprintf(s, 64, "Peek def 0x%lX\r\n", stk->def);
 		vui_debug(s);
@@ -158,7 +160,7 @@ void* vui_stack_peek(vui_stack* stk)
 		return stk->def;
 	}
 
-#ifdef VUI_DEBUG
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_STACK)
 	char s[64];
 	snprintf(s, 64, "Peek 0x%lX\r\n", stk->s[stk->n-1]);
 	vui_debug(s);
@@ -175,7 +177,7 @@ void* vui_stack_index(vui_stack* stk, unsigned int i)
 	{
 		return NULL;
 	}
-#ifdef VUI_DEBUG
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_STACK)
 	char s[64];
 	snprintf(s, 64, "Index [i] = 0x%lX\r\n", i, stk->s[i]);
 	vui_debug(s);
