@@ -2,3 +2,4 @@
 *.o
 libvui.a
 vuitest
+vui.dot
