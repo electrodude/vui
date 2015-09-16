@@ -914,7 +914,7 @@ vui_cmdline_def* vui_cmdline_mode_new(char* cmd, char* name, char* label, vui_tr
 	vui_transition transition_cmd_home = {.next = cmdline_state, .func = tfunc_cmd_home, .data = cmdline};
 	vui_transition transition_cmd_end = {.next = cmdline_state, .func = tfunc_cmd_end, .data = cmdline};
 
-	for (int i=0; i<VUI_MAXSTATE; i++)
+	for (int i=32; i<127; i++)
 	{
 		vui_set_char_t(cmdline_state, i, transition_cmd_key);
 	}
