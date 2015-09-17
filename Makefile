@@ -10,10 +10,10 @@ all:		vuitest
 clean:
 		rm -vf *.o libvui.a vuitest
 
-vuitest:	vuitest.o graphviz.o libvui.a
+vuitest:	vuitest.o libvui.a
 		$(LD) $^ $(LDFLAGS) -o $@
 
-libvui.a:	vui.o fragment.o combinator.o translator.o statemachine.o gc.o stack.o string.o utf8.o
+libvui.a:	vui.o fragment.o combinator.o translator.o statemachine.o gc.o stack.o string.o utf8.o graphviz.o
 		$(AR) $@ $^
 		$(RANLIB) $@
 
