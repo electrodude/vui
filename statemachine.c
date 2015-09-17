@@ -472,22 +472,22 @@ vui_state* vui_next_u(vui_state* currstate, unsigned int c, int act)
 	{
 		unsigned char s[16];
 		vui_utf8_encode(c, s);
-#if 0
+#if 1
 		unsigned char* s2 = s;
 
 		for (;*s2;s2++)
 		{
-			st = vui_next_t(st, c, st->next[*s2], act);
+			currstate = vui_next_t(currstate, c, currstate->next[*s2], act);
 		}
 
-		return st;
+		return currstate;
 #else
 		return vui_run_s(currstate, s, act);
 #endif
 	}
 }
 
-vui_state* vui_next_t(vui_state* currstate, unsigned char c, vui_transition t, int act)
+vui_state* vui_next_t(vui_state* currstate, unsigned int c, vui_transition t, int act)
 {
 	vui_state* nextstate = NULL;
 

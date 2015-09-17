@@ -141,7 +141,7 @@ void vui_set_string_t_mid(vui_state* state, unsigned char* s, vui_transition mid
 
 
 
-vui_state* vui_next_t(vui_state* currstate, unsigned char c, vui_transition t, int act);
+vui_state* vui_next_t(vui_state* currstate, unsigned int c, vui_transition t, int act);
 static inline vui_state* vui_next(vui_state* currstate, unsigned char c, int act)
 {
 	return vui_next_t(currstate, c, currstate->next[c], act);
