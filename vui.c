@@ -894,6 +894,7 @@ vui_cmdline_def* vui_cmdline_mode_new(char* cmd, char* name, char* label, vui_tr
 	cmdline->on_submit = on_submit;
 	cmdline->label = label;
 	cmdline->tr = tr;
+	cmdline->hist_last_entry = NULL;
 
 	vui_state* cmdline_state = vui_state_new();
 	cmdline_state->name = name;
