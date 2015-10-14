@@ -2,14 +2,14 @@
 
 #include <string.h>
 
-#include "debug.h"
+#include "vui_debug.h"
 
-#include "utf8.h"
-#include "string.h"
+#include "vui_utf8.h"
+#include "vui_string.h"
 
-#include "gc.h"
+#include "vui_gc.h"
 
-#include "statemachine.h"
+#include "vui_statemachine.h"
 
 int vui_iter_gen = 0;
 

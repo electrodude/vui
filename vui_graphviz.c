@@ -1,6 +1,6 @@
-#include "gc.h"
+#include "vui_gc.h"
 
-#include "graphviz.h"
+#include "vui_graphviz.h"
 
 int gv_id = 0;
 

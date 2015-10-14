@@ -1,8 +1,8 @@
 #include <string.h>
 
-#include "debug.h"
+#include "vui_debug.h"
 
-#include "stack.h"
+#include "vui_stack.h"
 
 vui_stack* vui_stack_new_prealloc(size_t maxn)
 {

@@ -5,7 +5,7 @@ extern "C"
 {
 #endif
 
-#include "stack.h"
+#include "vui_stack.h"
 
 #define VUI_STATE_BITS 8
 #define VUI_MAXSTATE (1 << VUI_STATE_BITS)

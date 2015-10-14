@@ -1,8 +1,8 @@
 #include <string.h>
 
-#include "utf8.h"
+#include "vui_utf8.h"
 
-#include "string.h"
+#include "vui_string.h"
 
 
 vui_string* vui_string_new_prealloc(vui_string* str, size_t n)

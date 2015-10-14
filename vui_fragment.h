@@ -1,8 +1,8 @@
 #pragma once
 
-#include "stack.h"
+#include "vui_stack.h"
 
-#include "statemachine.h"
+#include "vui_statemachine.h"
 
 typedef struct vui_frag
 {

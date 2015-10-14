@@ -1,6 +1,6 @@
-#include "statemachine.h"
+#include "vui_statemachine.h"
 
-#include "combinator.h"
+#include "vui_combinator.h"
 
 
 vui_frag* vui_frag_union(vui_frag* lhs, vui_frag* rhs)

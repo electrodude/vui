@@ -1,8 +1,8 @@
 #include <stdlib.h>
 
-#include "debug.h"
+#include "vui_debug.h"
 
-#include "utf8.h"
+#include "vui_utf8.h"
 
 
 unsigned char* vui_utf8_encode(unsigned int c, unsigned char* s)

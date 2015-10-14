@@ -1,6 +1,6 @@
-#include "debug.h"
+#include "vui_debug.h"
 
-#include "gc.h"
+#include "vui_gc.h"
 
 // not in statemachine.h so people don't call it
 void vui_state_kill(vui_state* state);

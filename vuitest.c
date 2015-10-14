@@ -5,17 +5,19 @@
 #include <unistd.h>
 #include <string.h>
 #include <fcntl.h>
+#include <signal.h>
+#include <sys/ioctl.h>
 
 #include <curses.h>
 
-#include "debug.h"
+#include "vui_debug.h"
 
 #include "vui.h"
-#include "combinator.h"
-#include "translator.h"
-#include "gc.h"
+#include "vui_combinator.h"
+#include "vui_translator.h"
+#include "vui_gc.h"
 
-#include "graphviz.h"
+#include "vui_graphviz.h"
 
 
 WINDOW* statusline;
@@ -30,6 +32,7 @@ int VUI_KEY_DELETE = KEY_DC;
 int VUI_KEY_ESCAPE = 27;
 int VUI_KEY_HOME = KEY_HOME;
 int VUI_KEY_END = KEY_END;
+int VUI_KEY_MODIFIER_CONTROL = -'@';
 
 int dbgfd;
 
@@ -41,12 +44,47 @@ void wrlog(char* s)
 	write(dbgfd, s, strlen(s));
 }
 
-#ifdef VUI_DEBUG
+#if defined(VUI_DEBUG)
 void vui_debug(char* s)
 {
 	wrlog(s);
 }
 #endif
+
+static void sighandler(int signo)
+{
+        switch (signo)
+        {
+                case SIGWINCH:
+                {
+			wrlog("winch \r\n");
+
+			endwin();
+			refresh();
+			clear();
+
+			wresize(statusline, 1, COLS);
+
+			mvwin(statusline, LINES-1, 0);
+
+			vui_resize(COLS);
+
+			vui_showcmd_setup(COLS - 20, 10);
+
+			mvwaddstr(statusline, 0, 0, vui_bar);
+			wmove(statusline, 0, vui_crsrx);
+			curs_set(vui_crsrx >= 0);
+			wrefresh(statusline);
+
+                        break;
+                }
+
+                default:
+                {
+
+                }
+        }
+}
 
 static vui_state* tfunc_quit(vui_state* currstate, unsigned int c, int act, void* data)
 {
@@ -76,17 +114,13 @@ static vui_state* tfunc_winch(vui_state* currstate, unsigned int c, int act, voi
 
 	wrlog("winch \r\n");
 
-	int width;
-	int height;
-	getmaxyx(stdscr, height, width);
+	wresize(statusline, 1, COLS);
 
-	wresize(statusline, 1, width);
+	mvwin(statusline, LINES-1, 0);
 
-	mvwin(statusline, height-1, 0);
+	vui_resize(COLS);
 
-	vui_resize(width);
-
-	vui_showcmd_setup(width - 20, 10);
+	vui_showcmd_setup(COLS - 20, 10);
 
 	return NULL;
 }
@@ -166,16 +200,21 @@ int main(int argc, char** argv)
 	cbreak();
 	noecho();
 
-	int width, height;
-	getmaxyx(stdscr, height, width);
+	endwin();
 
-	statusline = newwin(1, width, height-1, 0);
+	struct sigaction sa;
+	memset(&sa, 0, sizeof(struct sigaction));
+	sa.sa_handler = sighandler;
+	sigaction(SIGWINCH, &sa, NULL);
+
+
+	statusline = newwin(1, COLS, LINES-1, 0);
 
 	keypad(statusline, TRUE);
 	meta(statusline, TRUE);
 
 
-	vui_init(width);
+	vui_init(COLS);
 
 	vui_set_char_t_u(vui_normal_mode, KEY_RESIZE, vui_transition_new2(tfunc_winch, NULL));
 
@@ -185,7 +224,7 @@ int main(int argc, char** argv)
 
 	vui_macro_init('q', '@');
 
-	vui_showcmd_setup(width - 20, 10);
+	vui_showcmd_setup(COLS - 20, 10);
 
 	vui_translator_init();
 

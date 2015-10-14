@@ -1,10 +1,10 @@
 #pragma once
 
-#include "stack.h"
-#include "string.h"
-#include "statemachine.h"
+#include "vui_stack.h"
+#include "vui_string.h"
+#include "vui_statemachine.h"
 
-#include "fragment.h"
+#include "vui_fragment.h"
 
 typedef struct vui_translator
 {

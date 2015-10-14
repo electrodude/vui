@@ -1,5 +1,5 @@
 .*.swp
-*.o
+vui*.o
 libvui.a
 vuitest
 vui.dot

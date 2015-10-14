@@ -3,10 +3,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "utf8.h"
+#include "vui_utf8.h"
 #include "vui.h"
 
-#include "translator.h"
+#include "vui_translator.h"
 
 vui_state* vui_translator_deadend;
 

@@ -2,10 +2,11 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "debug.h"
 
-#include "utf8.h"
-#include "gc.h"
+#include "vui_debug.h"
+
+#include "vui_utf8.h"
+#include "vui_gc.h"
 
 #include "vui.h"
 
@@ -932,6 +933,11 @@ vui_cmdline_def* vui_cmdline_mode_new(char* cmd, char* name, char* label, vui_tr
 	vui_set_char_t_u(cmdline_state, VUI_KEY_HOME, transition_cmd_home);
 	vui_set_char_t_u(cmdline_state, VUI_KEY_END, transition_cmd_end);
 
+#if 0
+	vui_state* keyescapestate = vui_state_new_t(transition_cmd_key);
+
+	vui_set_char_s_u(cmdline_state, 22, keyescapestate);
+#endif
 
 	cmdline->cmdline_state = cmdline_state;
 

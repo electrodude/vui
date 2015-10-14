@@ -16,13 +16,14 @@ extern int VUI_KEY_DELETE;
 extern int VUI_KEY_ESCAPE;
 extern int VUI_KEY_HOME;
 extern int VUI_KEY_END;
+extern int VUI_KEY_MODIFIER_CONTROL;
 // End user-declared variables
 
-#include "string.h"
+#include "vui_string.h"
 
-#include "translator.h"
+#include "vui_translator.h"
 
-#include "statemachine.h"
+#include "vui_statemachine.h"
 
 typedef struct hist_entry
 {

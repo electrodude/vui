@@ -1,7 +1,7 @@
 #pragma once
 
-#include "stack.h"
-#include "statemachine.h"
+#include "vui_stack.h"
+#include "vui_statemachine.h"
 
 void vui_gc_register(vui_state* st);
 

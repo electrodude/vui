@@ -1,6 +1,6 @@
 #pragma once
 
-#include "fragment.h"
+#include "vui_fragment.h"
 
 // N.B. for any binary combinator: You must not use lhs or rhs after calling
 //  this; feed fragments through vui_frag_dup() before calling this function if
