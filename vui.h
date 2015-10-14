@@ -141,7 +141,7 @@ vui_cmdline_def* vui_cmdline_mode_new(                             // create new
                             char* name,                            // name (internal)
                             char* label,                           // mode label (e.g. : or / or ?) (can be multicharacter)
                             vui_translator* tr,                    // parser
-                            vui_cmdline_submit_callback on_submit; // callback to call on submission
+                            vui_cmdline_submit_callback on_submit  // callback to call on submission
 );
 
 
