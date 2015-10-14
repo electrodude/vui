@@ -1,5 +1,10 @@
 #pragma once
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #include <stdlib.h>
 
 // Stack class
@@ -64,3 +69,7 @@ void* vui_stack_peek(vui_stack* stk);
 
 // Returns the element at index `i`, or NULL if out of range
 void* vui_stack_index(vui_stack* stk, unsigned int i);
+
+#ifdef __cplusplus
+}
+#endif

@@ -1,5 +1,10 @@
 #pragma once
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #include <stdio.h>
 
 #include "vui_stack.h"
@@ -8,3 +13,7 @@
 void vui_gv_write(FILE* f, vui_stack* roots);
 
 void vui_gv_print_s(FILE* f, vui_state* s);
+
+#ifdef __cplusplus
+}
+#endif

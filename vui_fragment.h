@@ -1,5 +1,10 @@
 #pragma once
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #include "vui_stack.h"
 
 #include "vui_statemachine.h"
@@ -17,3 +22,7 @@ void vui_frag_kill(vui_frag* frag);
 vui_frag* vui_frag_dup(vui_frag* orig);
 
 vui_state* vui_frag_release(vui_frag* frag, vui_state* exit);
+
+#ifdef __cplusplus
+}
+#endif

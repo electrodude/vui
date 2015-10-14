@@ -1,5 +1,10 @@
 #pragma once
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #include <stdlib.h>
 
 // String builder class
@@ -76,3 +81,7 @@ static inline unsigned char* vui_string_get(vui_string* str)
 	                    //  (there is room already allocated)
 	return str->s;
 }
+
+#ifdef __cplusplus
+}
+#endif

@@ -1,5 +1,10 @@
 #pragma once
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #include "vui_fragment.h"
 
 // N.B. for any binary combinator: You must not use lhs or rhs after calling
@@ -13,3 +18,7 @@ vui_frag* vui_frag_union(vui_frag* lhs, vui_frag* rhs);
 vui_frag* vui_frag_cat(vui_frag* lhs, vui_frag* rhs);
 
 vui_frag* vui_frag_catv(vui_frag** frags);
+
+#ifdef __cplusplus
+}
+#endif
