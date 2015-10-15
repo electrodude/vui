@@ -161,8 +161,12 @@ vui_state* vui_next_u(vui_state* currstate, unsigned int c, int act);
 
 vui_state* vui_run_c_p(vui_state** sp, unsigned char c, int act);
 vui_state* vui_run_c_p_u(vui_state** sp, unsigned int c, int act);
+
 vui_state* vui_run_s_p(vui_state** sp, unsigned char* s, int act);
 vui_state* vui_run_s(vui_state* st, unsigned char* s, int act);
+
+vui_state* vui_run_buf_p(vui_state** sp, unsigned char* buf, size_t len, int act);
+vui_state* vui_run_buf(vui_state* st, unsigned char* buf, size_t len, int act);
 
 
 vui_state* vui_tfunc_stack_pop(vui_state* currstate, unsigned int c, int act, void* data);

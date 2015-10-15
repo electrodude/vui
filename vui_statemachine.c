@@ -552,6 +552,21 @@ vui_state* vui_run_s(vui_state* st, unsigned char* s, int act)
 	return st;
 }
 
+vui_state* vui_run_buf_p(vui_state** sp, unsigned char* buf, size_t len, int act)
+{
+	return *sp = vui_run_buf(*sp, buf, len, act);
+}
+
+vui_state* vui_run_buf(vui_state* st, unsigned char* buf, size_t len, int act)
+{
+	while (len--)
+	{
+		st = vui_next(st, *buf, act);
+	}
+
+	return st;
+}
+
 
 // state stack
 
