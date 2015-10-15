@@ -415,7 +415,7 @@ static vui_state* tfunc_cmd_up(vui_state* currstate, unsigned int c, int act, vo
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
 		if (cmdline->hist_curr_entry->prev == cmdline->hist_curr_entry)
 		{
-			vui_debug("own prev!\n");
+			vui_debugf("own prev!\n");
 		}
 #endif
 
@@ -429,7 +429,7 @@ static vui_state* tfunc_cmd_up(vui_state* currstate, unsigned int c, int act, vo
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
 	else
 	{
-		vui_debug("no prev\n");
+		vui_debugf("no prev\n");
 	}
 #endif
 
@@ -449,7 +449,7 @@ static vui_state* tfunc_cmd_down(vui_state* currstate, unsigned int c, int act, 
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
 		if (cmdline->hist_curr_entry->next == cmdline->hist_curr_entry)
 		{
-			vui_debug("own next!\n");
+			vui_debugf("own next!\n");
 		}
 #endif
 
@@ -464,7 +464,7 @@ static vui_state* tfunc_cmd_down(vui_state* currstate, unsigned int c, int act, 
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
 	else
 	{
-		vui_debug("no next\n");
+		vui_debugf("no next\n");
 	}
 #endif
 
@@ -521,7 +521,7 @@ static vui_state* tfunc_cmd_escape(vui_state* currstate, unsigned int c, int act
 	if (cmdline->hist_curr_entry->line[0] != 0)
 	{
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
-		vui_debug("new entry\n");
+		vui_debugf("new entry\n");
 #endif
 
 		hist_entry_new(cmdline);
@@ -529,7 +529,7 @@ static vui_state* tfunc_cmd_escape(vui_state* currstate, unsigned int c, int act
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
 	else
 	{
-		vui_debug("no new entry\n");
+		vui_debugf("no new entry\n");
 	}
 #endif
 
@@ -567,7 +567,7 @@ static vui_state* tfunc_cmd_enter(vui_state* currstate, unsigned int c, int act,
 	if (cmdline->hist_curr_entry->line[0] != 0)
 	{
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
-		vui_debug("new entry\n");
+		vui_debugf("new entry\n");
 #endif
 
 		hist_entry_new(cmdline);
@@ -575,7 +575,7 @@ static vui_state* tfunc_cmd_enter(vui_state* currstate, unsigned int c, int act,
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
 	else
 	{
-		vui_debug("no new entry\n");
+		vui_debugf("no new entry\n");
 	}
 #endif
 
@@ -699,9 +699,7 @@ static vui_state* tfunc_macro_record(vui_state* currstate, unsigned int c, int a
 	if (act <= 0) return vui_return(act);
 
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
-	char s[256];
-	snprintf(s, 256, "record %c\r\n", c);
-	vui_debug(s);
+	vui_debugf("record %c\n", c);
 #endif
 
 	vui_reset();
@@ -716,9 +714,7 @@ static vui_state* tfunc_macro_execute(vui_state* currstate, unsigned int c, int 
 	if (act <= 0) return vui_return(act);
 
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
-	char s[256];
-	snprintf(s, 256, "execute %c\r\n", c);
-	vui_debug(s);
+	vui_debugf("execute %c\n", c);
 #endif
 
 	int count = vui_count;
@@ -754,7 +750,7 @@ static vui_state* tfunc_record_enter(vui_state* currstate, unsigned int c, int a
 		if (act > 0)
 		{
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
-			vui_debug("end record\r\n");
+			vui_debugf("end record\n");
 #endif
 			vui_register_endrecord();
 
@@ -823,9 +819,7 @@ void vui_register_endrecord(void)
 {
 	vui_register_recording->s[--vui_register_recording->n] = 0;
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
-	char s[64];
-	snprintf(s, 64, "finished recording macro: %s\r\n", vui_register_recording->s);
-	vui_debug(s);
+	vui_debugf("finished recording macro: %s\n", vui_register_recording->s);
 #endif
 	vui_register_recording = NULL;
 }
@@ -972,9 +966,7 @@ void vui_input(unsigned int c)
 	if (vui_register_recording != NULL)
 	{
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
-		char s[64];
-		snprintf(s, 64, "register_putc(%d)\r\n", c);
-		vui_debug(s);
+		vui_debugf("register_putc(%d)\n", c);
 #endif
 		vui_string_put(vui_register_recording, c);
 	}

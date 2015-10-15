@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <unistd.h>
 #include <string.h>
 #include <fcntl.h>
@@ -34,20 +35,23 @@ int VUI_KEY_HOME = KEY_HOME;
 int VUI_KEY_END = KEY_END;
 int VUI_KEY_MODIFIER_CONTROL = -'@';
 
-int dbgfd;
+FILE* dbgf;
 
 vui_cmdline_def* cmd_mode;
 vui_cmdline_def* search_mode;
 
-void wrlog(char* s)
-{
-	write(dbgfd, s, strlen(s));
-}
-
 #if defined(VUI_DEBUG)
 void vui_debug(char* s)
 {
-	wrlog(s);
+	fwrite(s, 1, strlen(s), dbgf);
+}
+
+void vui_debugf(const char* format, ...)
+{
+	va_list argp;
+	va_start(argp, format);
+	vfprintf(dbgf, format, argp);
+	va_end(argp);
 }
 #endif
 
@@ -57,7 +61,7 @@ static void sighandler(int signo)
         {
                 case SIGWINCH:
                 {
-			wrlog("winch \r\n");
+			fprintf(dbgf, "winch\n");
 
 			endwin();
 			refresh();
@@ -92,16 +96,14 @@ static vui_state* tfunc_quit(vui_state* currstate, unsigned int c, int act, void
 
 	if (vui_count != 0)
 	{
-		char s[256];
-		snprintf(s, 256, "count: %d\r\n", vui_count);
-		wrlog(s);
+		fprintf(dbgf, "count: %d\n", vui_count);
 
 		vui_reset();
 
 		return vui_return(act);
 	}
 
-	wrlog("quit\r\n");
+	fprintf(dbgf, "quit\n");
 	endwin();
 	printf("Quitting!\n");
 
@@ -112,7 +114,7 @@ static vui_state* tfunc_winch(vui_state* currstate, unsigned int c, int act, voi
 {
 	if (act <= 0) return NULL;
 
-	wrlog("winch \r\n");
+	fprintf(dbgf, "winch\n");
 
 	wresize(statusline, 1, COLS);
 
@@ -133,13 +135,11 @@ void on_cmd_submit(vui_stack* cmd)
 
 	if (op != NULL)
 	{
-		wrlog("op: \"");
-		wrlog(op);
-		wrlog("\"\r\n");
+		fprintf(dbgf, "op: \"%s\"\n", op);
 	}
 	else
 	{
-		wrlog("op: NULL\r\n");
+		fprintf(dbgf, "op: NULL");
 		return;
 	}
 
@@ -154,26 +154,22 @@ void on_cmd_submit(vui_stack* cmd)
 		char* action = arg(1);
 		if (action == NULL)
 		{
-			wrlog("action: NULL\r\n");
+			fprintf(dbgf, "action: NULL\n");
 			return;
 		}
 		else
 		{
-			wrlog("action: \"");
-			wrlog(action);
-			wrlog("\"\r\n");
+			fprintf(dbgf, "action: \"%s\"\n", action);
 		}
 		char* reaction = arg(2);
 		if (reaction == NULL)
 		{
-			wrlog("reaction: NULL\r\n");
+			fprintf(dbgf, "reaction: NULL\n");
 			return;
 		}
 		else
 		{
-			wrlog("reaction: \"");
-			wrlog(reaction);
-			wrlog("\"\r\n");
+			fprintf(dbgf, "reaction: \"%s\"\n", reaction);
 		}
 
 		vui_map(vui_normal_mode, action, reaction);
@@ -183,18 +179,16 @@ void on_cmd_submit(vui_stack* cmd)
 
 void on_search_submit(char* cmd)
 {
-	wrlog("search: \"");
-	wrlog(cmd);
-	wrlog("\"\r\n");
+	fprintf(dbgf, "search: \"%s\"\n", cmd);
 }
 
 
 int main(int argc, char** argv)
 {
 	printf("Opening log...\n");
-	dbgfd = open("log", O_WRONLY | O_APPEND);
+	dbgf = fopen("log", "a");
 
-	wrlog("start\r\n");
+	fprintf(dbgf, "start\n");
 
 	initscr();
 	cbreak();
@@ -292,9 +286,7 @@ int main(int argc, char** argv)
 			c2[1] = '?';
 		}
 
-		char s[256];
-		sprintf(s, "char %d: %s\r\n", c, c2);
-		wrlog(s);
+		fprintf(dbgf, "char %d: %s\n", c, c2);
 
 		if (c >= 0)
 		{
@@ -309,30 +301,29 @@ int main(int argc, char** argv)
 #if 0
 			if (vui_curr_state == vui_normal_mode)
 			{
-				wrlog("normal mode\r\n");
+				fprintf(dbgf, "normal mode\n");
 			}
 			else if (vui_curr_state == vui_count_mode)
 			{
-				wrlog("count mode\r\n");
+				fprintf(dbgf, "count mode\n");
 			}
 			else if (vui_curr_state == cmd_mode->cmdline_state)
 			{
-				wrlog("cmd mode\r\n");
+				fprintf(dbgf, "cmd mode\n");
 			}
 			else if (vui_curr_state == search_mode->cmdline_state)
 			{
-				wrlog("search mode\r\n");
+				fprintf(dbgf, "search mode\n");
 			}
 #else
 			if (vui_curr_state->name != NULL)
 			{
-				wrlog(vui_curr_state->name);
-				wrlog("\r\n");
+				fprintf(dbgf, "%s\n", vui_curr_state->name);
 			}
 #endif
 			else
 			{
-				wrlog("unknown mode\r\n");
+				fprintf(dbgf, "unknown mode\n");
 			}
 		}
 	}

@@ -19,7 +19,8 @@ extern "C"
 //#define VUI_DEBUG_STACK
 //#define VUI_DEBUG_UTF8
 
-extern void vui_debug(char* msg);  // user must declare this
+extern void vui_debug(char* msg);  // DEPRECATED user must declare this
+extern void vui_debugf(const char* format, ...);  // user must declare this
 
 #endif
 

@@ -72,9 +72,7 @@ unsigned char* vui_utf8_encode(unsigned int c, unsigned char* s)
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_UTF8)
 	else
 	{
-		char s[256];
-		snprintf(s, 256, "Error: can't encode value as UTF-8: %d\r\n", c);
-		vui_debug(s);
+		vui_debugf("Error: can't encode value as UTF-8: %d\n", c);
 	}
 #endif
 

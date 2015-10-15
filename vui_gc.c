@@ -63,9 +63,7 @@ void vui_gc_mark(vui_state* st)
 	st->iter_gen = vui_iter_gen;
 
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_GC)
-	char s[256];
-	snprintf(s, 256, "vui_gc_mark(0x%lX)\r\n", st);
-	vui_debug(s);
+	vui_debugf("vui_gc_mark(0x%lX)\n", st);
 #endif
 
 	for (int i=0; i < VUI_MAXSTATE; i++)
