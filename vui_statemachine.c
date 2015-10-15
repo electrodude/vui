@@ -199,7 +199,7 @@ typedef struct vui_transition_run_s_data
 	char* str;
 } vui_transition_run_s_data;
 
-static vui_state* vui_tfunc_run_s_s(vui_state* currstate, unsigned int c, int act, void* data)
+vui_state* vui_tfunc_run_s_s(vui_state* currstate, unsigned int c, int act, void* data)
 {
 	vui_transition_run_s_data* tdata = data;
 
@@ -228,7 +228,7 @@ vui_transition vui_transition_run_s_s(vui_state* st, char* str)
 }
 
 
-static vui_state* vui_tfunc_run_c_s(vui_state* currstate, unsigned int c, int act, void* data)
+vui_state* vui_tfunc_run_c_s(vui_state* currstate, unsigned int c, int act, void* data)
 {
 	vui_state* other = data;
 
@@ -252,13 +252,8 @@ static vui_state* vui_tfunc_run_c_s(vui_state* currstate, unsigned int c, int ac
 	}
 }
 
-vui_transition vui_transition_run_c_s(vui_state* other)
-{
-	return (vui_transition){.next = NULL, .func = vui_tfunc_run_c_s, .data = other};
-}
 
-
-static vui_state* vui_tfunc_run_c_t(vui_state* currstate, unsigned int c, int act, void* data)
+vui_state* vui_tfunc_run_c_t(vui_state* currstate, unsigned int c, int act, void* data)
 {
 	vui_transition* t = data;
 
@@ -270,11 +265,6 @@ static vui_state* vui_tfunc_run_c_t(vui_state* currstate, unsigned int c, int ac
 	{
 		return vui_next_t(currstate, c, *t, VUI_ACT_EMUL);
 	}
-}
-
-vui_transition vui_transition_run_c_t(vui_transition* t)
-{
-	return (vui_transition){.next = NULL, .func = vui_tfunc_run_c_t, .data = t};
 }
 
 
@@ -565,7 +555,7 @@ vui_state* vui_run_s(vui_state* st, unsigned char* s, int act)
 
 // state stack
 
-static vui_state* vui_tfunc_stack_push(vui_state* currstate, unsigned int c, int act, void* data)
+vui_state* vui_tfunc_stack_push(vui_state* currstate, unsigned int c, int act, void* data)
 {
 	vui_stack* stk = data;
 
@@ -581,7 +571,7 @@ vui_transition vui_transition_stack_push(vui_stack* stk, vui_state* next)
 	return (vui_transition){.next = next, .func = vui_tfunc_stack_push, .data = stk};
 }
 
-static vui_state* vui_tfunc_stack_pop(vui_state* currstate, unsigned int c, int act, void* data)
+vui_state* vui_tfunc_stack_pop(vui_state* currstate, unsigned int c, int act, void* data)
 {
 	vui_stack* stk = data;
 
@@ -593,9 +583,4 @@ static vui_state* vui_tfunc_stack_pop(vui_state* currstate, unsigned int c, int 
 	{
 		return vui_stack_pop(stk);
 	}
-}
-
-vui_transition vui_transition_stack_pop(vui_stack* stk)
-{
-	return (vui_transition){.next = NULL, .func = vui_tfunc_stack_pop, .data = stk};
 }
