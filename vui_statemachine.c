@@ -352,6 +352,55 @@ void vui_set_string_t_nocall(vui_state* state, unsigned char* s, vui_transition 
 	}
 }
 
+void vui_set_buf_t(vui_state* state, unsigned char* s, size_t len, vui_transition next)
+{
+	vui_transition t = state->next[*s];
+
+	if (t.next == NULL)
+	{
+#if defined(VUI_DEBUG)
+		char s2[512];
+		snprintf(s2, 512, "vui_set_buf_t(0x%lX, 0x%p, %d, {.next = 0x%lX, .func = 0x%lX, .data = 0x%lX}): bad transition!\r\n", state, s, len, next.next, next.func, next.data);
+		vui_debug(s2);
+#endif
+	}
+	else
+	{
+		if (len)
+		{
+			vui_transition t = state->next[*s];
+			vui_state* state2 = t.next;
+
+			if (state2 == NULL) return;
+
+			vui_state* nextst = vui_state_dup(state2);
+
+			t.next = nextst;
+
+			vui_set_char_t(state, *s, t);
+
+			vui_string name;
+			vui_string_new(&name);
+			if (s[1] < 128)
+			{
+				vui_string_putc(&name, s[1]);
+			}
+			else
+			{
+				vui_string_puts(&name, "??");
+			}
+			free(nextst->name);
+			nextst->name = vui_string_get(&name);
+			
+			vui_set_buf_t(nextst, s+1, len-1, next);
+		}
+		else
+		{
+			vui_set_char_t(state, *s, next);
+		}
+	}
+}
+
 void vui_set_string_t(vui_state* state, unsigned char* s, vui_transition next)
 {
 	vui_transition t = state->next[*s];

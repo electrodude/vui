@@ -142,9 +142,15 @@ static inline void vui_set_string_s_nocall(vui_state* state, unsigned char* s, v
 }
 
 void vui_set_string_t(vui_state* state, unsigned char* s, vui_transition next);
-static inline void vui_set_string_s2(vui_state* state, unsigned char* s, vui_state* next)
+static inline void vui_set_string_s(vui_state* state, unsigned char* s, vui_state* next)
 {
 	vui_set_string_t(state, s, vui_transition_new1(next));
+}
+
+void vui_set_buf_t(vui_state* state, unsigned char* s, size_t len, vui_transition next);
+static inline void vui_set_buf_s(vui_state* state, unsigned char* s, size_t len, vui_state* next)
+{
+	vui_set_buf_t(state, s, len, vui_transition_new1(next));
 }
 
 void vui_set_string_t_mid(vui_state* state, unsigned char* s, vui_transition mid, vui_transition next);
