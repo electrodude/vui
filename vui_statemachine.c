@@ -630,11 +630,6 @@ vui_state* vui_tfunc_stack_push(vui_state* currstate, unsigned int c, int act, v
 	return NULL;
 }
 
-vui_transition vui_transition_stack_push(vui_stack* stk, vui_state* next)
-{
-	return (vui_transition){.next = next, .func = vui_tfunc_stack_push, .data = stk};
-}
-
 vui_state* vui_tfunc_stack_pop(vui_state* currstate, unsigned int c, int act, void* data)
 {
 	vui_stack* stk = data;

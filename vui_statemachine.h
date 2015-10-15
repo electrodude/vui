@@ -174,6 +174,11 @@ vui_state* vui_run_s(vui_state* st, unsigned char* s, int act);
 vui_state* vui_run_buf_p(vui_state** sp, unsigned char* buf, size_t len, int act);
 vui_state* vui_run_buf(vui_state* st, unsigned char* buf, size_t len, int act);
 
+vui_state* vui_tfunc_stack_push(vui_state* currstate, unsigned int c, int act, void* data);
+static inline vui_transition vui_transition_stack_push(vui_stack* stk, vui_state* next)
+{
+	return (vui_transition){.next = next, .func = vui_tfunc_stack_push, .data = stk};
+}
 
 vui_state* vui_tfunc_stack_pop(vui_state* currstate, unsigned int c, int act, void* data);
 static inline vui_transition vui_transition_stack_pop(vui_stack* stk)
