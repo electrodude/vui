@@ -1,4 +1,5 @@
-#pragma once
+#ifndef VUI_STRING_H
+#define VUI_STRING_H
 
 #ifdef __cplusplus
 extern "C"
@@ -84,4 +85,6 @@ static inline unsigned char* vui_string_get(vui_string* str)
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

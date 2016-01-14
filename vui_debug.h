@@ -1,4 +1,5 @@
-#pragma once
+#ifndef VUI_DEBUG_H
+#define VUI_DEBUG_H
 
 #ifdef __cplusplus
 extern "C"
@@ -26,4 +27,6 @@ extern void vui_debugf(const char* format, ...);  // user must declare this
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

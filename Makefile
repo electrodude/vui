@@ -1,6 +1,6 @@
-CCFLAGS+=-std=c99 -g -O0
+CCFLAGS+=-g -O0
 LDFLAGS+=-lcurses
-CC=gcc
+CC=gcc -std=c99
 LD=gcc
 AR=ar rcu
 RANLIB=ranlib

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef VUI_GRAPHVIZ_H
+#define VUI_GRAPHVIZ_H
 
 #ifdef __cplusplus
 extern "C"
@@ -16,4 +17,6 @@ void vui_gv_print_s(FILE* f, vui_state* s);
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

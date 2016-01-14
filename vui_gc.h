@@ -1,4 +1,5 @@
-#pragma once
+#ifndef VUI_GC_H
+#define VUI_GC_H
 
 #ifdef __cplusplus
 extern "C"
@@ -16,4 +17,6 @@ void vui_gc_mark(vui_state* st);
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

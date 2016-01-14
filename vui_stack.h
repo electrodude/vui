@@ -1,4 +1,5 @@
-#pragma once
+#ifndef VUI_STACK_H
+#define VUI_STACK_H
 
 #ifdef __cplusplus
 extern "C"
@@ -72,4 +73,6 @@ void* vui_stack_index(vui_stack* stk, unsigned int i);
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

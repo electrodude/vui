@@ -1,4 +1,5 @@
-#pragma once
+#ifndef VUI_TRANSLATOR_H
+#define VUI_TRANSLATOR_H
 
 #ifdef __cplusplus
 extern "C"
@@ -72,4 +73,6 @@ vui_frag* vui_frag_accept_any(vui_translator* tr);
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

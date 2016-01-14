@@ -1,4 +1,5 @@
-#pragma once
+#ifndef VUI_FRAGMENT_H
+#define VUI_FRAGMENT_H
 
 #ifdef __cplusplus
 extern "C"
@@ -25,4 +26,6 @@ vui_state* vui_frag_release(vui_frag* frag, vui_state* exit);
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

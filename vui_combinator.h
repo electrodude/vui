@@ -1,4 +1,5 @@
-#pragma once
+#ifndef VUI_COMBINATOR_H
+#define VUI_COMBINATOR_H
 
 #ifdef __cplusplus
 extern "C"
@@ -21,4 +22,6 @@ vui_frag* vui_frag_catv(vui_frag** frags);
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef VUI_H
+#define VUI_H
 
 #ifdef __cplusplus
 extern "C"
@@ -157,4 +158,6 @@ void vui_reset(void);
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

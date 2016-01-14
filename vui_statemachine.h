@@ -1,4 +1,5 @@
-#pragma once
+#ifndef VUI_STATEMACHINE_H
+#define VUI_STATEMACHINE_H
 
 #ifdef __cplusplus
 extern "C"
@@ -189,4 +190,6 @@ static inline vui_transition vui_transition_stack_pop(vui_stack* stk)
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
