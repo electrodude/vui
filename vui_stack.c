@@ -82,6 +82,9 @@ void vui_stack_push(vui_stack* stk, void* s)
 
 	if (stk->maxn < stk->n + 1)
 	{
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_STRING)
+		printf("realloc: %ld, %ld\n", stk->maxn, stk->n);
+#endif
 		stk->maxn = stk->n*2;
 		stk->s = realloc(stk->s, stk->maxn*sizeof(void*));
 	}
@@ -97,8 +100,11 @@ void vui_stack_append(vui_stack* stk, vui_stack* stk2)
 
 	size_t n = stk->n + stk2->n;
 	// make room for stk2
-	if (stk->maxn < n);
+	if (stk->maxn < n)
 	{
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_STRING)
+		printf("realloc: %ld, %ld\n", stk->maxn, stk->n);
+#endif
 		stk->maxn = n*2;
 		stk->s = realloc(stk->s, stk->maxn);
 	}

@@ -2,6 +2,8 @@
 
 #include "vui_utf8.h"
 
+#include "vui_debug.h"
+
 #include "vui_string.h"
 
 
@@ -47,6 +49,10 @@ char* vui_string_shrink(vui_string* str)
 {
 	if (str == NULL) return NULL;
 
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_STRING)
+	vui_debugf("shrink(\"%s\")\n", vui_string_get(str));
+#endif
+
 	str->s = realloc(str->s, str->maxn = str->n+1);
 
 	return vui_string_get(str);
@@ -57,9 +63,16 @@ void vui_string_putc(vui_string* str, unsigned char c)
 {
 	if (str == NULL) return;
 
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_STRING)
+	vui_debugf("putc(\"%s\", '%c')\n", vui_string_get(str), c);
+#endif
+
 	// make room for two more chars: c and null terminator
-	if (str->maxn < str->n + 2);
+	if (str->maxn < str->n + 2)
 	{
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_STRING)
+		printf("realloc: %ld, %ld\n", str->maxn, str->n);
+#endif
 		str->maxn = (str->n + 2)*2;
 		str->s = realloc(str->s, str->maxn);
 	}
@@ -85,10 +98,18 @@ void vui_string_append(vui_string* str, vui_string* str2)
 
 	if (str2 == NULL) return;
 
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_STRING)
+	vui_debugf("append(\"%s\", \"%s\")\n", vui_string_get(str), vui_string_get(str));
+#endif
+
+
 	size_t n = str->n + str2->n;
 	// make room for str2 and null terminator
-	if (str->maxn < n + 1);
+	if (str->maxn < n + 1)
 	{
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_STRING)
+		printf("realloc: %ld, %ld\n", str->maxn, str->n);
+#endif
 		str->maxn = (n + 1)*2;
 		str->s = realloc(str->s, str->maxn);
 	}

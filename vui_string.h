@@ -31,7 +31,7 @@ vui_string* vui_string_new_prealloc(vui_string* str, size_t n);
 // otherwise, put it at *str
 static inline vui_string* vui_string_new(vui_string* str)
 {
-	return vui_string_new_prealloc(str, 16);
+	return vui_string_new_prealloc(str, 32);
 }
 
 // Destroy a string and its buffer
