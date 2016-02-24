@@ -188,6 +188,8 @@ int main(int argc, char** argv)
 	printf("Opening log...\n");
 	dbgf = fopen("log", "a");
 
+	setvbuf(dbgf, NULL, _IOLBF, BUFSIZ);
+
 	fprintf(dbgf, "start\n");
 
 	initscr();
@@ -258,12 +260,17 @@ int main(int argc, char** argv)
 
 	vui_gc_run();
 
-	FILE* f = fopen("vui.dot", "w");
+	/*
 	vui_stack* gv_roots = vui_stack_new();
-	vui_stack_push(gv_roots, vui_normal_mode);
-	vui_stack_push(gv_roots, cmd_tr_start);
+	//vui_stack_push(gv_roots, vui_normal_mode);
+	//vui_stack_push(gv_roots, cmd_tr_start);
+
+	FILE* f = fopen("vui.dot", "w");
 	vui_gv_write(f, gv_roots);
 	fclose(f);
+
+	exit(0);
+	*/
 
 	while (1)
 	{

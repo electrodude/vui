@@ -709,9 +709,18 @@ static vui_state* tfunc_macro_record(vui_state* currstate, unsigned int c, int a
 	return vui_return(act);
 }
 
+unsigned int lastmacro = 0;
+
 static vui_state* tfunc_macro_execute(vui_state* currstate, unsigned int c, int act, void* data)
 {
 	if (act <= 0) return vui_return(act);
+
+	unsigned int c_bak = c;
+
+	if (c == '@')
+	{
+		c = lastmacro;
+	}
 
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
 	vui_debugf("execute %c\n", c);
@@ -722,12 +731,25 @@ static vui_state* tfunc_macro_execute(vui_state* currstate, unsigned int c, int 
 
 	if (count < 1) count = 1;
 
+	vui_state* st = vui_return(VUI_ACT_TEST);
+
 	while (count--)
 	{
-		vui_register_execute(c);
+		st = vui_register_execute(st, c, act);
 	}
 
-	return vui_return(act);
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
+	vui_debugf("execute %c done\n", c);
+#endif
+
+	if (c_bak != '@')
+	{
+		lastmacro = c;
+	}
+
+	vui_return(act);
+
+	return st;
 }
 
 static vui_state* tfunc_record_enter(vui_state* currstate, unsigned int c, int act, void* data)
@@ -794,42 +816,106 @@ void vui_register_init(void)
 	vui_register_recording = NULL;
 }
 
-vui_string* vui_register_get(int c)
+vui_string* vui_register_get(unsigned int c)
 {
-	vui_string** regptr = (vui_string**)&vui_next_u(vui_register_container, c, VUI_ACT_NOCALL)->data;
+	vui_state* st = vui_next_u(vui_register_container, c, VUI_ACT_NOCALL);
+	vui_string* reg = (vui_string*)st->data;
 
-	if (*regptr == NULL)
+	if (reg == NULL)
 	{
-		*regptr = vui_string_new(NULL);
+		reg = vui_string_new(NULL);
+
+		vui_state* st_new = vui_state_new();
+		st_new->data = reg;
+
+		vui_set_char_s_u(vui_register_container, c, st_new);
 	}
 
-	return *regptr;
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
+	vui_debugf("register %c: %s\n", c, reg->s);
+#endif
+
+	return reg;
 }
 
-void vui_register_record(int c)
+void vui_register_record(unsigned int c)
 {
 	vui_string* reg = vui_register_get(c);
-	reg->n = 0;
-	reg->s[0] = 0;
+	vui_string_reset(reg);
 
 	vui_register_recording = reg;
+
+	vui_status_set("recording");
 }
 
 void vui_register_endrecord(void)
 {
-	vui_register_recording->s[--vui_register_recording->n] = 0;
+	if (vui_register_recording != NULL)
+	{
+		vui_register_recording->n--;
+		vui_string_get(vui_register_recording);	// append null terminator
+
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
-	vui_debugf("finished recording macro: %s\n", vui_register_recording->s);
+		vui_debugf("finished recording macro: %s\n", vui_register_recording->s);
 #endif
-	vui_register_recording = NULL;
+
+		vui_register_recording = NULL;
+	}
+
+	vui_status_clear();
 }
 
-void vui_register_execute(int c)
+vui_state* vui_register_execute(vui_state* currstate, unsigned int c, int act)
 {
+	vui_state* st = vui_next_u(vui_register_container, c, VUI_ACT_NOCALL);
+	void* data = st->data;
+
+	if (data == NULL)
+	{
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
+		vui_debugf("stopped recursive macro %c\n", c);
+#endif
+	}
+
 	vui_string* reg = vui_register_get(c);
-	vui_run_s(vui_return(0), reg->s, 1);
+
+	st->data = NULL;
+
+	vui_state* nextstate = vui_run_s(currstate, reg->s, act);
+
+	st->data = data;
+
+	return nextstate;
 }
 
+
+static vui_state* tfunc_cmd_paste(vui_state* currstate, unsigned int c, int act, void* data)
+{
+	if (act <= 0) return vui_return(act);
+
+	vui_string* reg = vui_register_get(c);
+
+	if (reg != NULL)
+	{
+		vui_state* cmdline_state = vui_return(VUI_ACT_TEST);
+
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
+		vui_debugf("paste %c\n", c);
+#endif
+		for (int i = 0; i < reg->n; i++)
+		{
+			tfunc_cmd_key(cmdline_state, reg->s[i], act, data);
+		}
+	}
+	else
+	{
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
+		vui_debugf("paste empty %c\n", c);
+#endif
+	}
+
+	return vui_return(act);
+}
 
 // new modes
 
@@ -911,6 +997,9 @@ vui_cmdline_def* vui_cmdline_mode_new(char* cmd, char* name, char* label, vui_tr
 	vui_transition transition_cmd_home = {.next = cmdline_state, .func = tfunc_cmd_home, .data = cmdline};
 	vui_transition transition_cmd_end = {.next = cmdline_state, .func = tfunc_cmd_end, .data = cmdline};
 
+	vui_transition transition_macro_paste = vui_transition_new3(cmdline_state, tfunc_cmd_paste, cmdline);
+	vui_state* paste_state = vui_state_new_t(transition_macro_paste);
+
 	for (int i=32; i<127; i++)
 	{
 		vui_set_char_t(cmdline_state, i, transition_cmd_key);
@@ -927,6 +1016,8 @@ vui_cmdline_def* vui_cmdline_mode_new(char* cmd, char* name, char* label, vui_tr
 	vui_set_char_t_u(cmdline_state, VUI_KEY_DELETE, transition_cmd_delete);
 	vui_set_char_t_u(cmdline_state, VUI_KEY_HOME, transition_cmd_home);
 	vui_set_char_t_u(cmdline_state, VUI_KEY_END, transition_cmd_end);
+
+	vui_set_char_s_u(cmdline_state, 'R' + VUI_KEY_MODIFIER_CONTROL, paste_state);
 
 #if 0
 	vui_state* keyescapestate = vui_state_new_t(transition_cmd_key);
@@ -966,7 +1057,7 @@ void vui_input(unsigned int c)
 	if (vui_register_recording != NULL)
 	{
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
-		vui_debugf("register_putc(%d)\n", c);
+		vui_debugf("register_putc('%c' 0x%02x)\n", c, c);
 #endif
 		vui_string_put(vui_register_recording, c);
 	}

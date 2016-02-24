@@ -116,11 +116,11 @@ void vui_macro_init(unsigned int record, unsigned int execute);
 // registers
 void vui_register_init(void);
 
-vui_string* vui_register_get(int c);
+vui_string* vui_register_get(unsigned int c);
 
-void vui_register_record(int c);
+void vui_register_record(unsigned int c);
 void vui_register_endrecord(void);
-void vui_register_execute(int c);
+vui_state* vui_register_execute(vui_state* currstate, unsigned int c, int act);
 
 
 // new modes

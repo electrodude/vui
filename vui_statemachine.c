@@ -336,8 +336,7 @@ void vui_set_string_t_nocall(vui_state* state, unsigned char* s, vui_transition 
 			{
 				vui_string_puts(&name, "??");
 			}
-			free(nextst->name);
-			nextst->name = vui_string_get(&name);
+			vui_string_get_replace(&name, &nextst->name);
 
 			vui_set_string_t_nocall(nextst, s+1, next);
 		}
@@ -360,7 +359,7 @@ void vui_set_buf_t(vui_state* state, unsigned char* s, size_t len, vui_transitio
 	}
 	else
 	{
-		if (len)
+		if (len > 1)
 		{
 			vui_transition t = state->next[*s];
 			vui_state* state2 = t.next;
@@ -375,16 +374,15 @@ void vui_set_buf_t(vui_state* state, unsigned char* s, size_t len, vui_transitio
 
 			vui_string name;
 			vui_string_new(&name);
-			if (s[1] < 128)
+			if (s[1] >= 32 && s[1] < 128)
 			{
 				vui_string_putc(&name, s[1]);
 			}
 			else
 			{
-				vui_string_puts(&name, "??");
+				vui_string_putf(&name, "0x%02x", s[1]);
 			}
-			free(nextst->name);
-			nextst->name = vui_string_get(&name);
+			vui_string_get_replace(&name, &nextst->name);
 			
 			vui_set_buf_t(nextst, s+1, len-1, next);
 		}
@@ -430,8 +428,7 @@ void vui_set_string_t(vui_state* state, unsigned char* s, vui_transition next)
 			{
 				vui_string_puts(&name, "??");
 			}
-			free(nextst->name);
-			nextst->name = vui_string_get(&name);
+			vui_string_get_replace(&name, &nextst->name);
 			
 			vui_set_string_t(nextst, s+1, next);
 		}
@@ -479,8 +476,7 @@ void vui_set_string_t_mid(vui_state* state, unsigned char* s, vui_transition mid
 			{
 				vui_string_puts(&name, "??");
 			}
-			free(nextst->name);
-			nextst->name = vui_string_get(&name);
+			vui_string_get_replace(&name, &nextst->name);
 
 			vui_set_string_t_mid(nextst, s+1, mid, next);
 		}
@@ -518,6 +514,13 @@ vui_state* vui_next_u(vui_state* currstate, unsigned int c, int act)
 
 vui_state* vui_next_t(vui_state* currstate, unsigned int c, vui_transition t, int act)
 {
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_STATEMACHINE)
+	if (act == VUI_ACT_RUN)
+	{
+		vui_debugf("source: \"%s\" (0x%lX)\n", currstate->name != NULL ? currstate->name : "", currstate);
+	}
+#endif
+
 	vui_state* nextstate = NULL;
 
 
@@ -556,7 +559,7 @@ vui_state* vui_next_t(vui_state* currstate, unsigned int c, vui_transition t, in
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_STATEMACHINE)
 	if (act == VUI_ACT_RUN)
 	{
-		vui_debugf("destination: (0x%lX)\n", nextstate);
+		vui_debugf("destination: \"%s\" (0x%lX)\n", nextstate->name != NULL ? nextstate->name : "", nextstate);
 	}
 #endif
 

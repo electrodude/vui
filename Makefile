@@ -42,7 +42,7 @@ vui_statemachine.o: vui_statemachine.c vui_debug.h vui_utf8.h \
  vui_string.h vui_gc.h vui_stack.h vui_statemachine.h
 vui_gc.o: vui_gc.c vui_debug.h vui_gc.h vui_stack.h vui_statemachine.h
 vui_stack.o: vui_stack.c vui_debug.h vui_stack.h
-vui_string.o: vui_string.c vui_utf8.h vui_string.h
+vui_string.o: vui_string.c vui_utf8.h vui_debug.h vui_string.h
 vui_utf8.o: vui_utf8.c vui_debug.h vui_utf8.h
 vui_graphviz.o: vui_graphviz.c vui_gc.h vui_stack.h vui_statemachine.h \
  vui_graphviz.h

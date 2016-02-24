@@ -6,7 +6,7 @@ extern "C"
 {
 #endif
 
-//#define VUI_DEBUG 1
+#define VUI_DEBUG 1
 
 #ifdef VUI_DEBUG
 
@@ -18,6 +18,7 @@ extern "C"
 #define VUI_DEBUG_STATEMACHINE
 //#define VUI_DEBUG_GC
 //#define VUI_DEBUG_STACK
+//#define VUI_DEBUG_STRING
 //#define VUI_DEBUG_UTF8
 
 extern void vui_debug(char* msg);  // DEPRECATED user must declare this
