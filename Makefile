@@ -11,19 +11,19 @@ clean:
 		rm -vf vui*.o libvui.a vuitest
 
 vuitest:	vuitest.o libvui.a
-		$(LD) $^ $(LDFLAGS) -o $@
+		${LD} $^ ${LDFLAGS} -o $@
 
 libvui.a:	vui.o vui_fragment.o vui_combinator.o vui_translator.o vui_statemachine.o vui_gc.o vui_stack.o vui_string.o vui_utf8.o vui_graphviz.o
-		$(AR) $@ $^
-		$(RANLIB) $@
+		${AR} $@ $^
+		${RANLIB} $@
 
 %.o:		%.c
-		$(CC) $(CCFLAGS) -c $< -o $@
+		${CC} ${CCFLAGS} -c $< -o $@
 
 depend:		
-		$(CC) $(CCFLAGS) -MM vui{test,,_fragment,_combinator,_translator,_statemachine,_gc,_stack,_string,_utf8,_graphviz}.c
+		${CC} ${CCFLAGS} -MM vui{test,,_fragment,_combinator,_translator,_statemachine,_gc,_stack,_string,_utf8,_graphviz}.c
 
-.PHONY:		all clean
+.PHONY:		all depend clean
 
 # output of `make depend`
 
