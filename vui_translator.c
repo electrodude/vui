@@ -102,9 +102,9 @@ static inline vui_transition t_escaper_end(vui_state* lt, vui_translator* tr, vu
 {
 	vui_transition lt_mid = vui_transition_translator_putc(tr, NULL);
 
-	vui_stack* lt_end_funcs = vui_stack_new();
-	vui_transition_multi_push(lt_end_funcs, vui_transition_translator_pop(tr, NULL));
-	vui_transition_multi_push(lt_end_funcs, vui_transition_run_s_s(vui_state_new_t_self(vui_transition_translator_putc(tr, NULL)), reaction));
+	vui_stack* lt_end_funcs = vui_stack_new_v(2,
+			vui_transition_multi_stage(vui_transition_translator_pop(tr, NULL)),
+			vui_transition_multi_stage(vui_transition_run_s_s(vui_state_new_t_self(vui_transition_translator_putc(tr, NULL)), reaction)));
 
 	vui_set_string_t_mid(lt, action, lt_mid, vui_transition_multi(lt_end_funcs, returnto));
 }
@@ -128,13 +128,13 @@ vui_frag* vui_frag_accept_escaped(vui_translator* tr)
 
 	vui_state* eschelper = vui_state_new_t(vui_transition_translator_putc(tr, escaper));
 
-	vui_stack* lt_abort_funcs = vui_stack_new();
-	vui_transition_multi_push(lt_abort_funcs, vui_transition_translator_putc(tr, NULL));
-	vui_transition_multi_push(lt_abort_funcs, vui_transition_translator_puts(tr, NULL));
+	vui_stack* lt_abort_funcs = vui_stack_new_v(2,
+		vui_transition_multi_stage(vui_transition_translator_putc(tr, NULL)),
+		vui_transition_multi_stage(vui_transition_translator_puts(tr, NULL)));
 
-	vui_stack* lt_enter_funcs = vui_stack_new();
-	vui_transition_multi_push(lt_enter_funcs, vui_transition_translator_push(tr, NULL));
-	vui_transition_multi_push(lt_enter_funcs, vui_transition_translator_putc(tr, NULL));
+	vui_stack* lt_enter_funcs = vui_stack_new_v(2,
+		vui_transition_multi_stage(vui_transition_translator_push(tr, NULL)),
+		vui_transition_multi_stage(vui_transition_translator_putc(tr, NULL)));
 
 	vui_state* lt = vui_state_new_t(vui_transition_multi(lt_abort_funcs, escaper));
 	vui_set_char_t(escaper, '<', vui_transition_multi(lt_enter_funcs, lt));

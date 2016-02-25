@@ -6,7 +6,7 @@ extern "C"
 {
 #endif
 
-#define VUI_DEBUG 1
+//#define VUI_DEBUG
 
 #ifdef VUI_DEBUG
 

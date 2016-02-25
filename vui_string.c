@@ -1,3 +1,4 @@
+#include <stdarg.h>
 #include <string.h>
 
 #include "vui_utf8.h"
@@ -18,6 +19,24 @@ vui_string* vui_string_new_prealloc(vui_string* str, size_t n)
 	str->maxn = n;
 	str->s = malloc(str->maxn);
 	str->s[0] = 0;
+
+	return str;
+}
+
+vui_string* vui_string_new_array(size_t n, char* s)
+{
+	vui_string* str = vui_string_new_prealloc(NULL, n);
+
+	vui_string_putn(str, n, s);
+
+	return str;
+}
+
+vui_string* vui_string_new_str(char* s)
+{
+	vui_string* str = vui_string_new(NULL);
+
+	vui_string_puts(str, s);
 
 	return str;
 }
@@ -53,7 +72,9 @@ char* vui_string_shrink(vui_string* str)
 	vui_debugf("shrink(\"%s\")\n", vui_string_get(str));
 #endif
 
-	str->s = realloc(str->s, str->maxn = str->n+1);
+	str->maxn = str->n+1;
+
+	str->s = realloc(str->s, str->maxn);
 
 	return vui_string_get(str);
 }
@@ -87,6 +108,18 @@ void vui_string_puts(vui_string* str, unsigned char* s)
 	if (s == NULL) return;
 
 	for (;*s;s++)
+	{
+		vui_string_putc(str, *s);
+	}
+}
+
+void vui_string_putn(vui_string* str, size_t n, unsigned char* s)
+{
+	if (str == NULL) return;
+
+	if (s == NULL) return;
+
+	for (int i = 0; i < n; i++)
 	{
 		vui_string_putc(str, *s);
 	}

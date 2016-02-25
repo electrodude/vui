@@ -34,6 +34,17 @@ static inline vui_string* vui_string_new(vui_string* str)
 	return vui_string_new_prealloc(str, 32);
 }
 
+
+// Create a new string
+// Copy n chars starting at c into the string
+vui_string* vui_string_new_array(size_t n, char* s);
+
+
+// Create a new string
+// Copy a null-terminated string at s into the string
+vui_string* vui_string_new_str(char* s);
+
+
 // Destroy a string and its buffer
 void vui_string_kill(vui_string* str);
 
@@ -63,6 +74,9 @@ void vui_string_putc(vui_string* str, unsigned char c);
 
 // Append a null-terminated string
 void vui_string_puts(vui_string* str, unsigned char* s);
+
+// Append a string that is n characters long
+void vui_string_putn(vui_string* str, size_t n, unsigned char* s);
 
 // Append a vui_string
 void vui_string_append(vui_string* str, vui_string* str2);

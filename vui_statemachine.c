@@ -179,7 +179,7 @@ vui_transition vui_transition_multi(vui_stack* funcs, vui_state* next)
 	}
 }
 
-void vui_transition_multi_push(vui_stack* funcs, vui_transition t)
+vui_transition* vui_transition_multi_stage(vui_transition t)
 {
 	vui_transition* t2 = malloc(sizeof(vui_transition));
 
@@ -187,7 +187,7 @@ void vui_transition_multi_push(vui_stack* funcs, vui_transition t)
 	t2->func = t.func;
 	t2->data = t.data;
 
-	vui_stack_push(funcs, t2);
+	return t2;
 }
 
 
