@@ -3,3 +3,4 @@ vui*.o
 libvui.a
 vuitest
 vui.dot
+vui.dot.png
