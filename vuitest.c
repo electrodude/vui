@@ -41,16 +41,13 @@ vui_cmdline_def* cmd_mode;
 vui_cmdline_def* search_mode;
 
 #if defined(VUI_DEBUG)
-void vui_debug(char* s)
-{
-	fwrite(s, 1, strlen(s), dbgf);
-}
-
 void vui_debugf(const char* format, ...)
 {
 	va_list argp;
 	va_start(argp, format);
+
 	vfprintf(dbgf, format, argp);
+
 	va_end(argp);
 }
 #endif
@@ -61,7 +58,9 @@ static void sighandler(int signo)
         {
                 case SIGWINCH:
                 {
-			fprintf(dbgf, "winch\n");
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_TEST)
+			vui_debugf("winch\n");
+#endif
 
 			endwin();
 			refresh();
@@ -114,7 +113,9 @@ static vui_state* tfunc_winch(vui_state* currstate, unsigned int c, int act, voi
 {
 	if (act <= 0) return NULL;
 
-	fprintf(dbgf, "winch\n");
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_TEST)
+	vui_debugf("winch\n");
+#endif
 
 	wresize(statusline, 1, COLS);
 
@@ -225,17 +226,20 @@ int main(int argc, char** argv)
 	vui_translator_init();
 
 
+	// make cmdline parser
 	vui_translator* cmd_tr = vui_translator_new();
 
 	vui_state* cmd_tr_start = cmd_tr->st_start;
 	cmd_tr_start->name = "cmd_tr";
 
 
+	// :q
 	vui_state* cmd_tr_q = vui_state_new_deadend();
 
 	vui_set_string_t_mid(cmd_tr_start, "q", vui_transition_translator_putc(cmd_tr, NULL), vui_transition_translator_putc(cmd_tr, cmd_tr_q));
 
 
+	// :map a b
 	vui_state* cmd_tr_map = vui_frag_release(
 	                                         vui_frag_cat(vui_frag_accept_escaped(cmd_tr), vui_frag_accept_escaped(cmd_tr)),
 						 vui_state_new_deadend());
@@ -258,6 +262,7 @@ int main(int argc, char** argv)
 	vui_set_string_t_nocall(vui_normal_mode, "ZZ", transition_quit);
 
 
+	// done initialization; run garbage collector
 	vui_gc_run();
 
 	/*
@@ -293,7 +298,9 @@ int main(int argc, char** argv)
 			c2[1] = '?';
 		}
 
-		fprintf(dbgf, "char %d: %s\n", c, c2);
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_TEST)
+		vui_debugf("char %d: %s\n", c, c2);
+#endif
 
 		if (c >= 0)
 		{
@@ -305,33 +312,35 @@ int main(int argc, char** argv)
 			curs_set(vui_crsrx >= 0);
 			wrefresh(statusline);
 
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_TEST)
 #if 0
 			if (vui_curr_state == vui_normal_mode)
 			{
-				fprintf(dbgf, "normal mode\n");
+				vui_debugf("normal mode\n");
 			}
 			else if (vui_curr_state == vui_count_mode)
 			{
-				fprintf(dbgf, "count mode\n");
+				vui_debugf("count mode\n");
 			}
 			else if (vui_curr_state == cmd_mode->cmdline_state)
 			{
-				fprintf(dbgf, "cmd mode\n");
+				vui_debugf("cmd mode\n");
 			}
 			else if (vui_curr_state == search_mode->cmdline_state)
 			{
-				fprintf(dbgf, "search mode\n");
+				vui_debugf("search mode\n");
 			}
 #else
 			if (vui_curr_state->name != NULL)
 			{
-				fprintf(dbgf, "%s\n", vui_curr_state->name);
+				vui_debugf("%s\n", vui_curr_state->name);
 			}
 #endif
 			else
 			{
-				fprintf(dbgf, "unknown mode\n");
+				vui_debugf("unknown mode\n");
 			}
+#endif
 		}
 	}
 
