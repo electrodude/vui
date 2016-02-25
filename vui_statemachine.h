@@ -14,7 +14,7 @@ extern "C"
 typedef struct vui_state vui_state;
 
 #define VUI_ACT_GC     -2
-#define VUI_ACT_NOCALL -1
+#define VUI_ACT_MAP    -1
 #define VUI_ACT_TEST    0
 #define VUI_ACT_RUN     1
 #define VUI_ACT_EMUL    2

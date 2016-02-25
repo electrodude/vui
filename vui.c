@@ -550,14 +550,7 @@ static vui_state* tfunc_cmd_enter(vui_state* currstate, unsigned int c, int act,
 
 	hist_entry_set(cmdline->hist_curr_entry, &vui_cmd[cmd_base], cmd_len);
 
-	if (cmdline->tr != NULL)
-	{
-		cmdline->on_submit(vui_translator_run(cmdline->tr, cmdline->hist_curr_entry->line));
-	}
-	else
-	{
-		cmdline->on_submit(cmdline->hist_curr_entry->line);
-	}
+	cmdline->on_submit(vui_translator_run(cmdline->tr, cmdline->hist_curr_entry->line));
 
 	vui_bar = vui_status;
 	vui_crsrx = -1;
@@ -812,20 +805,20 @@ void vui_macro_init(unsigned int record, unsigned int execute)
 
 void vui_register_init(void)
 {
-	vui_register_container = vui_state_new();
+	vui_register_container = vui_state_new_s(NULL);
 	vui_register_recording = NULL;
 }
 
 vui_string* vui_register_get(unsigned int c)
 {
-	vui_state* st = vui_next_u(vui_register_container, c, VUI_ACT_NOCALL);
+	vui_state* st = vui_next_u(vui_register_container, c, VUI_ACT_MAP);
 	vui_string* reg = (vui_string*)st->data;
 
 	if (reg == NULL)
 	{
 		reg = vui_string_new(NULL);
 
-		vui_state* st_new = vui_state_new();
+		vui_state* st_new = vui_state_new_s(NULL);
 		st_new->data = reg;
 
 		vui_set_char_s_u(vui_register_container, c, st_new);
@@ -867,7 +860,7 @@ void vui_register_endrecord(void)
 
 vui_state* vui_register_execute(vui_state* currstate, unsigned int c, int act)
 {
-	vui_state* st = vui_next_u(vui_register_container, c, VUI_ACT_NOCALL);
+	vui_state* st = vui_next_u(vui_register_container, c, VUI_ACT_MAP);
 	void* data = st->data;
 
 	if (data == NULL)
@@ -973,8 +966,16 @@ vui_cmdline_def* vui_cmdline_mode_new(char* cmd, char* name, char* label, vui_tr
 	vui_cmdline_def* cmdline = malloc(sizeof(vui_cmdline_def));
 	cmdline->on_submit = on_submit;
 	cmdline->label = label;
-	cmdline->tr = tr;
 	cmdline->hist_last_entry = NULL;
+
+	if (tr != NULL)
+	{
+		cmdline->tr = tr;
+	}
+	else
+	{
+		cmdline->tr = vui_translator_identity;
+	}
 
 	vui_state* cmdline_state = vui_state_new();
 	cmdline_state->name = name;

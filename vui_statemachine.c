@@ -524,7 +524,7 @@ vui_state* vui_next_t(vui_state* currstate, unsigned int c, vui_transition t, in
 	vui_state* nextstate = NULL;
 
 
-	if (act == VUI_ACT_NOCALL)
+	if (act == VUI_ACT_MAP)
 	{
 		if (t.next != NULL)
 		{
@@ -532,7 +532,7 @@ vui_state* vui_next_t(vui_state* currstate, unsigned int c, vui_transition t, in
 		}
 		else
 		{
-			return t.next = vui_state_new();
+			return t.next = vui_state_new_s(NULL);
 		}
 	}
 	else if (t.func != NULL && (act || t.next == NULL))

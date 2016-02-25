@@ -10,10 +10,13 @@
 
 vui_state* vui_translator_deadend;
 
+vui_translator* vui_translator_identity;
+
 void vui_translator_init(void)
 {
-	vui_translator_deadend = vui_state_new();
-	vui_translator_deadend->root++;
+	vui_translator_identity = vui_translator_new();
+
+	vui_translator_new2(vui_translator_identity, vui_state_new_putc(vui_translator_identity));
 }
 
 vui_translator* vui_translator_new(void)
@@ -97,6 +100,8 @@ vui_state* vui_translator_tfunc_puts(vui_state* currstate, unsigned int c, int a
 
 	return NULL;
 }
+
+
 
 static inline vui_transition t_escaper_end(vui_state* lt, vui_translator* tr, vui_state* returnto, unsigned char* action, unsigned char* reaction)
 {

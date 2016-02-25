@@ -21,8 +21,18 @@ typedef struct vui_translator
 
 extern vui_state* vui_translator_deadend;
 
+extern vui_translator* vui_translator_identity;
+
 void vui_translator_init(void);
 vui_translator* vui_translator_new(void);
+static inline vui_translator* vui_translator_new2(vui_translator* tr, vui_state* st_start)
+{
+	tr->st_start = st_start;
+	tr->st_start->root++;
+
+	return tr;
+}
+
 void vui_translator_kill(vui_translator* tr);
 
 vui_stack* vui_translator_run(vui_translator* tr, char* in);
@@ -65,6 +75,7 @@ static inline vui_state* vui_state_new_putc(vui_translator* tr)
 }
 
 
+// fragment constructors
 vui_frag* vui_frag_accept_escaped(vui_translator* tr);
 
 vui_frag* vui_frag_deadend(void);

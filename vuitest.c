@@ -178,9 +178,9 @@ void on_cmd_submit(vui_stack* cmd)
 #undef arg
 }
 
-void on_search_submit(char* cmd)
+void on_search_submit(vui_stack* cmd)
 {
-	fprintf(dbgf, "search: \"%s\"\n", cmd);
+	fprintf(dbgf, "search: \"%s\"\n", vui_string_get(vui_stack_peek(cmd)));
 }
 
 
@@ -229,7 +229,7 @@ int main(int argc, char** argv)
 	// make cmdline parser
 	vui_translator* cmd_tr = vui_translator_new();
 
-	vui_state* cmd_tr_start = cmd_tr->st_start;
+	vui_state* cmd_tr_start = vui_state_new_putc(cmd_tr);
 	cmd_tr_start->name = "cmd_tr";
 
 
@@ -247,7 +247,8 @@ int main(int argc, char** argv)
 	vui_set_string_t_mid(cmd_tr_start, "map ", vui_transition_translator_putc(cmd_tr, NULL), vui_transition_translator_push(cmd_tr, cmd_tr_map));
 
 
-	cmd_tr_start->root++;
+	vui_translator_new2(cmd_tr, cmd_tr_start);
+
 
 
 	cmd_mode = vui_cmdline_mode_new(":", "command", ":", cmd_tr, on_cmd_submit);
