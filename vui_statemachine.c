@@ -163,7 +163,7 @@ vui_transition vui_transition_multi(vui_stack* funcs, vui_state* next)
 {
 	if (funcs->n > 1)
 	{
-		return (vui_transition){.next = next, .func = vui_tfunc_multi, .data = funcs};
+		return vui_transition_new3(next, vui_tfunc_multi, funcs);
 	}
 	else if (funcs->n == 1)
 	{
@@ -222,7 +222,7 @@ vui_transition vui_transition_run_s_s(vui_state* st, char* str)
 	data->st = st;
 	data->str = str;
 
-	return (vui_transition){.next = NULL, .func = vui_tfunc_run_s_s, .data = data};
+	return vui_transition_new2(vui_tfunc_run_s_s, data);
 }
 
 

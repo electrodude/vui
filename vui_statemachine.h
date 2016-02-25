@@ -100,13 +100,13 @@ vui_transition vui_transition_run_s_s(vui_state* st, char* str);
 vui_state* vui_tfunc_run_c_s(vui_state* currstate, unsigned int c, int act, void* data);
 static inline vui_transition vui_transition_run_c_s(vui_state* other)
 {
-	return (vui_transition){.next = NULL, .func = vui_tfunc_run_c_s, .data = other};
+	return vui_transition_new2(vui_tfunc_run_c_s, other);
 }
 
 vui_state* vui_tfunc_run_c_t(vui_state* currstate, unsigned int c, int act, void* data);
 static inline vui_transition vui_transition_run_c_t(vui_transition* t)
 {
-	return (vui_transition){.next = NULL, .func = vui_tfunc_run_c_t, .data = t};
+	return vui_transition_new2(vui_tfunc_run_c_t, t);
 }
 
 
@@ -178,13 +178,13 @@ vui_state* vui_run_buf(vui_state* st, unsigned char* buf, size_t len, int act);
 vui_state* vui_tfunc_stack_push(vui_state* currstate, unsigned int c, int act, void* data);
 static inline vui_transition vui_transition_stack_push(vui_stack* stk, vui_state* next)
 {
-	return (vui_transition){.next = next, .func = vui_tfunc_stack_push, .data = stk};
+	return vui_transition_new3(next, vui_tfunc_stack_push, stk);
 }
 
 vui_state* vui_tfunc_stack_pop(vui_state* currstate, unsigned int c, int act, void* data);
 static inline vui_transition vui_transition_stack_pop(vui_stack* stk)
 {
-	return (vui_transition){.next = NULL, .func = vui_tfunc_stack_pop, .data = stk};
+	return vui_transition_new2(vui_tfunc_stack_pop, stk);
 }
 
 
