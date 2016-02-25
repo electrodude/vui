@@ -125,6 +125,38 @@ void vui_string_putn(vui_string* str, size_t n, unsigned char* s)
 	}
 }
 
+void vui_string_putf(vui_string* str, unsigned char* fmt, ...)
+{
+	if (str == NULL) return;
+
+	if (fmt == NULL) return;
+
+	va_list argp;
+
+	va_start(argp, fmt);
+	size_t len = vsnprintf(NULL, 0, fmt, argp) + 2;
+	va_end(argp);
+
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_STRING)
+	vui_debugf("printf(%s, %s, ...)\n", vui_string_get(str), fmt);
+#endif
+
+	size_t n = str->n + len;
+	// make room for new stuff and null terminator
+	if (str->maxn < n + 1)
+	{
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_STRING)
+		printf("realloc: %ld, %ld\n", str->maxn, str->n);
+#endif
+		str->maxn = (n + 1)*2;
+		str->s = realloc(str->s, str->maxn);
+	}
+
+	va_start(argp, fmt);
+	str->n += vsnprintf(&str->s[str->n], len, fmt, argp);
+	va_end(argp);
+}
+
 void vui_string_append(vui_string* str, vui_string* str2)
 {
 	if (str == NULL) return;
@@ -162,4 +194,20 @@ void vui_string_put(vui_string* str, unsigned int c)
 	vui_utf8_encode(c, s);
 
 	vui_string_puts(str, s);
+}
+
+void vui_string_get_replace(vui_string* str, char** s)
+{
+	if (str == NULL) return;
+
+	if (s == NULL) return;
+
+	char* s_old = *s;
+
+	*s = vui_string_get(str);
+
+	if (s_old != NULL)
+	{
+		free(s_old);
+	}
 }

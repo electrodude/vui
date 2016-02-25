@@ -78,6 +78,9 @@ void vui_string_puts(vui_string* str, unsigned char* s);
 // Append a string that is n characters long
 void vui_string_putn(vui_string* str, size_t n, unsigned char* s);
 
+// Append printf-formatted text
+void vui_string_putf(vui_string* str, unsigned char* fmt, ...);
+
 // Append a vui_string
 void vui_string_append(vui_string* str, vui_string* str2);
 
@@ -96,6 +99,9 @@ static inline unsigned char* vui_string_get(vui_string* str)
 	                    //  (there is room already allocated)
 	return str->s;
 }
+
+
+void vui_string_get_replace(vui_string* str, char** s);
 
 #ifdef __cplusplus
 }
