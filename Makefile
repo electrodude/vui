@@ -1,4 +1,4 @@
-CCFLAGS+=-g -O0
+CCFLAGS+=-g -O2
 LDFLAGS+=-lcurses
 CC=gcc -std=c99
 LD=gcc

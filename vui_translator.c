@@ -177,15 +177,15 @@ vui_frag* vui_frag_accept_escaped(vui_translator* tr)
 	t_escaper_end(bsl, tr, escaper, " ", " ");
 	t_escaper_end(bsl, tr, escaper, "<", "<");
 
-	return vui_frag_new_stk(escaper, exits);
+	return vui_frag_new(escaper, exits);
 }
 
 vui_frag* vui_frag_deadend(void)
 {
-	return vui_frag_new(vui_state_new_deadend(), NULL, 0);
+	return vui_frag_new(vui_state_new_deadend(), NULL);
 }
 
 vui_frag* vui_frag_accept_any(vui_translator* tr)
 {
-	return vui_frag_new(vui_state_new_t_self(vui_transition_translator_putc(tr, NULL)), NULL, 0);
+	return vui_frag_new(vui_state_new_t_self(vui_transition_translator_putc(tr, NULL)), NULL);
 }

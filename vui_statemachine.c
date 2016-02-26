@@ -532,6 +532,7 @@ vui_state* vui_next_t(vui_state* currstate, unsigned int c, vui_transition t, in
 		}
 		else
 		{
+			// BROKEN: t isn't a pointer
 			return t.next = vui_state_new_s(NULL);
 		}
 	}

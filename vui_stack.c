@@ -48,6 +48,8 @@ void vui_stack_kill(vui_stack* stk)
 {
 	if (stk == NULL) return;
 
+	vui_stack_reset(stk);
+
 	free(stk->s);
 
 	free(stk);
@@ -125,7 +127,7 @@ void vui_stack_pushn(vui_stack* stk, size_t n, void** elements)
 {
 	if (stk == NULL) return;
 
-	for (int i = 0; i < n; i++)
+	for (size_t i = 0; i < n; i++)
 	{
 		vui_stack_push(stk, elements[i]);
 	}
@@ -215,4 +217,24 @@ void* vui_stack_index(vui_stack* stk, unsigned int i)
 #endif
 
 	return stk->s[i];
+}
+
+void vui_stack_foreach(vui_stack* stk, void (*func)(void* elem))
+{
+	for (size_t i = 0; i < stk->n; i++)
+	{
+		func(stk->s[i]);
+	}
+}
+
+vui_stack* vui_stack_map(vui_stack* stk, void* (*func)(void* elem))
+{
+	vui_stack* stk2 = vui_stack_new_prealloc(stk->n);
+
+	for (size_t i = 0; i < stk->n; i++)
+	{
+		vui_stack_push(stk2, func(stk->s[i]));
+	}
+
+	return stk2;
 }
