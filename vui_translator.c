@@ -97,6 +97,7 @@ vui_state* vui_translator_tfunc_puts(vui_state* currstate, unsigned int c, int a
 	vui_string* str = vui_stack_pop(tr->stk);
 	tr->str = vui_stack_peek(tr->stk);
 	vui_string_append(tr->str, str);
+	vui_string_kill(str);
 
 	return NULL;
 }

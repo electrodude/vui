@@ -182,8 +182,6 @@ void vui_string_append(vui_string* str, vui_string* str2)
 	memcpy(&str->s[str->n], str2->s, str2->n);
 
 	str->n = n;
-
-	vui_string_kill(str2);
 }
 
 void vui_string_put(vui_string* str, unsigned int c)
