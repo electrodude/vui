@@ -581,7 +581,7 @@ void vui_init(int width)
 	vui_normal_mode = vui_curr_state = vui_state_new();
 	vui_normal_mode->name = "vui_normal_mode";
 
-	vui_normal_mode->root++;
+	vui_normal_mode->gc.root++;
 
 	vui_transition transition_normal = vui_transition_new3(vui_normal_mode, tfunc_normal, NULL);
 

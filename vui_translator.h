@@ -28,7 +28,7 @@ vui_translator* vui_translator_new(void);
 static inline vui_translator* vui_translator_new2(vui_translator* tr, vui_state* st_start)
 {
 	tr->st_start = st_start;
-	tr->st_start->root++;
+	tr->st_start->gc.root++;
 
 	return tr;
 }

@@ -2,35 +2,37 @@
 
 #include "vui_gc.h"
 
-// not in statemachine.h so people don't call it
-void vui_state_kill(vui_state* state);
+vui_gc_header* vui_gc_first = NULL;
 
-vui_state* vui_gc_first;
+static int vui_gc_gen;
 
-void vui_gc_register(vui_state* st)
+void vui_gc_register_header(vui_gc_header* obj, vui_gc_dtor dtor)
 {
-	if (vui_gc_first == NULL)
-	{
-		vui_gc_first = st;
-	}
-	else
-	{
-		st->gc_next = vui_gc_first;
-		vui_gc_first = st;
-	}
+	obj->dtor = dtor;
+
+	obj->gc_gen = vui_gc_gen;
+
+	obj->gc_next = vui_gc_first;
+
+	vui_gc_first = obj;
 }
 
 void vui_gc_run(void)
 {
-	vui_iter_gen++;
+	vui_gc_gen++;
 
-	vui_state** curr = &vui_gc_first;
+	vui_gc_header** curr = &vui_gc_first;
 
 	while (*curr != NULL)
 	{
+
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_GC)
+		vui_debugf("vui_gc: check 0x%lX: root = %d\n", *curr, (*curr)->root);
+#endif
+
 		if ((*curr)->root)
 		{
-			vui_gc_mark(*curr);
+			vui_gc_mark_header(*curr);
 		}
 
 		*curr = (*curr)->gc_next;
@@ -40,12 +42,16 @@ void vui_gc_run(void)
 
 	while (*curr != NULL)
 	{
-		if ((*curr)->iter_gen != vui_iter_gen)
+		if ((*curr)->gc_gen != vui_gc_gen)
 		{
-			vui_state* condemned = *curr;
+			vui_gc_header* condemned = *curr;
 			*curr = condemned->gc_next;
 
-			vui_state_kill(condemned);
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_GC)
+			vui_debugf("vui_gc: sweep 0x%lX\n", condemned);
+#endif
+
+			condemned->dtor(condemned, VUI_GC_DTOR_SWEEP);
 		}
 		else
 		{
@@ -54,20 +60,17 @@ void vui_gc_run(void)
 	}
 }
 
-void vui_gc_mark(vui_state* st)
+void vui_gc_mark_header(vui_gc_header* obj)
 {
-	if (st == NULL) return;
+	if (obj == NULL) return;
 
-	if (st->iter_gen == vui_iter_gen) return;
+	if (obj->gc_gen == vui_gc_gen) return;
 
-	st->iter_gen = vui_iter_gen;
+	obj->gc_gen = vui_gc_gen;
 
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_GC)
-	vui_debugf("vui_gc_mark(0x%lX)\n", st);
+	vui_debugf("vui_gc_mark(0x%lX)\n", obj);
 #endif
 
-	for (int i=0; i < VUI_MAXSTATE; i++)
-	{
-		vui_gc_mark(vui_next(st, i, VUI_ACT_GC));
-	}
+	obj->dtor(obj, VUI_GC_DTOR_MARK);
 }

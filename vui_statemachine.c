@@ -7,19 +7,19 @@
 #include "vui_utf8.h"
 #include "vui_string.h"
 
-#include "vui_gc.h"
-
 #include "vui_statemachine.h"
 
 int vui_iter_gen = 0;
+
+static void vui_state_dtor(void* obj, vui_gc_dtor_mode mode);
 
 static inline vui_state* vui_state_new_raw(void)
 {
 	vui_state* state = malloc(sizeof(vui_state));
 
-	vui_gc_register(state);
-
 	state->gv_norank = 0;
+
+	vui_gc_register(state, vui_state_dtor);
 
 	return state;
 }
@@ -99,7 +99,7 @@ vui_state* vui_state_dup(vui_state* parent)
 	return state;
 }
 
-void vui_state_kill(vui_state* state)
+static void vui_state_kill(vui_state* state)
 {
 	if (state == NULL) return;
 
@@ -108,6 +108,23 @@ void vui_state_kill(vui_state* state)
 #endif
 
 	free(state);
+}
+
+static void vui_state_dtor(void* obj, vui_gc_dtor_mode mode)
+{
+	vui_state* st = (vui_state*)obj;
+
+	if (mode == VUI_GC_DTOR_MARK)
+	{
+		for (int i=0; i < VUI_MAXSTATE; i++)
+		{
+			vui_gc_mark(vui_next(obj, i, VUI_ACT_GC));
+		}
+	}
+	else if (mode == VUI_GC_DTOR_SWEEP)
+	{
+		vui_state_kill(st);
+	}
 }
 
 void vui_state_replace(vui_state* state, vui_transition search, vui_transition replacement)

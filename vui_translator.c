@@ -24,7 +24,7 @@ vui_translator* vui_translator_new(void)
 	vui_translator* tr = malloc(sizeof(vui_translator));
 
 	tr->st_start = vui_state_new_deadend();
-	tr->st_start->root++;
+	tr->st_start->gc.root++;
 
 	tr->str = NULL;
 	tr->stk = vui_stack_new();
@@ -35,7 +35,7 @@ vui_translator* vui_translator_new(void)
 
 void vui_translator_kill(vui_translator* tr)
 {
-	tr->st_start->root--;
+	tr->st_start->gc.root--;
 
 	free(tr);
 }

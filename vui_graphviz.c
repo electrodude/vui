@@ -153,7 +153,7 @@ void vui_gv_print_s(FILE* f, vui_state* s)
 			int firstmatch = 1;
 
 			fprintf(f, "\"];\n\t\"%d\" -> \"%d\" [", s->iter_id, next->iter_id);
-			if (next->push != NULL || next->root || next->gv_norank)
+			if (next->push != NULL || next->gc.root || next->gv_norank)
 			{
 				fprintf(f, "constraint = false, ");
 			}

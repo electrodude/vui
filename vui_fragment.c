@@ -9,7 +9,7 @@ vui_frag* vui_frag_new(vui_state* entry, vui_stack* exits)
 
 	frag->entry = entry;
 
-	frag->entry->root++;
+	frag->entry->gc.root++;
 
 	frag->exits = exits;
 
@@ -18,7 +18,7 @@ vui_frag* vui_frag_new(vui_state* entry, vui_stack* exits)
 
 void vui_frag_kill(vui_frag* frag)
 {
-	frag->entry->root--;
+	frag->entry->gc.root--;
 
 	vui_stack_kill(frag->exits);
 

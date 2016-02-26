@@ -8,6 +8,8 @@ extern "C"
 
 #include "vui_stack.h"
 
+#include "vui_gc.h"
+
 #define VUI_STATE_BITS 8
 #define VUI_MAXSTATE (1 << VUI_STATE_BITS)
 
@@ -40,9 +42,9 @@ typedef struct vui_transition
 
 typedef struct vui_state
 {
-	vui_transition next[VUI_MAXSTATE];
+	vui_gc_header gc;
 
-	unsigned int root;
+	vui_transition next[VUI_MAXSTATE];
 
 	vui_stack* push;
 
@@ -54,7 +56,6 @@ typedef struct vui_state
 
 	int iter_id;
 	int iter_gen;
-	vui_state* gc_next;
 	vui_state* iter_other;
 
 } vui_state;
