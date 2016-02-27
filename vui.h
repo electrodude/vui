@@ -123,6 +123,12 @@ void vui_register_endrecord(void);
 vui_state* vui_register_execute(vui_state* currstate, unsigned int c, int act);
 
 
+// keybinds
+
+void vui_bind_u(vui_state* mode, unsigned int c, vui_transition_callback func, void* data);
+void vui_bind(vui_state* mode, unsigned char* s, vui_transition_callback func, void* data);
+
+
 // new modes
 #define VUI_MODE_NEW_MANUAL_IN 0x1
 #define VUI_MODE_NEW_INHERIT   0x2

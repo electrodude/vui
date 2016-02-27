@@ -21,6 +21,10 @@ void vui_gc_run(void)
 {
 	vui_gc_gen++;
 
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_GC)
+	vui_debugf("vui_gc_run: gc_gen = %d\n", vui_gc_gen);
+#endif
+
 	vui_gc_header** curr = &vui_gc_first;
 
 	while (*curr != NULL)

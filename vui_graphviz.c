@@ -58,7 +58,11 @@ void vui_gv_puts(FILE* f, unsigned char* s)
 		{
 			if (c == '\'')
 			{
-				fprintf(f, "\\'");
+				fprintf(f, "'");
+			}
+			else if (c == '"')
+			{
+				fprintf(f, "\\\"");
 			}
 			else if (c == '\\')
 			{
@@ -94,6 +98,9 @@ void vui_gv_write(FILE* f, vui_stack* roots)
 	gv_id = 0;
 
 	fprintf(f, "digraph vui\n{\n");
+
+	fprintf(f, "\tsplines=true;\n");
+	fprintf(f, "\toverlap=scalexy;\n");
 
 	for (int i=0; i < roots->n; i++)
 	{

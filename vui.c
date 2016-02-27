@@ -882,6 +882,24 @@ vui_state* vui_register_execute(vui_state* currstate, unsigned int c, int act)
 }
 
 
+
+void vui_bind_u(vui_state* mode, unsigned int c, vui_transition_callback func, void* data)
+{
+	vui_transition t = vui_transition_new2(func, data);
+
+	vui_set_char_t_u(mode, c, t);
+}
+
+void vui_bind(vui_state* mode, unsigned char* s, vui_transition_callback func, void* data)
+{
+	vui_transition t = vui_transition_new2(func, data);
+
+	vui_set_string_t_mid(mode, s, vui_transition_return(), t);
+}
+
+
+
+
 static vui_state* tfunc_cmd_paste(vui_state* currstate, unsigned int c, int act, void* data)
 {
 	if (act <= 0) return vui_return(act);

@@ -109,6 +109,40 @@ static vui_state* tfunc_quit(vui_state* currstate, unsigned int c, int act, void
 	exit(0);
 }
 
+static vui_state* tfunc_gc(vui_state* currstate, unsigned int c, int act, void* data)
+{
+	if (act <= 0) return vui_return(act);
+
+	vui_reset();
+
+	vui_gc_run();
+
+	return vui_return(act);
+}
+
+
+static vui_state* tfunc_graphviz(vui_state* currstate, unsigned int c, int act, void* data)
+{
+	if (act <= 0) return vui_return(act);
+
+	vui_reset();
+
+	vui_stack* gv_roots = vui_stack_new();
+	vui_stack_push(gv_roots, vui_normal_mode);
+	//vui_stack_push(gv_roots, cmd_tr_start);
+
+	FILE* f = fopen("vui.dot", "w");
+	vui_gv_write(f, gv_roots);
+	fclose(f);
+
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_TEST)
+	vui_debugf("wrote vui.dot\n");
+#endif
+
+	return vui_return(act);
+}
+
+
 static vui_state* tfunc_winch(vui_state* currstate, unsigned int c, int act, void* data)
 {
 	if (act <= 0) return NULL;
@@ -125,7 +159,7 @@ static vui_state* tfunc_winch(vui_state* currstate, unsigned int c, int act, voi
 
 	vui_showcmd_setup(COLS - 20, 10);
 
-	return NULL;
+	return vui_return(act);
 }
 
 void on_cmd_submit(vui_stack* cmd)
@@ -213,7 +247,7 @@ int main(int argc, char** argv)
 
 	vui_init(COLS);
 
-	vui_set_char_t_u(vui_normal_mode, KEY_RESIZE, vui_transition_new2(tfunc_winch, NULL));
+	vui_bind_u(vui_normal_mode, KEY_RESIZE, tfunc_winch, NULL);
 
 	vui_count_init();
 
@@ -256,11 +290,14 @@ int main(int argc, char** argv)
 	search_mode = vui_cmdline_mode_new("/", "search", "/", NULL, on_search_submit);
 
 
-	vui_transition transition_quit = vui_transition_new2(tfunc_quit, NULL);
+	vui_bind(vui_normal_mode, "Q", tfunc_quit, NULL);
 
-	vui_set_char_t_u(vui_normal_mode, 'Q', transition_quit);
+	vui_bind(vui_normal_mode, "ZZ", tfunc_quit, NULL);
 
-	vui_set_string_t_nocall(vui_normal_mode, "ZZ", transition_quit);
+
+	vui_bind(vui_normal_mode, "gc", tfunc_gc, NULL);
+
+	vui_bind(vui_normal_mode, "gv", tfunc_graphviz, NULL);
 
 
 	// done initialization; run garbage collector

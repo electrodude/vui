@@ -570,6 +570,9 @@ vui_state* vui_next_t(vui_state* currstate, unsigned int c, vui_transition t, in
 	{
 		if (nextstate->push != NULL)
 		{
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_STATEMACHINE)
+			vui_debugf("push\n");
+#endif
 			vui_stack_push_nodup(nextstate->push, nextstate);
 		}
 	}

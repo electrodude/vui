@@ -1,6 +1,9 @@
 #include <stdarg.h>
 #include <string.h>
 
+// for vsnprintf
+#include <stdio.h>
+
 #include "vui_utf8.h"
 
 #include "vui_debug.h"
