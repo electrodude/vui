@@ -8,24 +8,35 @@ The library itself uses no external dependencies (although the demo does).
 
 ## Features
 
-* Basic Vim-like commands, modes, cmdline, and macros
-  * each cmdline type has its own history
+* Basic Vim-like features
+  * modes
+  * cmdlines
+    * line editing
+    * register insertion
+    * separate history per cmdline definition
+    * cmdline parser
   * showcmd
   * count
+  * macros
 * UTF-8 support (sort of)
-  * allows states to pretend they have more than 256 transitions by converting input Unicode codepoints to UTF-8 first
+  * allows states to pretend they have more than 256 transitions by converting input Unicode codepoints to UTF-8 strings first
 * Contains general-purpose deterministic finite state machine library
   * can be used independently of vui, although they are currently part of the same library
+  * uses mark-sweep garbage collector for cleanup
+  * can output (pretty unreadable) Graphviz representation of a state machine
 
 ## Planned/Under Development Features
 
 * fragments and combinators
   * function to create a fragment from a regexp
 * DFA-based parser for cmdline and other things
+  * currently used by `vuitest` to unescape arguments to `:map`
+  * I've only tried it with regular languages so far, but I think it will eventually be able to parse any deterministic context-free language
+* saving and loading state machines to disk
 
 
 ## Demo
-vui comes with a ncurses-based demo in `vuitest.c`.  Clone or download the repository and run `make vuitest && ./vuitest` in one terminal and `tail -f log` in another.  
+vui comes with a ncurses-based demo in `vuitest.c`.  Clone or download the repository, `cd` into it, and run `make vuitest && ./vuitest`. As you push keys, text will appear in window.  The same text is appended to a file `log`, if you want to scroll back.  
 
 `:q<Enter>`, `Q`, and `ZZ` all quit.  `:` and `/` enter Vi-like command and search modes.  Search mode does nothing (other than make a log entry), but command mode has some commands:
 * `:q`: quit
@@ -35,18 +46,22 @@ If given a count, `Q` and `ZZ` log the count instead of quitting.
 
 `q<register>` records, `q` ends recording, and `@<register>` plays back a macro.
 
-Macros currently are very buggy, and will very readily cause stack overflows, even if they don't call themselves.
+`CTRL-r<register>` while editing a cmdline inserts that register.
+
+`gv` outputs a Graphviz file `vui.dot` in the current working directory of the main state machine.
+
+`gc` runs the garbage collector.  This isn't really very interesting, unless debug output is on, and is only useful for debugging the garbage collector.
 
 ## Using vui in your own program
 Run `make libvui.a` and then link the resulting file `libvui.a` into your own program.
 
 Before using any features of vui, you must call `vui_init(width)`, where `width` is the desired width, in characters, of the vui bar.  
 
-The contents of the vui bar are stored in `char* vui_bar`.  This string should be drawn to the screen regularly by the user, preferably after each call to `vui_input`.  The address contained in `vui_bar` changes depending if vui is in status or command mode, so you should not cache it.  The variable `int vui_crsrx` contains the cursor position in the bar, where `-1` means cursor should be hidden and `n` means the cursor should be to the left of character `n`.  To change the width of the vui bar (e.g. if the screen gets resized), call `vui_resize(newwidth)`, where `newwidth` is the new desired width.  
+The contents of the vui status and command line are stored in `char* vui_bar`.  This string should be drawn to the screen regularly by the user, preferably after each call to `vui_input`.  The address contained in `vui_bar` changes depending if vui is in status or command mode, so you should not cache it.  The variable `int vui_crsrx` contains the cursor position in the bar, where `-1` means cursor should be hidden and `n` means the cursor should be to the left of character `n`.  To change the width of the vui bar (e.g. if the screen gets resized), call `vui_resize(newwidth)`, where `newwidth` is the new desired width.  
 
 To feed user input into vui, call `vui_input(key)`, where `key` is the value of the entered keystroke.  `key` may be any value from 0 to 0x7FFFFFFF (UTF-8 codepoint range).  
 
-To create a new mode, call `vui_mode_new` (see `vui.h:67`).  To create a new command line type (like `:` or `/` in Vi) and to register an on submit callback (of type `vui_cmdline_submit_callback` at `vui.h:39`), call `vui_cmdline_type_new` (see `vui.h:77`)
+To create a new mode, call `vui_mode_new` (around `vui.h:150`).  To create a new command line type (like `:` or `/` in Vi) and to register an on submit callback (of type `vui_cmdline_submit_callback` around `vui.h:39`), call `vui_cmdline_mode_new` (around `vui.h:160`).
 
-To add commands like `ZZ`, see functions like `vui_set_string_t` (defined at `statemachine.h:65`).  
+To add commands like `ZZ`, see functions like `vui_set_string_t` (defined around `vui_statemachine.h:157`).  
 
