@@ -579,7 +579,8 @@ static vui_state* tfunc_cmd_enter(vui_state* currstate, unsigned int c, int act,
 void vui_init(int width)
 {
 	vui_normal_mode = vui_curr_state = vui_state_new();
-	vui_normal_mode->name = "vui_normal_mode";
+	vui_string_reset(&vui_normal_mode->name);
+	vui_string_puts(&vui_normal_mode->name, "vui_normal_mode");
 
 	vui_normal_mode->gc.root++;
 
@@ -674,7 +675,8 @@ void vui_count_init(void)
 	vui_transition transition_count_leave = vui_transition_run_c_s(vui_normal_mode);
 
 	vui_count_mode = vui_state_new_t(transition_count_leave);
-	vui_count_mode->name = "vui_count_mode";
+	vui_string_reset(&vui_count_mode->name);
+	vui_string_puts(&vui_count_mode->name, "vui_count_mode");
 
 	vui_transition transition_count = vui_transition_new3(vui_count_mode, tfunc_count, &vui_count);
 	vui_set_range_t(vui_count_mode, '0', '9', transition_count);
@@ -783,7 +785,8 @@ void vui_macro_init(unsigned int record, unsigned int execute)
 
 	char sr[16];
 	vui_utf8_encode(record, sr);
-	state_macro_record->name = strdup(sr);
+	vui_string_reset(&state_macro_record->name);
+	vui_string_puts(&state_macro_record->name, sr);
 
 	vui_transition transition_record_enter = vui_transition_new2(tfunc_record_enter, NULL);
 
@@ -795,7 +798,8 @@ void vui_macro_init(unsigned int record, unsigned int execute)
 
 	char se[16];
 	vui_utf8_encode(execute, se);
-	state_macro_execute->name = strdup(se);
+	vui_string_reset(&state_macro_execute->name);
+	vui_string_puts(&state_macro_execute->name, se);
 
 	vui_set_char_t_u(vui_normal_mode, execute, vui_transition_new3(state_macro_execute, tfunc_showcmd_put, NULL));
 }
@@ -943,8 +947,8 @@ vui_state* vui_mode_new(char* cmd, char* name, char* label, int mode, vui_transi
 		state = vui_state_new();
 	}
 
-	free(state->name);
-	state->name = name;
+	vui_string_reset(&state->name);
+	vui_string_puts(&state->name, name);
 
 	if (func_enter.next == NULL) func_enter.next = state;
 
@@ -996,7 +1000,9 @@ vui_cmdline_def* vui_cmdline_mode_new(char* cmd, char* name, char* label, vui_tr
 	}
 
 	vui_state* cmdline_state = vui_state_new();
-	cmdline_state->name = name;
+	vui_string_reset(&cmdline_state->name);
+	vui_string_puts(&cmdline_state->name, name);
+
 	cmdline_state->push = vui_state_stack;
 
 	vui_transition transition_normal_to_cmd = vui_transition_new3(cmdline_state, tfunc_normal_to_cmd, cmdline);

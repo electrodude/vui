@@ -119,7 +119,8 @@ vui_frag* vui_frag_accept_escaped(vui_translator* tr)
 {
 	vui_state* escaper = vui_state_new_putc(tr);
 
-	escaper->name = strdup("escaper");
+	vui_string_reset(&escaper->name);
+	vui_string_puts(&escaper->name, "escaper");
 
 	escaper->gv_norank = 1;
 

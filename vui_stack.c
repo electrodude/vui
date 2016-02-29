@@ -25,7 +25,7 @@ vui_stack* vui_stack_new_v(size_t n, ...)
 
 	vui_stack* stk = vui_stack_new_prealloc(n);
 
-	for (int i = 0; i < n; i++)
+	for (size_t i = 0; i < n; i++)
 	{
 		vui_stack_push(stk, va_arg(ap, void*));
 	}

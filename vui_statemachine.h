@@ -6,6 +6,7 @@ extern "C"
 {
 #endif
 
+#include "vui_string.h"
 #include "vui_stack.h"
 
 #include "vui_gc.h"
@@ -52,7 +53,7 @@ typedef struct vui_state
 
 	void* data;
 
-	char* name;
+	vui_string name;
 
 	int iter_id;
 	int iter_gen;
@@ -73,6 +74,11 @@ void vui_state_replace(vui_state* state, vui_transition search, vui_transition r
 
 void vui_state_cp(vui_state* dest, const vui_state* src);
 void vui_state_fill(vui_state* dest, vui_transition t);
+
+static inline unsigned char* vui_state_name(vui_state* st)
+{
+	return vui_string_get(&st->name);
+}
 
 
 static inline vui_transition vui_transition_new1(vui_state* next)

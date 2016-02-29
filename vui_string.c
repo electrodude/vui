@@ -26,20 +26,29 @@ vui_string* vui_string_new_prealloc(vui_string* str, size_t n)
 	return str;
 }
 
-vui_string* vui_string_new_array(size_t n, char* s)
+vui_string* vui_string_new_array(vui_string* ptr, size_t n, const unsigned char* s)
 {
-	vui_string* str = vui_string_new_prealloc(NULL, n);
+	vui_string* str = vui_string_new_prealloc(ptr, n);
 
 	vui_string_putn(str, n, s);
 
 	return str;
 }
 
-vui_string* vui_string_new_str(char* s)
+vui_string* vui_string_new_str(vui_string* ptr, const unsigned char* s)
 {
-	vui_string* str = vui_string_new(NULL);
+	vui_string* str = vui_string_new(ptr);
 
 	vui_string_puts(str, s);
+
+	return str;
+}
+
+vui_string* vui_string_dup(vui_string* ptr, const vui_string* orig)
+{
+	vui_string* str = vui_string_new_prealloc(ptr, orig->n);
+
+	memcpy(str->s, orig->s, orig->n);
 
 	return str;
 }
@@ -51,6 +60,15 @@ void vui_string_kill(vui_string* str)
 	free(str->s);
 
 	free(str);
+}
+
+void vui_string_dtor(vui_string* str)
+{
+	if (str == NULL) return;
+
+	str->n = str->maxn = 0;
+
+	free(str->s);
 }
 
 unsigned char* vui_string_release(vui_string* str)
@@ -104,7 +122,7 @@ void vui_string_putc(vui_string* str, unsigned char c)
 	str->s[str->n++] = c;
 }
 
-void vui_string_puts(vui_string* str, unsigned char* s)
+void vui_string_puts(vui_string* str, const unsigned char* s)
 {
 	if (str == NULL) return;
 
@@ -116,19 +134,19 @@ void vui_string_puts(vui_string* str, unsigned char* s)
 	}
 }
 
-void vui_string_putn(vui_string* str, size_t n, unsigned char* s)
+void vui_string_putn(vui_string* str, size_t n, const unsigned char* s)
 {
 	if (str == NULL) return;
 
 	if (s == NULL) return;
 
-	for (int i = 0; i < n; i++)
+	for (size_t i = 0; i < n; i++)
 	{
 		vui_string_putc(str, *s);
 	}
 }
 
-void vui_string_putf(vui_string* str, unsigned char* fmt, ...)
+void vui_string_putf(vui_string* str, const unsigned char* fmt, ...)
 {
 	if (str == NULL) return;
 
@@ -160,7 +178,7 @@ void vui_string_putf(vui_string* str, unsigned char* fmt, ...)
 	va_end(argp);
 }
 
-void vui_string_append(vui_string* str, vui_string* str2)
+void vui_string_append(vui_string* str, const vui_string* str2)
 {
 	if (str == NULL) return;
 

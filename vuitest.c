@@ -264,7 +264,7 @@ int main(int argc, char** argv)
 	vui_translator* cmd_tr = vui_translator_new();
 
 	vui_state* cmd_tr_start = vui_state_new_putc(cmd_tr);
-	cmd_tr_start->name = "cmd_tr";
+	vui_string_new_str(&cmd_tr_start->name, "cmd_tr");
 
 
 	// :q
@@ -351,33 +351,7 @@ int main(int argc, char** argv)
 			wrefresh(statusline);
 
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_TEST)
-#if 0
-			if (vui_curr_state == vui_normal_mode)
-			{
-				vui_debugf("normal mode\n");
-			}
-			else if (vui_curr_state == vui_count_mode)
-			{
-				vui_debugf("count mode\n");
-			}
-			else if (vui_curr_state == cmd_mode->cmdline_state)
-			{
-				vui_debugf("cmd mode\n");
-			}
-			else if (vui_curr_state == search_mode->cmdline_state)
-			{
-				vui_debugf("search mode\n");
-			}
-#else
-			if (vui_curr_state->name != NULL)
-			{
-				vui_debugf("%s\n", vui_curr_state->name);
-			}
-#endif
-			else
-			{
-				vui_debugf("unknown mode\n");
-			}
+			vui_debugf("%s\n", vui_state_name(vui_curr_state));
 #endif
 		}
 	}

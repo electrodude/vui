@@ -137,9 +137,9 @@ void vui_gv_print_s(FILE* f, vui_state* s)
 
 	fprintf(f, "\t\"%d\" [label=\"", s->iter_id);
 
-	if (s->name != NULL)
+	if (s->name.n > 0)
 	{
-		vui_gv_puts(f, s->name);
+		vui_gv_puts(f, vui_state_name(s));
 	}
 	else
 	{

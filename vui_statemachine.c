@@ -19,6 +19,8 @@ static inline vui_state* vui_state_new_raw(void)
 
 	state->gv_norank = 0;
 
+	vui_string_new(&state->name);
+
 	vui_gc_register(state, vui_state_dtor);
 
 	return state;
@@ -35,7 +37,7 @@ vui_state* vui_state_new(void)
 	state->data = NULL;
 
 	state->push = NULL;
-	state->name = strdup("new");
+	vui_string_puts(&state->name, "new");
 
 	return state;
 }
@@ -48,7 +50,7 @@ vui_state* vui_state_new_t(vui_transition transition)
 
 	state->data = NULL;
 	state->push = NULL;
-	state->name = strdup("new_t");
+	vui_string_puts(&state->name, "new_t");
 
 	return state;
 }
@@ -63,7 +65,7 @@ vui_state* vui_state_new_t_self(vui_transition transition)
 
 	state->data = NULL;
 	state->push = NULL;
-	state->name = strdup("new_t_self");
+	vui_string_puts(&state->name, "new_t_self");
 
 	return state;
 }
@@ -72,20 +74,17 @@ vui_state* vui_state_new_s(vui_state* next)
 {
 	vui_state* state = vui_state_new_t(vui_transition_new1(next));
 
-	free(state->name);
-
-	vui_string name;
-	vui_string_new(&name);
-	vui_string_puts(&name, "to ");
+	vui_string* name = &state->name;
+	vui_string_reset(name);
+	vui_string_puts(name, "to ");
 	if (next != NULL)
 	{
-		vui_string_puts(&name, next->name);
+		vui_string_append(name, &next->name);
 	}
 	else
 	{
-		vui_string_puts(&name, "NULL");
+		vui_string_puts(name, "NULL");
 	}
-	state->name = vui_string_get(&name);
 
 	return state;
 }
@@ -107,6 +106,8 @@ static void vui_state_kill(vui_state* state)
 	vui_debugf("Killing state 0x%lX\n", state);
 #endif
 
+	vui_string_dtor(&state->name);
+
 	free(state);
 }
 
@@ -120,6 +121,9 @@ static void vui_state_dtor(void* obj, vui_gc_dtor_mode mode)
 		{
 			vui_gc_mark(vui_next(obj, i, VUI_ACT_GC));
 		}
+
+		// if the gc is running, this state's name is probably final
+		vui_string_shrink(&st->name);
 	}
 	else if (mode == VUI_GC_DTOR_SWEEP)
 	{
@@ -150,11 +154,10 @@ void vui_state_cp(vui_state* dest, const vui_state* src)
 	dest->data = src->data;
 	dest->push = src->push;
 
-	vui_string name;
-	vui_string_new(&name);
-	vui_string_puts(&name, "dup ");
-	vui_string_puts(&name, src->name);
-	dest->name = vui_string_get(&name);
+	vui_string* name = &dest->name;
+	vui_string_reset(name);
+	vui_string_puts(name, "dup ");
+	vui_string_append(name, &src->name);
 }
 
 void vui_state_fill(vui_state* dest, vui_transition t)
@@ -342,18 +345,17 @@ void vui_set_string_t_nocall(vui_state* state, unsigned char* s, vui_transition 
 
 			vui_set_char_t(state, *s, vui_transition_new1(nextst));
 
-			vui_string name;
-			vui_string_new(&name);
-			vui_string_puts(&name, "string ");
+			vui_string* name = &nextst->name;
+			vui_string_reset(name);
+			vui_string_puts(name, "string ");
 			if (s[1] < 128)
 			{
-				vui_string_putc(&name, s[1]);
+				vui_string_putc(name, s[1]);
 			}
 			else
 			{
-				vui_string_puts(&name, "??");
+				vui_string_puts(name, "??");
 			}
-			vui_string_get_replace(&name, &nextst->name);
 
 			vui_set_string_t_nocall(nextst, s+1, next);
 		}
@@ -389,17 +391,16 @@ void vui_set_buf_t(vui_state* state, unsigned char* s, size_t len, vui_transitio
 
 			vui_set_char_t(state, *s, t);
 
-			vui_string name;
-			vui_string_new(&name);
+			vui_string* name = &nextst->name;
+			vui_string_reset(name);
 			if (s[1] >= 32 && s[1] < 128)
 			{
-				vui_string_putc(&name, s[1]);
+				vui_string_putc(name, s[1]);
 			}
 			else
 			{
-				vui_string_putf(&name, "0x%02x", s[1]);
+				vui_string_putf(name, "0x%02x", s[1]);
 			}
-			vui_string_get_replace(&name, &nextst->name);
 			
 			vui_set_buf_t(nextst, s+1, len-1, next);
 		}
@@ -435,17 +436,16 @@ void vui_set_string_t(vui_state* state, unsigned char* s, vui_transition next)
 
 			vui_set_char_t(state, *s, t);
 
-			vui_string name;
-			vui_string_new(&name);
+			vui_string* name = &nextst->name;
+			vui_string_reset(name);
 			if (s[1] < 128)
 			{
-				vui_string_putc(&name, s[1]);
+				vui_string_putc(name, s[1]);
 			}
 			else
 			{
-				vui_string_puts(&name, "??");
+				vui_string_puts(name, "??");
 			}
-			vui_string_get_replace(&name, &nextst->name);
 			
 			vui_set_string_t(nextst, s+1, next);
 		}
@@ -483,17 +483,16 @@ void vui_set_string_t_mid(vui_state* state, unsigned char* s, vui_transition mid
 
 			vui_set_char_t(state, *s, t);
 
-			vui_string name;
-			vui_string_new(&name);
+			vui_string* name = &nextst->name;
+			vui_string_reset(name);
 			if (s[1] < 128)
 			{
-				vui_string_putc(&name, s[1]);
+				vui_string_putc(name, s[1]);
 			}
 			else
 			{
-				vui_string_puts(&name, "??");
+				vui_string_puts(name, "??");
 			}
-			vui_string_get_replace(&name, &nextst->name);
 
 			vui_set_string_t_mid(nextst, s+1, mid, next);
 		}
@@ -534,7 +533,7 @@ vui_state* vui_next_t(vui_state* currstate, unsigned int c, vui_transition t, in
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_STATEMACHINE)
 	if (act == VUI_ACT_RUN)
 	{
-		vui_debugf("source: \"%s\" (0x%lX)\n", currstate->name != NULL ? currstate->name : "", currstate);
+		vui_debugf("source: \"%s\" (0x%lX)\n", vui_state_name(currstate), currstate);
 	}
 #endif
 
@@ -570,17 +569,17 @@ vui_state* vui_next_t(vui_state* currstate, unsigned int c, vui_transition t, in
 	{
 		if (nextstate->push != NULL)
 		{
-#if defined(VUI_DEBUG) && defined(VUI_DEBUG_STATEMACHINE)
-			vui_debugf("push\n");
-#endif
 			vui_stack_push_nodup(nextstate->push, nextstate);
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_STATEMACHINE)
+			vui_debugf("push %d\n", nextstate->push->n);
+#endif
 		}
 	}
 
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_STATEMACHINE)
 	if (act == VUI_ACT_RUN)
 	{
-		vui_debugf("destination: \"%s\" (0x%lX)\n", nextstate->name != NULL ? nextstate->name : "", nextstate);
+		vui_debugf("destination: \"%s\" (0x%lX)\n", vui_state_name(nextstate), nextstate);
 	}
 #endif
 

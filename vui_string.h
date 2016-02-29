@@ -37,16 +37,21 @@ static inline vui_string* vui_string_new(vui_string* str)
 
 // Create a new string
 // Copy n chars starting at c into the string
-vui_string* vui_string_new_array(size_t n, char* s);
+vui_string* vui_string_new_array(vui_string* ptr, size_t n, const unsigned char* s);
 
 
 // Create a new string
 // Copy a null-terminated string at s into the string
-vui_string* vui_string_new_str(char* s);
+vui_string* vui_string_new_str(vui_string* ptr, const unsigned char* s);
 
+// Clone a string
+vui_string* vui_string_dup(vui_string* ptr, const vui_string* orig);
 
 // Destroy a string and its buffer
 void vui_string_kill(vui_string* str);
+
+// Destruct a non-malloc'd string
+void vui_string_dtor(vui_string* str);
 
 // Destroy string, returning its internal buffer
 // The caller assumes responsibilty for free()ing the returned buffer.
@@ -73,16 +78,16 @@ char* vui_string_shrink(vui_string* str);
 void vui_string_putc(vui_string* str, unsigned char c);
 
 // Append a null-terminated string
-void vui_string_puts(vui_string* str, unsigned char* s);
+void vui_string_puts(vui_string* str, const unsigned char* s);
 
 // Append a string that is n characters long
-void vui_string_putn(vui_string* str, size_t n, unsigned char* s);
+void vui_string_putn(vui_string* str, size_t n, const unsigned char* s);
 
 // Append printf-formatted text
-void vui_string_putf(vui_string* str, unsigned char* fmt, ...);
+void vui_string_putf(vui_string* str, const unsigned char* fmt, ...);
 
 // Append a vui_string
-void vui_string_append(vui_string* str, vui_string* str2);
+void vui_string_append(vui_string* str, const vui_string* str2);
 
 // Append a codepoint to be encoded as UTF-8
 void vui_string_put(vui_string* str, unsigned int c);
