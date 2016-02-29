@@ -64,7 +64,7 @@ vui_frag* vui_frag_dup(vui_frag* orig)
 
 vui_state* vui_frag_release(vui_frag* frag, vui_state* exit)
 {
-	for (int i=0; i<frag->exits->n; i++)
+	for (size_t i=0; i<frag->exits->n; i++)
 	{
 		vui_state_cp(frag->exits->s[i], exit);
 	}

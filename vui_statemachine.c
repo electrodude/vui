@@ -117,7 +117,7 @@ static void vui_state_gc_dtor(void* obj, vui_gc_dtor_mode mode)
 
 	if (mode == VUI_GC_DTOR_MARK)
 	{
-		for (int i=0; i < VUI_MAXSTATE; i++)
+		for (unsigned int i=0; i < VUI_MAXSTATE; i++)
 		{
 			vui_gc_mark(vui_next(obj, i, VUI_ACT_GC));
 		}

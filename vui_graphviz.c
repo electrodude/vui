@@ -102,7 +102,7 @@ void vui_gv_write(FILE* f, vui_stack* roots)
 	fprintf(f, "\tsplines=true;\n");
 	fprintf(f, "\toverlap=scalexy;\n");
 
-	for (int i=0; i < roots->n; i++)
+	for (size_t i=0; i < roots->n; i++)
 	{
 		vui_state* root = roots->s[i];
 
@@ -125,7 +125,7 @@ void vui_gv_print_s(FILE* f, vui_state* s)
 		return;
 	}
 
-	for (int i = 0; i < VUI_MAXSTATE; i++)
+	for (unsigned int i = 0; i < VUI_MAXSTATE; i++)
 	{
 		vui_state* next = vui_next(s, i, VUI_ACT_TEST);
 
@@ -147,7 +147,7 @@ void vui_gv_print_s(FILE* f, vui_state* s)
 	}
 
 
-	for (int i = 0; i < VUI_MAXSTATE; i++)
+	for (unsigned int i = 0; i < VUI_MAXSTATE; i++)
 	{
 		vui_transition t = s->next[i];
 		vui_state* next = vui_next(s, i, VUI_ACT_TEST);
@@ -166,7 +166,7 @@ void vui_gv_print_s(FILE* f, vui_state* s)
 			}
 			fprintf(f, "label=\"");
 
-			for (int j = 0; j < VUI_MAXSTATE; j++)
+			for (unsigned int j = 0; j < VUI_MAXSTATE; j++)
 			{
 				if (next == vui_next(s, j, VUI_ACT_TEST)) // match
 				{

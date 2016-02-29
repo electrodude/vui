@@ -586,7 +586,7 @@ void vui_init(int width)
 
 	vui_transition transition_normal = vui_transition_new3(vui_normal_mode, tfunc_normal, NULL);
 
-	for (int i=0; i<VUI_MAXSTATE; i++)
+	for (unsigned int i=0; i<VUI_MAXSTATE; i++)
 	{
 		vui_set_char_t(vui_normal_mode, i, transition_normal);
 	}
@@ -917,7 +917,7 @@ static vui_state* tfunc_cmd_paste(vui_state* currstate, unsigned int c, int act,
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
 		vui_debugf("paste %c\n", c);
 #endif
-		for (int i = 0; i < reg->n; i++)
+		for (size_t i = 0; i < reg->n; i++)
 		{
 			tfunc_cmd_key(cmdline_state, reg->s[i], act, data);
 		}
@@ -970,7 +970,7 @@ vui_state* vui_mode_new(char* cmd, char* name, char* label, int mode, vui_transi
 		func_exit.func = tfunc_status_clear;
 	}
 
-	for (int i=0; i<VUI_MAXSTATE; i++)
+	for (unsigned int i=0; i<VUI_MAXSTATE; i++)
 	{
 		vui_set_char_t(state, i, func_in);
 	}
@@ -1025,7 +1025,7 @@ vui_cmdline_def* vui_cmdline_mode_new(char* cmd, char* name, char* label, vui_tr
 	vui_transition transition_macro_paste = vui_transition_new3(cmdline_state, tfunc_cmd_paste, cmdline);
 	vui_state* paste_state = vui_state_new_t(transition_macro_paste);
 
-	for (int i=32; i<127; i++)
+	for (unsigned int i=32; i<127; i++)
 	{
 		vui_set_char_t(cmdline_state, i, transition_cmd_key);
 	}
