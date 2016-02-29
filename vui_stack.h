@@ -77,7 +77,11 @@ void* vui_stack_pop(vui_stack* stk);
 // Peek at the top element of the stack
 void* vui_stack_peek(vui_stack* stk);
 
-// Return the element at index `i`, or NULL if out of range
+// Return the i-th element from the top of the stack, or NULL if out of range
+// Is zero indexed, so vui_stack_index_end(stk, 0) == vui_stack_peek(stk)
+void* vui_stack_index_end(vui_stack* stk, size_t n);
+
+// Return the i-th element from the bottom of the stack, or NULL if out of range
 void* vui_stack_index(vui_stack* stk, unsigned int i);
 
 // Call given function on each element of the stack, from top to bottom

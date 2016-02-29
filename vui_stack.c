@@ -204,6 +204,26 @@ void* vui_stack_peek(vui_stack* stk)
 	return stk->s[stk->n-1];
 }
 
+void* vui_stack_index_end(vui_stack* stk, size_t n)
+{
+	if (stk == NULL) return NULL;
+
+	if (stk->n <= 0)
+	{
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_STACK)
+		vui_debugf("Peek def 0x%lX\n", stk->def);
+#endif
+
+		return stk->def;
+	}
+
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_STACK)
+	vui_debugf("Peek 0x%lX\n", stk->s[stk->n-1 - n]);
+#endif
+
+	return stk->s[stk->n-1 - n];
+}
+
 void* vui_stack_index(vui_stack* stk, unsigned int i)
 {
 	if (stk == NULL) return NULL;

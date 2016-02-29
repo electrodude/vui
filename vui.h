@@ -89,8 +89,19 @@ static inline vui_state* vui_return(int act)
 	}
 }
 
-void vui_map(vui_state* mode, char* action, char* reaction);
-void vui_map2(vui_state* mode, char* action, vui_state* reaction_st, char* reaction_str);
+static inline vui_state* vui_return_n(int act, size_t n)
+{
+	if (act > 0)
+	{
+		while (n-- > 0) vui_stack_pop(vui_state_stack);
+
+		return vui_stack_pop(vui_state_stack);
+	}
+	else
+	{
+		return vui_stack_index_end(vui_state_stack, n);
+	}
+}
 
 
 // showcmd
@@ -125,8 +136,11 @@ vui_state* vui_register_execute(vui_state* currstate, unsigned int c, int act);
 
 // keybinds
 
-void vui_bind_u(vui_state* mode, unsigned int c, vui_transition_callback func, void* data);
-void vui_bind(vui_state* mode, unsigned char* s, vui_transition_callback func, void* data);
+void vui_bind_u(vui_state* mode, unsigned int c, vui_transition t);
+void vui_bind(vui_state* mode, unsigned char* s, vui_transition t);
+
+void vui_map(vui_state* mode, char* action, char* reaction);
+void vui_map2(vui_state* mode, char* action, vui_state* reaction_st, char* reaction_str);
 
 
 // new modes

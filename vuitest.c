@@ -247,7 +247,7 @@ int main(int argc, char** argv)
 
 	vui_init(COLS);
 
-	vui_bind_u(vui_normal_mode, KEY_RESIZE, tfunc_winch, NULL);
+	vui_bind_u(vui_normal_mode, KEY_RESIZE, vui_transition_new2(tfunc_winch, NULL));
 
 	vui_count_init();
 
@@ -290,14 +290,14 @@ int main(int argc, char** argv)
 	search_mode = vui_cmdline_mode_new("/", "search", "/", NULL, on_search_submit);
 
 
-	vui_bind(vui_normal_mode, "Q", tfunc_quit, NULL);
+	vui_bind(vui_normal_mode, "Q", vui_transition_new2(tfunc_quit, NULL));
 
-	vui_bind(vui_normal_mode, "ZZ", tfunc_quit, NULL);
+	vui_bind(vui_normal_mode, "ZZ", vui_transition_new2(tfunc_quit, NULL));
 
 
-	vui_bind(vui_normal_mode, "gc", tfunc_gc, NULL);
+	vui_bind(vui_normal_mode, "gc", vui_transition_new2(tfunc_gc, NULL));
 
-	vui_bind(vui_normal_mode, "gv", tfunc_graphviz, NULL);
+	vui_bind(vui_normal_mode, "gv", vui_transition_new2(tfunc_graphviz, NULL));
 
 
 	// done initialization; run garbage collector

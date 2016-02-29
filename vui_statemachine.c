@@ -343,6 +343,8 @@ void vui_set_string_t_nocall(vui_state* state, unsigned char* s, vui_transition 
 
 			vui_state* nextst = vui_state_dup(state2);
 
+			nextst->push = NULL;
+
 			vui_set_char_t(state, *s, vui_transition_new1(nextst));
 
 			vui_string* name = &nextst->name;
@@ -386,6 +388,8 @@ void vui_set_buf_t(vui_state* state, unsigned char* s, size_t len, vui_transitio
 			if (state2 == NULL) return;
 
 			vui_state* nextst = vui_state_dup(state2);
+
+			nextst->push = NULL;
 
 			t.next = nextst;
 
@@ -432,6 +436,8 @@ void vui_set_string_t(vui_state* state, unsigned char* s, vui_transition next)
 
 			vui_state* nextst = vui_state_dup(state2);
 
+			nextst->push = NULL;
+
 			t.next = nextst;
 
 			vui_set_char_t(state, *s, t);
@@ -476,6 +482,8 @@ void vui_set_string_t_mid(vui_state* state, unsigned char* s, vui_transition mid
 			if (state2 == NULL) return;
 
 			vui_state* nextst = vui_state_dup(state2);
+
+			nextst->push = NULL;
 
 			t = mid;
 
