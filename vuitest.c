@@ -21,6 +21,7 @@
 #include "vui_graphviz.h"
 
 
+WINDOW* logwindow;
 WINDOW* statusline;
 
 int VUI_KEY_UP = KEY_UP;
@@ -40,17 +41,25 @@ FILE* dbgf;
 vui_cmdline_def* cmd_mode;
 vui_cmdline_def* search_mode;
 
-#if defined(VUI_DEBUG)
+// Defined even if !defined(VUI_DEBUG), since we use it for debug output
 void vui_debugf(const char* format, ...)
 {
 	va_list argp;
 	va_start(argp, format);
 
-	vfprintf(dbgf, format, argp);
+	size_t len = COLS;
 
+	char line[len];
+
+	vsnprintf(line, len, format, argp);
 	va_end(argp);
+
+	fprintf(dbgf, "%s", line);
+
+	waddstr(logwindow, line);
+	wrefresh(logwindow);
+
 }
-#endif
 
 static void sighandler(int signo)
 {
@@ -65,6 +74,9 @@ static void sighandler(int signo)
 			endwin();
 			refresh();
 			clear();
+
+			wresize(logwindow, LINES-1, COLS);
+			wrefresh(logwindow);
 
 			wresize(statusline, 1, COLS);
 
@@ -95,14 +107,14 @@ static vui_state* tfunc_quit(vui_state* currstate, unsigned int c, int act, void
 
 	if (vui_count != 0)
 	{
-		fprintf(dbgf, "count: %d\n", vui_count);
+		vui_debugf("count: %d\n", vui_count);
 
 		vui_reset();
 
 		return vui_return(act);
 	}
 
-	fprintf(dbgf, "quit\n");
+	vui_debugf("quit\n");
 	endwin();
 	printf("Quitting!\n");
 
@@ -151,9 +163,13 @@ static vui_state* tfunc_winch(vui_state* currstate, unsigned int c, int act, voi
 	vui_debugf("winch\n");
 #endif
 
+	wresize(logwindow, LINES-2, COLS);
+	wrefresh(logwindow);
+
 	wresize(statusline, 1, COLS);
 
 	mvwin(statusline, LINES-1, 0);
+	wrefresh(statusline);
 
 	vui_resize(COLS);
 
@@ -170,11 +186,11 @@ void on_cmd_submit(vui_stack* cmd)
 
 	if (op != NULL)
 	{
-		fprintf(dbgf, "op: \"%s\"\n", op);
+		vui_debugf("op: \"%s\"\n", op);
 	}
 	else
 	{
-		fprintf(dbgf, "op: NULL");
+		vui_debugf("op: NULL");
 		return;
 	}
 
@@ -189,22 +205,22 @@ void on_cmd_submit(vui_stack* cmd)
 		char* action = arg(1);
 		if (action == NULL)
 		{
-			fprintf(dbgf, "action: NULL\n");
+			vui_debugf("action: NULL\n");
 			return;
 		}
 		else
 		{
-			fprintf(dbgf, "action: \"%s\"\n", action);
+			vui_debugf("action: \"%s\"\n", action);
 		}
 		char* reaction = arg(2);
 		if (reaction == NULL)
 		{
-			fprintf(dbgf, "reaction: NULL\n");
+			vui_debugf("reaction: NULL\n");
 			return;
 		}
 		else
 		{
-			fprintf(dbgf, "reaction: \"%s\"\n", reaction);
+			vui_debugf("reaction: \"%s\"\n", reaction);
 		}
 
 		vui_map(vui_normal_mode, action, reaction);
@@ -214,7 +230,7 @@ void on_cmd_submit(vui_stack* cmd)
 
 void on_search_submit(vui_stack* cmd)
 {
-	fprintf(dbgf, "search: \"%s\"\n", vui_string_get(vui_stack_peek(cmd)));
+	vui_debugf("search: \"%s\"\n", vui_string_get(vui_stack_peek(cmd)));
 }
 
 
@@ -225,7 +241,7 @@ int main(int argc, char** argv)
 
 	setvbuf(dbgf, NULL, _IOLBF, BUFSIZ);
 
-	fprintf(dbgf, "start\n");
+	vui_debugf("start\n");
 
 	initscr();
 	cbreak();
@@ -238,6 +254,9 @@ int main(int argc, char** argv)
 	sa.sa_handler = sighandler;
 	sigaction(SIGWINCH, &sa, NULL);
 
+
+	logwindow = newwin(LINES-1, COLS, 0, 0);
+	scrollok(logwindow, true);
 
 	statusline = newwin(1, COLS, LINES-1, 0);
 
