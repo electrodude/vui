@@ -11,7 +11,7 @@
 
 int vui_iter_gen = 0;
 
-static void vui_state_dtor(void* obj, vui_gc_dtor_mode mode);
+static void vui_state_gc_dtor(void* obj, vui_gc_dtor_mode mode);
 
 static inline vui_state* vui_state_new_raw(void)
 {
@@ -21,7 +21,7 @@ static inline vui_state* vui_state_new_raw(void)
 
 	vui_string_new(&state->name);
 
-	vui_gc_register(state, vui_state_dtor);
+	vui_gc_register(state, vui_state_gc_dtor);
 
 	return state;
 }
@@ -111,7 +111,7 @@ static void vui_state_kill(vui_state* state)
 	free(state);
 }
 
-static void vui_state_dtor(void* obj, vui_gc_dtor_mode mode)
+static void vui_state_gc_dtor(void* obj, vui_gc_dtor_mode mode)
 {
 	vui_state* st = (vui_state*)obj;
 
