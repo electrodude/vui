@@ -22,7 +22,7 @@ void vui_gc_run(void)
 	vui_gc_gen++;
 
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_GC)
-	vui_debugf("vui_gc_run: gc_gen = %d\n", vui_gc_gen);
+	vui_debugf("vui_gc_run: gc_gen = %d, vui_gc_first = %p\n", vui_gc_gen, vui_gc_first);
 #endif
 
 	vui_gc_header** curr = &vui_gc_first;
@@ -31,7 +31,7 @@ void vui_gc_run(void)
 	{
 
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_GC)
-		vui_debugf("vui_gc: check 0x%lX: root = %d\n", *curr, (*curr)->root);
+		vui_debugf("vui_gc: check %p: root = %d\n", *curr, (*curr)->root);
 #endif
 
 		if ((*curr)->root)
@@ -39,7 +39,7 @@ void vui_gc_run(void)
 			vui_gc_mark_header(*curr);
 		}
 
-		*curr = (*curr)->gc_next;
+		curr = &(*curr)->gc_next;
 	}
 
 	curr = &vui_gc_first;
@@ -52,16 +52,20 @@ void vui_gc_run(void)
 			*curr = condemned->gc_next;
 
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_GC)
-			vui_debugf("vui_gc: sweep 0x%lX\n", condemned);
+			vui_debugf("vui_gc: sweep %p\n", condemned);
 #endif
 
 			condemned->dtor(condemned, VUI_GC_DTOR_SWEEP);
 		}
 		else
 		{
-			*curr = (*curr)->gc_next;
+			curr = &(*curr)->gc_next;
 		}
 	}
+
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_GC)
+	vui_debugf("vui_gc_first = %p\n", vui_gc_first);
+#endif
 }
 
 void vui_gc_mark_header(vui_gc_header* obj)
@@ -73,7 +77,7 @@ void vui_gc_mark_header(vui_gc_header* obj)
 	obj->gc_gen = vui_gc_gen;
 
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_GC)
-	vui_debugf("vui_gc_mark(0x%lX)\n", obj);
+	vui_debugf("vui_gc_mark(%p)\n", obj);
 #endif
 
 	obj->dtor(obj, VUI_GC_DTOR_MARK);
