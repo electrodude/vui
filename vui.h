@@ -111,6 +111,12 @@ void vui_showcmd_reset(void);
 
 void vui_showcmd_setup(int start, int length);
 
+vui_state* vui_tfunc_showcmd_put(vui_state* currstate, unsigned int c, int act, void* data);
+static inline vui_transition vui_transition_new_showcmd_put(vui_state* next)
+{
+	return vui_transition_new3(next, vui_tfunc_showcmd_put, NULL);
+}
+
 
 // init/resize
 void vui_init(int width);		// initialize vui, set width
@@ -144,6 +150,24 @@ void vui_bind(vui_state* mode, unsigned char* s, vui_transition t);
 void vui_map(vui_state* mode, char* action, char* reaction);
 void vui_map2(vui_state* mode, char* action, vui_state* reaction_st, char* reaction_str);
 
+// misc callbacks
+vui_state* vui_tfunc_normal(vui_state* currstate, unsigned int c, int act, void* data);
+static inline vui_transition vui_transition_new_normal(void)
+{
+	return vui_transition_new3(vui_normal_mode, vui_tfunc_normal, NULL);
+}
+
+vui_state* vui_tfunc_status_set(vui_state* currstate, unsigned int c, int act, void* data);
+static inline vui_transition vui_transition_new_status_set(vui_state* next, char* str)
+{
+	return vui_transition_new3(next, vui_tfunc_status_set, str);
+}
+
+vui_state* vui_tfunc_status_clear(vui_state* currstate, unsigned int c, int act, void* data);
+static inline vui_transition vui_transition_new_clear(vui_state* next)
+{
+	return vui_transition_new3(next, vui_tfunc_status_clear, NULL);
+}
 
 // new modes
 #define VUI_MODE_NEW_MANUAL_IN 0x1

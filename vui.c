@@ -195,9 +195,18 @@ void vui_showcmd_setup(int start, int length)
 	vui_showcmd_reset();
 }
 
+vui_state* vui_tfunc_showcmd_put(vui_state* currstate, unsigned int c, int act, void* data)
+{
+	if (act <= 0) return NULL;
+
+	vui_showcmd_put(c);
+
+	return NULL;
+}
+
 
 // misc callbacks
-static vui_state* tfunc_normal(vui_state* currstate, unsigned int c, int act, void* data)
+vui_state* vui_tfunc_normal(vui_state* currstate, unsigned int c, int act, void* data)
 {
 	if (act <= 0) return NULL;
 
@@ -213,16 +222,7 @@ static vui_state* tfunc_normal(vui_state* currstate, unsigned int c, int act, vo
 	return NULL;
 }
 
-static vui_state* tfunc_showcmd_put(vui_state* currstate, unsigned int c, int act, void* data)
-{
-	if (act <= 0) return NULL;
-
-	vui_showcmd_put(c);
-
-	return NULL;
-}
-
-static vui_state* tfunc_status_set(vui_state* currstate, unsigned int c, int act, void* data)
+vui_state* vui_tfunc_status_set(vui_state* currstate, unsigned int c, int act, void* data)
 {
 	char* s = data;
 
@@ -233,7 +233,7 @@ static vui_state* tfunc_status_set(vui_state* currstate, unsigned int c, int act
 	return NULL;
 }
 
-static vui_state* tfunc_status_clear(vui_state* currstate, unsigned int c, int act, void* data)
+vui_state* vui_tfunc_status_clear(vui_state* currstate, unsigned int c, int act, void* data)
 {
 	if (act <= 0) return NULL;
 
@@ -244,7 +244,7 @@ static vui_state* tfunc_status_clear(vui_state* currstate, unsigned int c, int a
 
 
 // cmdline callbacks
-static vui_state* tfunc_normal_to_cmd(vui_state* currstate, unsigned int c, int act, void* data)
+static vui_state* vui_tfunc_normal_to_cmd(vui_state* currstate, unsigned int c, int act, void* data)
 {
 	vui_cmdline* cmdline = data;
 
@@ -272,7 +272,7 @@ static vui_state* tfunc_normal_to_cmd(vui_state* currstate, unsigned int c, int 
 	return cmdline->cmdline_state;
 }
 
-static vui_state* tfunc_cmd_key(vui_state* currstate, unsigned int c, int act, void* data)
+static vui_state* vui_tfunc_cmd_key(vui_state* currstate, unsigned int c, int act, void* data)
 {
 	vui_cmdline* cmdline = data;
 
@@ -292,7 +292,7 @@ static vui_state* tfunc_cmd_key(vui_state* currstate, unsigned int c, int act, v
 	return vui_return(act);
 }
 
-static vui_state* tfunc_cmd_backspace(vui_state* currstate, unsigned int c, int act, void* data)
+static vui_state* vui_tfunc_cmd_backspace(vui_state* currstate, unsigned int c, int act, void* data)
 {
 	vui_cmdline* cmdline = data;
 
@@ -333,7 +333,7 @@ static vui_state* tfunc_cmd_backspace(vui_state* currstate, unsigned int c, int 
 	return vui_return(act);
 }
 
-static vui_state* tfunc_cmd_delete(vui_state* currstate, unsigned int c, int act, void* data)
+static vui_state* vui_tfunc_cmd_delete(vui_state* currstate, unsigned int c, int act, void* data)
 {
 	vui_cmdline* cmdline = data;
 
@@ -358,7 +358,7 @@ static vui_state* tfunc_cmd_delete(vui_state* currstate, unsigned int c, int act
 	return vui_return(act);
 }
 
-static vui_state* tfunc_cmd_left(vui_state* currstate, unsigned int c, int act, void* data)
+static vui_state* vui_tfunc_cmd_left(vui_state* currstate, unsigned int c, int act, void* data)
 {
 	vui_cmdline* cmdline = data;
 
@@ -374,7 +374,7 @@ static vui_state* tfunc_cmd_left(vui_state* currstate, unsigned int c, int act, 
 	return vui_return(act);
 }
 
-static vui_state* tfunc_cmd_right(vui_state* currstate, unsigned int c, int act, void* data)
+static vui_state* vui_tfunc_cmd_right(vui_state* currstate, unsigned int c, int act, void* data)
 {
 	vui_cmdline* cmdline = data;
 
@@ -390,7 +390,7 @@ static vui_state* tfunc_cmd_right(vui_state* currstate, unsigned int c, int act,
 	return vui_return(act);
 }
 
-static vui_state* tfunc_cmd_up(vui_state* currstate, unsigned int c, int act, void* data)
+static vui_state* vui_tfunc_cmd_up(vui_state* currstate, unsigned int c, int act, void* data)
 {
 	vui_cmdline* cmdline = data;
 
@@ -424,7 +424,7 @@ static vui_state* tfunc_cmd_up(vui_state* currstate, unsigned int c, int act, vo
 	return vui_return(act);
 }
 
-static vui_state* tfunc_cmd_down(vui_state* currstate, unsigned int c, int act, void* data)
+static vui_state* vui_tfunc_cmd_down(vui_state* currstate, unsigned int c, int act, void* data)
 {
 	vui_cmdline* cmdline = data;
 
@@ -459,7 +459,7 @@ static vui_state* tfunc_cmd_down(vui_state* currstate, unsigned int c, int act, 
 	return vui_return(act);
 }
 
-static vui_state* tfunc_cmd_home(vui_state* currstate, unsigned int c, int act, void* data)
+static vui_state* vui_tfunc_cmd_home(vui_state* currstate, unsigned int c, int act, void* data)
 {
 	vui_cmdline* cmdline = data;
 
@@ -472,7 +472,7 @@ static vui_state* tfunc_cmd_home(vui_state* currstate, unsigned int c, int act, 
 	return vui_return(act);
 }
 
-static vui_state* tfunc_cmd_end(vui_state* currstate, unsigned int c, int act, void* data)
+static vui_state* vui_tfunc_cmd_end(vui_state* currstate, unsigned int c, int act, void* data)
 {
 	vui_cmdline* cmdline = data;
 
@@ -485,7 +485,7 @@ static vui_state* tfunc_cmd_end(vui_state* currstate, unsigned int c, int act, v
 	return vui_return(act);
 }
 
-static vui_state* tfunc_cmd_escape(vui_state* currstate, unsigned int c, int act, void* data)
+static vui_state* vui_tfunc_cmd_escape(vui_state* currstate, unsigned int c, int act, void* data)
 {
 	vui_cmdline* cmdline = data;
 
@@ -524,7 +524,7 @@ static vui_state* tfunc_cmd_escape(vui_state* currstate, unsigned int c, int act
 	return vui_return_n(act, 1);
 }
 
-static vui_state* tfunc_cmd_enter(vui_state* currstate, unsigned int c, int act, void* data)
+static vui_state* vui_tfunc_cmd_enter(vui_state* currstate, unsigned int c, int act, void* data)
 {
 	vui_cmdline* cmdline = data;
 
@@ -572,7 +572,7 @@ void vui_init(int width)
 
 	vui_gc_incr(vui_normal_mode);
 
-	vui_transition transition_normal = vui_transition_new3(vui_normal_mode, tfunc_normal, NULL);
+	vui_transition transition_normal = vui_transition_new_normal();
 
 	for (unsigned int i=0; i<VUI_MAXSTATE; i++)
 	{
@@ -645,7 +645,7 @@ void vui_resize(int width)
 
 // count
 
-static vui_state* tfunc_count_enter(vui_state* currstate, unsigned int c, int act, void* data)
+static vui_state* vui_tfunc_count_enter(vui_state* currstate, unsigned int c, int act, void* data)
 {
 	int* count = data;
 
@@ -658,7 +658,7 @@ static vui_state* tfunc_count_enter(vui_state* currstate, unsigned int c, int ac
 	return NULL;
 }
 
-static vui_state* tfunc_count(vui_state* currstate, unsigned int c, int act, void* data)
+static vui_state* vui_tfunc_count(vui_state* currstate, unsigned int c, int act, void* data)
 {
 	int* count = data;
 
@@ -679,10 +679,10 @@ void vui_count_init(void)
 	vui_string_reset(&vui_count_mode->name);
 	vui_string_puts(&vui_count_mode->name, "vui_count_mode");
 
-	vui_transition transition_count = vui_transition_new3(vui_count_mode, tfunc_count, &vui_count);
+	vui_transition transition_count = vui_transition_new3(vui_count_mode, vui_tfunc_count, &vui_count);
 	vui_set_range_t(vui_count_mode, '0', '9', transition_count);
 
-	vui_transition transition_count_enter = vui_transition_new3(vui_count_mode, tfunc_count_enter, &vui_count);
+	vui_transition transition_count_enter = vui_transition_new3(vui_count_mode, vui_tfunc_count_enter, &vui_count);
 	vui_set_range_t(vui_normal_mode, '1', '9', transition_count_enter);
 }
 
@@ -690,7 +690,7 @@ void vui_count_init(void)
 
 vui_state* state_macro_record;
 
-static vui_state* tfunc_macro_record(vui_state* currstate, unsigned int c, int act, void* data)
+static vui_state* vui_tfunc_macro_record(vui_state* currstate, unsigned int c, int act, void* data)
 {
 	if (act <= 0) return vui_return(act);
 
@@ -707,7 +707,7 @@ static vui_state* tfunc_macro_record(vui_state* currstate, unsigned int c, int a
 
 unsigned int lastmacro = 0;
 
-static vui_state* tfunc_macro_execute(vui_state* currstate, unsigned int c, int act, void* data)
+static vui_state* vui_tfunc_macro_execute(vui_state* currstate, unsigned int c, int act, void* data)
 {
 	if (act <= 0) return vui_return(act);
 
@@ -748,7 +748,7 @@ static vui_state* tfunc_macro_execute(vui_state* currstate, unsigned int c, int 
 	return st;
 }
 
-static vui_state* tfunc_record_enter(vui_state* currstate, unsigned int c, int act, void* data)
+static vui_state* vui_tfunc_record_enter(vui_state* currstate, unsigned int c, int act, void* data)
 {
 	if (act > 0)
 	{
@@ -781,7 +781,7 @@ static vui_state* tfunc_record_enter(vui_state* currstate, unsigned int c, int a
 
 void vui_macro_init(unsigned int record, unsigned int execute)
 {
-	vui_transition transition_macro_record = vui_transition_new3(vui_normal_mode, tfunc_macro_record, NULL);
+	vui_transition transition_macro_record = vui_transition_new3(vui_normal_mode, vui_tfunc_macro_record, NULL);
 	state_macro_record = vui_state_new_t(transition_macro_record);
 
 	char sr[16];
@@ -789,11 +789,11 @@ void vui_macro_init(unsigned int record, unsigned int execute)
 	vui_string_reset(&state_macro_record->name);
 	vui_string_puts(&state_macro_record->name, sr);
 
-	vui_transition transition_record_enter = vui_transition_new2(tfunc_record_enter, NULL);
+	vui_transition transition_record_enter = vui_transition_new2(vui_tfunc_record_enter, NULL);
 
 	vui_set_char_t_u(vui_normal_mode, record, transition_record_enter);
 
-	vui_transition transition_macro_execute = vui_transition_new3(vui_normal_mode, tfunc_macro_execute, NULL);
+	vui_transition transition_macro_execute = vui_transition_new3(vui_normal_mode, vui_tfunc_macro_execute, NULL);
 
 	vui_state* state_macro_execute = vui_state_new_t(transition_macro_execute);
 
@@ -802,7 +802,7 @@ void vui_macro_init(unsigned int record, unsigned int execute)
 	vui_string_reset(&state_macro_execute->name);
 	vui_string_puts(&state_macro_execute->name, se);
 
-	vui_set_char_t_u(vui_normal_mode, execute, vui_transition_new3(state_macro_execute, tfunc_showcmd_put, NULL));
+	vui_set_char_t_u(vui_normal_mode, execute, vui_transition_new_showcmd_put(state_macro_execute));
 }
 
 
@@ -896,7 +896,7 @@ void vui_bind_u(vui_state* mode, unsigned int c, vui_transition t)
 
 void vui_bind(vui_state* mode, unsigned char* s, vui_transition t)
 {
-	vui_set_string_t_mid(mode, s, vui_transition_new2(tfunc_showcmd_put, NULL), t);
+	vui_set_string_t_mid(mode, s, vui_transition_new_showcmd_put(NULL), t);
 }
 
 
@@ -912,7 +912,7 @@ void vui_map2(vui_state* mode, char* action, vui_state* reaction_st, char* react
 
 
 
-static vui_state* tfunc_cmd_paste(vui_state* currstate, unsigned int c, int act, void* data)
+static vui_state* vui_tfunc_cmd_paste(vui_state* currstate, unsigned int c, int act, void* data)
 {
 	if (act <= 0) return vui_return(act);
 
@@ -927,7 +927,7 @@ static vui_state* tfunc_cmd_paste(vui_state* currstate, unsigned int c, int act,
 #endif
 		for (size_t i = 0; i < reg->n; i++)
 		{
-			tfunc_cmd_key(cmdline_state, reg->s[i], act, data);
+			vui_tfunc_cmd_key(cmdline_state, reg->s[i], act, data);
 		}
 	}
 	else
@@ -962,7 +962,7 @@ vui_state* vui_mode_new(char* cmd, char* name, char* label, int mode, vui_transi
 
 	if (func_enter.func == NULL)
 	{
-		func_enter.func = tfunc_status_set;
+		func_enter.func = vui_tfunc_status_set;
 		func_enter.data = label;
 	}
 
@@ -975,7 +975,7 @@ vui_state* vui_mode_new(char* cmd, char* name, char* label, int mode, vui_transi
 
 	if (func_exit.func == NULL)
 	{
-		func_exit.func = tfunc_status_clear;
+		func_exit.func = vui_tfunc_status_clear;
 	}
 
 	for (unsigned int i=0; i<VUI_MAXSTATE; i++)
@@ -1018,24 +1018,24 @@ vui_cmdline* vui_cmdline_new(char* cmd, char* name, char* label, vui_translator*
 
 	cmdline_state->push = vui_state_stack;
 
-	vui_transition transition_normal_to_cmd = vui_transition_new3(cmdline_state, tfunc_normal_to_cmd, cmdline);
+	vui_transition transition_normal_to_cmd = vui_transition_new3(cmdline_state, vui_tfunc_normal_to_cmd, cmdline);
 
 	vui_set_string_t_nocall(vui_normal_mode, cmd, transition_normal_to_cmd);
 
-	vui_transition transition_cmd_key = vui_transition_new3(cmdline_state, tfunc_cmd_key, cmdline);
-	vui_transition transition_cmd_escape = vui_transition_new3(NULL, tfunc_cmd_escape, cmdline);
-	vui_transition transition_cmd_enter = vui_transition_new3(NULL, tfunc_cmd_enter, cmdline);
-	vui_transition transition_cmd_backspace = vui_transition_new2(tfunc_cmd_backspace, cmdline);
+	vui_transition transition_cmd_key = vui_transition_new3(cmdline_state, vui_tfunc_cmd_key, cmdline);
+	vui_transition transition_cmd_escape = vui_transition_new3(NULL, vui_tfunc_cmd_escape, cmdline);
+	vui_transition transition_cmd_enter = vui_transition_new3(NULL, vui_tfunc_cmd_enter, cmdline);
+	vui_transition transition_cmd_backspace = vui_transition_new2(vui_tfunc_cmd_backspace, cmdline);
 
-	vui_transition transition_cmd_up = vui_transition_new3(cmdline_state, tfunc_cmd_up, cmdline);
-	vui_transition transition_cmd_down = vui_transition_new3(cmdline_state, tfunc_cmd_down, cmdline);
-	vui_transition transition_cmd_left = vui_transition_new3(cmdline_state, tfunc_cmd_left, cmdline);
-	vui_transition transition_cmd_right = vui_transition_new3(cmdline_state, tfunc_cmd_right, cmdline);
-	vui_transition transition_cmd_delete = vui_transition_new3(cmdline_state, tfunc_cmd_delete, cmdline);
-	vui_transition transition_cmd_home = vui_transition_new3(cmdline_state, tfunc_cmd_home, cmdline);
-	vui_transition transition_cmd_end = vui_transition_new3(cmdline_state, tfunc_cmd_end, cmdline);
+	vui_transition transition_cmd_up = vui_transition_new3(cmdline_state, vui_tfunc_cmd_up, cmdline);
+	vui_transition transition_cmd_down = vui_transition_new3(cmdline_state, vui_tfunc_cmd_down, cmdline);
+	vui_transition transition_cmd_left = vui_transition_new3(cmdline_state, vui_tfunc_cmd_left, cmdline);
+	vui_transition transition_cmd_right = vui_transition_new3(cmdline_state, vui_tfunc_cmd_right, cmdline);
+	vui_transition transition_cmd_delete = vui_transition_new3(cmdline_state, vui_tfunc_cmd_delete, cmdline);
+	vui_transition transition_cmd_home = vui_transition_new3(cmdline_state, vui_tfunc_cmd_home, cmdline);
+	vui_transition transition_cmd_end = vui_transition_new3(cmdline_state, vui_tfunc_cmd_end, cmdline);
 
-	vui_transition transition_macro_paste = vui_transition_new3(cmdline_state, tfunc_cmd_paste, cmdline);
+	vui_transition transition_macro_paste = vui_transition_new3(cmdline_state, vui_tfunc_cmd_paste, cmdline);
 	vui_state* paste_state = vui_state_new_t(transition_macro_paste);
 
 	for (unsigned int i=32; i<127; i++)
@@ -1115,4 +1115,5 @@ void vui_reset(void)
 {
 	vui_showcmd_reset();
 	vui_count = 0;
+	vui_register_curr = vui_register_get('"');
 }
