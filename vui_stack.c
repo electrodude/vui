@@ -47,6 +47,19 @@ vui_stack* vui_stack_new_array_at(vui_stack* stk, size_t n, void** elements)
 	return stk;
 }
 
+vui_stack* vui_stack_dup_at(vui_stack* stk, vui_stack* orig)
+{
+	orig->dtor = NULL;	// prevent double free
+
+	stk = vui_stack_new_prealloc_at(stk, orig->n);
+
+	memcpy(stk->s, orig->s, orig->n * sizeof(void*));
+
+	stk->n = orig->n;
+
+	return stk;
+}
+
 void vui_stack_kill(vui_stack* stk)
 {
 	if (stk == NULL) return;

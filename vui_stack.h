@@ -39,6 +39,11 @@ vui_stack* vui_stack_new_v_at(vui_stack* stk, size_t n, ...);
 #define vui_stack_new_array(n, elements) vui_stack_new_array_at(NULL, n, elements)
 vui_stack* vui_stack_new_array_at(vui_stack* stk, size_t n, void** elements);
 
+// Clone a stack
+// As a hack, if the stack has a dtor, removes it.  This might cause a memory leak, but it elminates a double free.
+#define vui_stack_dup(orig) vui_stack_dup_at(NULL, orig)
+vui_stack* vui_stack_dup_at(vui_stack* stk, vui_stack* orig);
+
 // Destroy given stack and its internal buffer
 // Does not free any elements, but calling `vui_stack_reset` first does
 void vui_stack_kill(vui_stack* stk);

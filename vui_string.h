@@ -40,16 +40,17 @@ static inline vui_string* vui_string_new_at(vui_string* str)
 // Create a new string
 // Copy n chars starting at c into the string
 #define vui_string_new_array(n, s) vui_string_new_array_at(NULL, n, s)
-vui_string* vui_string_new_array_at(vui_string* ptr, size_t n, const unsigned char* s);
+vui_string* vui_string_new_array_at(vui_string* str, size_t n, const unsigned char* s);
 
 
 // Create a new string
 // Copy a null-terminated string at s into the string
 #define vui_string_new_str(s) vui_string_new_str_at(NULL, s)
-vui_string* vui_string_new_str_at(vui_string* ptr, const unsigned char* s);
+vui_string* vui_string_new_str_at(vui_string* str, const unsigned char* s);
 
 // Clone a string
-vui_string* vui_string_dup(vui_string* ptr, const vui_string* orig);
+#define vui_string_dup(orig) vui_string_dup_at(NULL, orig)
+vui_string* vui_string_dup_at(vui_string* str, const vui_string* orig);
 
 // Destroy a string and its buffer
 void vui_string_kill(vui_string* str);

@@ -26,29 +26,31 @@ vui_string* vui_string_new_prealloc_at(vui_string* str, size_t n)
 	return str;
 }
 
-vui_string* vui_string_new_array_at(vui_string* ptr, size_t n, const unsigned char* s)
+vui_string* vui_string_new_array_at(vui_string* str, size_t n, const unsigned char* s)
 {
-	vui_string* str = vui_string_new_prealloc_at(ptr, n);
+	str = vui_string_new_prealloc_at(str, n);
 
 	vui_string_putn(str, n, s);
 
 	return str;
 }
 
-vui_string* vui_string_new_str_at(vui_string* ptr, const unsigned char* s)
+vui_string* vui_string_new_str_at(vui_string* str, const unsigned char* s)
 {
-	vui_string* str = vui_string_new_at(ptr);
+	str = vui_string_new_at(str);
 
 	vui_string_puts(str, s);
 
 	return str;
 }
 
-vui_string* vui_string_dup(vui_string* ptr, const vui_string* orig)
+vui_string* vui_string_dup_at(vui_string* str, const vui_string* orig)
 {
-	vui_string* str = vui_string_new_prealloc_at(ptr, orig->n);
+	str = vui_string_new_prealloc_at(str, orig->n);
 
 	memcpy(str->s, orig->s, orig->n);
+
+	str->n = orig->n;
 
 	return str;
 }
