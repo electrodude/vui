@@ -570,7 +570,7 @@ void vui_init(int width)
 	vui_string_reset(&vui_normal_mode->name);
 	vui_string_puts(&vui_normal_mode->name, "vui_normal_mode");
 
-	vui_normal_mode->gc.root++;
+	vui_gc_incr(vui_normal_mode);
 
 	vui_transition transition_normal = vui_transition_new3(vui_normal_mode, tfunc_normal, NULL);
 
@@ -997,6 +997,8 @@ vui_cmdline_def* vui_cmdline_mode_new(char* cmd, char* name, char* label, vui_tr
 	vui_state* cmdline_state = vui_state_new();
 	vui_string_reset(&cmdline_state->name);
 	vui_string_puts(&cmdline_state->name, name);
+
+	vui_gc_incr(cmdline_state);
 
 	cmdline_state->push = vui_state_stack;
 

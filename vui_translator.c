@@ -24,7 +24,7 @@ vui_translator* vui_translator_new(void)
 	vui_translator* tr = malloc(sizeof(vui_translator));
 
 	tr->st_start = vui_state_new_deadend();
-	tr->st_start->gc.root++;
+	vui_gc_incr(tr->st_start);
 
 	tr->str = NULL;
 	tr->stk = vui_stack_new();
@@ -35,7 +35,9 @@ vui_translator* vui_translator_new(void)
 
 void vui_translator_kill(vui_translator* tr)
 {
-	tr->st_start->gc.root--;
+	vui_gc_decr(tr->st_start);
+
+	vui_stack_kill(tr->stk);	// kills tr->str, which is vui_stack_peek(tr->stk)
 
 	free(tr);
 }

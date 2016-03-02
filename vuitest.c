@@ -127,7 +127,11 @@ static vui_state* tfunc_gc(vui_state* currstate, unsigned int c, int act, void* 
 
 	vui_reset();
 
+	vui_debugf("pre  gc objects: %ld\n", vui_gc_nlive);
+
 	vui_gc_run();
+
+	vui_debugf("post gc objects: %ld\n", vui_gc_nlive);
 
 	return vui_return(act);
 }
@@ -333,6 +337,8 @@ int main(int argc, char** argv)
 
 	exit(0);
 	*/
+
+	vui_debugf("live GC objects: %ld\n", vui_gc_nlive);
 
 	while (1)
 	{

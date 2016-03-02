@@ -119,7 +119,7 @@ static void vui_state_gc_dtor(void* obj, vui_gc_dtor_mode mode)
 	{
 		for (unsigned int i=0; i < VUI_MAXSTATE; i++)
 		{
-			vui_gc_mark(vui_next(obj, i, VUI_ACT_GC));
+			vui_gc_mark(vui_next(st, i, VUI_ACT_GC));
 		}
 
 		// if the gc is running, this state's name is probably final
@@ -128,6 +128,12 @@ static void vui_state_gc_dtor(void* obj, vui_gc_dtor_mode mode)
 	else if (mode == VUI_GC_DTOR_SWEEP)
 	{
 		vui_state_kill(st);
+	}
+	else if (mode == VUI_GC_DTOR_DESCRIBE)
+	{
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_STATEMACHINE)
+		vui_debugf("vui_gc: \"%s\" (%p)\n", vui_state_name(st), st);
+#endif
 	}
 }
 
@@ -221,13 +227,13 @@ vui_state* vui_tfunc_run_s_s(vui_state* currstate, unsigned int c, int act, void
 {
 	vui_transition_run_s_data* tdata = data;
 
+	if (act == VUI_ACT_GC)
+	{
+		vui_gc_mark(tdata->st);
+	}
+
 	if (act <= 0)
 	{
-		if (act == VUI_ACT_GC)
-		{
-			vui_gc_mark(tdata->st);
-		}
-
 		return vui_run_s(tdata->st, tdata->str, act);
 	}
 	else
@@ -250,6 +256,11 @@ vui_state* vui_tfunc_run_c_s(vui_state* currstate, unsigned int c, int act, void
 {
 	vui_state* other = data;
 
+	if (act == VUI_ACT_GC)
+	{
+		vui_gc_mark(other);
+	}
+
 	if (other == currstate) // evade stack overflow
 	{
 		return currstate;
@@ -257,11 +268,6 @@ vui_state* vui_tfunc_run_c_s(vui_state* currstate, unsigned int c, int act, void
 
 	if (act <= 0)
 	{
-		if (act == VUI_ACT_GC)
-		{
-			vui_gc_mark(other);
-		}
-
 		return vui_next_t(currstate, c, other->next[c], act);
 	}
 	else
@@ -274,6 +280,14 @@ vui_state* vui_tfunc_run_c_s(vui_state* currstate, unsigned int c, int act, void
 vui_state* vui_tfunc_run_c_t(vui_state* currstate, unsigned int c, int act, void* data)
 {
 	vui_transition* t = data;
+
+	if (act == VUI_ACT_GC)
+	{
+		if (t->next != NULL)
+		{
+			vui_gc_mark(t->next);
+		}
+	}
 
 	if (act <= 0)
 	{

@@ -14,7 +14,11 @@ vui_frag* vui_frag_union(vui_frag* lhs, vui_frag* rhs)
 
 vui_frag* vui_frag_cat(vui_frag* lhs, vui_frag* rhs)
 {
+	vui_gc_decr(rhs->entry);
+
 	rhs->entry = vui_frag_release(lhs, rhs->entry);
+
+	vui_gc_incr(rhs->entry);
 
 	return rhs;
 }
