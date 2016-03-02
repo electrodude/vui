@@ -51,7 +51,7 @@ vui_stack* vui_stack_dup_at(vui_stack* stk, vui_stack* orig)
 {
 	orig->dtor = NULL;	// prevent double free
 
-	stk = vui_stack_new_prealloc_at(stk, orig->n);
+	stk = vui_stack_new_prealloc_at(stk, orig->maxn);
 
 	memcpy(stk->s, orig->s, orig->n * sizeof(void*));
 

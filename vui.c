@@ -921,15 +921,20 @@ void vui_bind(vui_state* mode, unsigned char* s, vui_transition t)
 	vui_set_string_t_mid(mode, s, vui_transition_new_showcmd_put(NULL), t);
 }
 
-
-void vui_map(vui_state* mode, char* action, char* reaction)
+void vui_bind_str(vui_state* mode, vui_string* s, vui_transition t)
 {
-	vui_bind(mode, action, vui_transition_run_s_s(mode, reaction));
+	vui_set_string_t_mid(mode, vui_string_get(s), vui_transition_new_showcmd_put(NULL), t);
 }
 
-void vui_map2(vui_state* mode, char* action, vui_state* reaction_st, char* reaction_str)
+
+void vui_map(vui_state* mode, vui_string* action, vui_string* reaction)
 {
-	vui_bind(mode, action, vui_transition_run_s_s(reaction_st, reaction_str));
+	vui_bind_str(mode, action, vui_transition_run_str_s(mode, reaction));
+}
+
+void vui_map2(vui_state* mode, vui_string* action, vui_state* reaction_st, vui_string* reaction_str)
+{
+	vui_bind_str(mode, action, vui_transition_run_str_s(reaction_st, reaction_str));
 }
 
 

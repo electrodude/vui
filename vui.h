@@ -146,9 +146,10 @@ vui_state* vui_register_execute(vui_state* currstate, unsigned int c, int act);
 
 void vui_bind_u(vui_state* mode, unsigned int c, vui_transition t);
 void vui_bind(vui_state* mode, unsigned char* s, vui_transition t);
+void vui_bind_str(vui_state* mode, vui_string* s, vui_transition t);
 
-void vui_map(vui_state* mode, char* action, char* reaction);
-void vui_map2(vui_state* mode, char* action, vui_state* reaction_st, char* reaction_str);
+void vui_map(vui_state* mode, vui_string* action, vui_string* reaction);
+void vui_map2(vui_state* mode, vui_string* action, vui_state* reaction_st, vui_string* reaction_str);
 
 // misc callbacks
 vui_state* vui_tfunc_normal(vui_state* currstate, unsigned int c, int act, void* data);

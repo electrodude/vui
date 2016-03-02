@@ -62,6 +62,11 @@ void vui_debugf(const char* format, ...)
 	waddstr(logwindow, line);
 	wrefresh(logwindow);
 
+	curs_set(vui_crsrx >= 0);
+	if (vui_crsrx >= 0)
+	{
+		wrefresh(statusline);
+	}
 }
 
 static void on_winch(void)
@@ -219,7 +224,8 @@ static vui_state* tfunc_winch(vui_state* currstate, unsigned int c, int act, voi
 
 void on_cmd_submit(vui_stack* cmd)
 {
-#define arg(i) vui_string_get(vui_stack_index(cmd, i))
+#define arg_str(i) vui_stack_index(cmd, i)
+#define arg(i) vui_string_get(arg_str(i))
 
 	char* op = arg(0);
 
@@ -239,7 +245,7 @@ void on_cmd_submit(vui_stack* cmd)
 	}
 	else if (!strcmp(op, "map"))
 	{
-		char* action = arg(1);
+		vui_string* action = arg_str(1);
 		if (action == NULL)
 		{
 			vui_debugf("action: NULL\n");
@@ -247,9 +253,9 @@ void on_cmd_submit(vui_stack* cmd)
 		}
 		else
 		{
-			vui_debugf("action: \"%s\"\n", action);
+			vui_debugf("action: \"%s\"\n", vui_string_get(action));
 		}
-		char* reaction = arg(2);
+		vui_string* reaction = arg_str(2);
 		if (reaction == NULL)
 		{
 			vui_debugf("reaction: NULL\n");
@@ -257,7 +263,7 @@ void on_cmd_submit(vui_stack* cmd)
 		}
 		else
 		{
-			vui_debugf("reaction: \"%s\"\n", reaction);
+			vui_debugf("reaction: \"%s\"\n", vui_string_get(reaction));
 		}
 
 		vui_map(vui_normal_mode, action, reaction);

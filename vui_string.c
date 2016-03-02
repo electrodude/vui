@@ -46,7 +46,7 @@ vui_string* vui_string_new_str_at(vui_string* str, const unsigned char* s)
 
 vui_string* vui_string_dup_at(vui_string* str, const vui_string* orig)
 {
-	str = vui_string_new_prealloc_at(str, orig->n);
+	str = vui_string_new_prealloc_at(str, orig->maxn);
 
 	memcpy(str->s, orig->s, orig->n);
 
