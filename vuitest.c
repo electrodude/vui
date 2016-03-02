@@ -20,6 +20,8 @@
 
 #include "vui_graphviz.h"
 
+#define LOGWIDTH 48
+
 
 WINDOW* logwindow;
 WINDOW* statusline;
@@ -55,44 +57,93 @@ void vui_debugf(const char* format, ...)
 	va_end(argp);
 
 	fprintf(dbgf, "%s", line);
+	fflush(dbgf);
 
 	waddstr(logwindow, line);
 	wrefresh(logwindow);
 
 }
 
+static void on_winch(void)
+{
+	endwin();
+
+	struct winsize w;
+	ioctl(0, TIOCGWINSZ, &w);
+	vui_debugf("TIOCGWINSZ: %dx%d\n", w.ws_col, w.ws_row);
+
+	if (!is_term_resized(w.ws_row, w.ws_col))
+	{
+		return;
+	}
+
+	resize_term(w.ws_row, w.ws_col);
+
+	refresh();
+	clear();
+	doupdate();
+
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_TEST)
+	vui_debugf("winch %dx%d\n", COLS, LINES);
+#endif
+
+
+	wresize(logwindow, LINES-1, LOGWIDTH);
+	mvwin(logwindow, 0, COLS - LOGWIDTH);
+	wrefresh(logwindow);
+
+	wresize(statusline, 1, COLS);
+
+	mvwin(statusline, LINES-1, 0);
+
+	vui_resize(COLS);
+
+	vui_showcmd_setup(COLS - 20, 10);
+
+	mvwaddstr(statusline, 0, 0, vui_bar);
+	wmove(statusline, 0, vui_crsrx);
+	curs_set(vui_crsrx >= 0);
+	wrefresh(statusline);
+
+	refresh();
+}
+
+static void quit(void)
+{
+	endwin();
+	printf("Quitting!\n");
+
+	if (cmd_mode != NULL) vui_cmdline_kill(cmd_mode);
+	if (search_mode != NULL) vui_cmdline_kill(search_mode);
+
+	vui_deinit();
+
+	vui_gc_run();
+
+	printf("live GC objects: %ld\n", vui_gc_nlive);
+
+	exit(0);
+}
+
 static void sighandler(int signo)
 {
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_TEST)
+	vui_debugf("signal %d\n", signo);
+#endif
+
         switch (signo)
         {
                 case SIGWINCH:
                 {
-#if defined(VUI_DEBUG) && defined(VUI_DEBUG_TEST)
-			vui_debugf("winch\n");
-#endif
-
-			endwin();
-			refresh();
-			clear();
-
-			wresize(logwindow, LINES-1, COLS);
-			wrefresh(logwindow);
-
-			wresize(statusline, 1, COLS);
-
-			mvwin(statusline, LINES-1, 0);
-
-			vui_resize(COLS);
-
-			vui_showcmd_setup(COLS - 20, 10);
-
-			mvwaddstr(statusline, 0, 0, vui_bar);
-			wmove(statusline, 0, vui_crsrx);
-			curs_set(vui_crsrx >= 0);
-			wrefresh(statusline);
+			ungetch(KEY_RESIZE);
 
                         break;
                 }
+
+		case SIGINT:
+		{
+			quit();
+		}
 
                 default:
                 {
@@ -115,10 +166,8 @@ static vui_state* tfunc_quit(vui_state* currstate, unsigned int c, int act, void
 	}
 
 	vui_debugf("quit\n");
-	endwin();
-	printf("Quitting!\n");
 
-	exit(0);
+	quit();
 }
 
 static vui_state* tfunc_gc(vui_state* currstate, unsigned int c, int act, void* data)
@@ -161,23 +210,9 @@ static vui_state* tfunc_graphviz(vui_state* currstate, unsigned int c, int act, 
 
 static vui_state* tfunc_winch(vui_state* currstate, unsigned int c, int act, void* data)
 {
-	if (act <= 0) return NULL;
+	if (act <= 0) return vui_return(act);
 
-#if defined(VUI_DEBUG) && defined(VUI_DEBUG_TEST)
-	vui_debugf("winch\n");
-#endif
-
-	wresize(logwindow, LINES-2, COLS);
-	wrefresh(logwindow);
-
-	wresize(statusline, 1, COLS);
-
-	mvwin(statusline, LINES-1, 0);
-	wrefresh(statusline);
-
-	vui_resize(COLS);
-
-	vui_showcmd_setup(COLS - 20, 10);
+	on_winch();
 
 	return vui_return(act);
 }
@@ -200,9 +235,7 @@ void on_cmd_submit(vui_stack* cmd)
 
 	if (!strcmp(op, "q"))
 	{
-		endwin();
-		printf("Quitting!\n");
-		exit(0);
+		quit();
 	}
 	else if (!strcmp(op, "map"))
 	{
@@ -259,7 +292,7 @@ int main(int argc, char** argv)
 	sigaction(SIGWINCH, &sa, NULL);
 
 
-	logwindow = newwin(LINES-1, COLS, 0, 0);
+	logwindow = newwin(LINES-1, LOGWIDTH, 0, COLS - LOGWIDTH);
 	scrollok(logwindow, true);
 
 	statusline = newwin(1, COLS, LINES-1, 0);
@@ -381,5 +414,5 @@ int main(int argc, char** argv)
 		}
 	}
 
-	endwin();
+	quit();
 }

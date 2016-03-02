@@ -115,6 +115,8 @@ void vui_showcmd_setup(int start, int length);
 // init/resize
 void vui_init(int width);		// initialize vui, set width
 
+void vui_deinit(void);
+
 void vui_resize(int width);		// change width
 
 

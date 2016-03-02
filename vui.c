@@ -600,6 +600,19 @@ void vui_init(int width)
 	vui_bar = vui_status;
 }
 
+void vui_deinit(void)
+{
+	vui_crsrx = -1;
+	vui_bar = NULL;
+
+	vui_gc_decr(vui_normal_mode);
+
+	vui_stack_kill(vui_state_stack);
+
+	free(vui_cmd);
+	free(vui_status);
+}
+
 void vui_resize(int width)
 {
 	// if the number of columns actually changed
