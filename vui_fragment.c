@@ -27,13 +27,13 @@ void vui_frag_kill(vui_frag* frag)
 
 static vui_state* vui_frag_state_dup(vui_state* orig)
 {
-	if (orig->iter_gen == vui_iter_gen) return orig->iter_other;
+	if (orig->iter_gen == vui_iter_gen) return orig->iter_data.st;
 
 	orig->iter_gen = vui_iter_gen;
 
 	vui_state* state = vui_state_new();
 
-	orig->iter_other = state;
+	orig->iter_data.st = state;
 
 	state->data = orig->data;
 

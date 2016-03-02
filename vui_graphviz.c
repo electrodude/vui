@@ -152,7 +152,7 @@ void vui_gv_print_s(FILE* f, vui_state* s)
 		vui_transition t = s->next[i];
 		vui_state* next = vui_next(s, i, VUI_ACT_TEST);
 
-		if (next->iter_other != s)
+		if (next->iter_data.st != s)
 		{
 			int lastj = -1;
 			vui_state* lastnext = NULL;
@@ -203,7 +203,7 @@ void vui_gv_print_s(FILE* f, vui_state* s)
 			}
 		}
 
-		next->iter_other = s;
+		next->iter_data.st = s;
 	}
 
 

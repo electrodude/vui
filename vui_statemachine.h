@@ -57,7 +57,12 @@ typedef struct vui_state
 
 	int iter_id;
 	int iter_gen;
-	vui_state* iter_other;
+	union
+	{
+		vui_state* st;
+		size_t off;
+		void* data;
+	} iter_data;
 
 } vui_state;
 
