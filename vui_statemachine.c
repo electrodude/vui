@@ -19,7 +19,7 @@ static inline vui_state* vui_state_new_raw(void)
 
 	state->gv_norank = 0;
 
-	vui_string_new(&state->name);
+	vui_string_new_at(&state->name);
 
 	vui_gc_register(state, vui_state_gc_dtor);
 
@@ -65,6 +65,7 @@ vui_state* vui_state_new_t_self(vui_transition transition)
 
 	state->data = NULL;
 	state->push = NULL;
+
 	vui_string_puts(&state->name, "new_t_self");
 
 	return state;

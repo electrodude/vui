@@ -5,9 +5,12 @@
 
 #include "vui_stack.h"
 
-vui_stack* vui_stack_new_prealloc(size_t maxn)
+vui_stack* vui_stack_new_prealloc_at(vui_stack* stk, size_t maxn)
 {
-	vui_stack* stk = malloc(sizeof(vui_stack));
+	if (stk == NULL)
+	{
+		stk = malloc(sizeof(vui_stack));
+	}
 
 	stk->n = 0;
 	stk->maxn = maxn;
@@ -18,12 +21,12 @@ vui_stack* vui_stack_new_prealloc(size_t maxn)
 	return stk;
 }
 
-vui_stack* vui_stack_new_v(size_t n, ...)
+vui_stack* vui_stack_new_v_at(vui_stack* stk, size_t n, ...)
 {
 	va_list ap;
 	va_start(ap, n);
 
-	vui_stack* stk = vui_stack_new_prealloc(n);
+	stk = vui_stack_new_prealloc_at(stk, n);
 
 	for (size_t i = 0; i < n; i++)
 	{
@@ -35,9 +38,9 @@ vui_stack* vui_stack_new_v(size_t n, ...)
 	return stk;
 }
 
-vui_stack* vui_stack_new_array(size_t n, void** elements)
+vui_stack* vui_stack_new_array_at(vui_stack* stk, size_t n, void** elements)
 {
-	vui_stack* stk = vui_stack_new_prealloc(n);
+	stk = vui_stack_new_prealloc_at(stk, n);
 
 	vui_stack_pushn(stk, n, elements);
 
@@ -53,6 +56,19 @@ void vui_stack_kill(vui_stack* stk)
 	free(stk->s);
 
 	free(stk);
+}
+
+void vui_stack_dtor(vui_stack* stk)
+{
+	if (stk == NULL) return;
+
+	stk->n = stk->maxn = 0;
+
+	if (stk->s == NULL) return;
+
+	free(stk->s);
+
+	stk->s = NULL;
 }
 
 void vui_stack_trunc(vui_stack* stk, size_t n)
@@ -126,6 +142,8 @@ void vui_stack_push(vui_stack* stk, void* s)
 void vui_stack_pushn(vui_stack* stk, size_t n, void** elements)
 {
 	if (stk == NULL) return;
+
+	if (elements == NULL) return;
 
 	for (size_t i = 0; i < n; i++)
 	{
@@ -204,36 +222,39 @@ void* vui_stack_peek(vui_stack* stk)
 	return stk->s[stk->n-1];
 }
 
-void* vui_stack_index_end(vui_stack* stk, size_t n)
+void* vui_stack_index_end(vui_stack* stk, size_t i)
 {
 	if (stk == NULL) return NULL;
 
-	if (stk->n <= 0)
+	size_t i2 = stk->n - 1 - i;
+
+	if (i >= stk->n)
 	{
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_STACK)
-		vui_debugf("Peek def 0x%lX\n", stk->def);
+		vui_debugf("Index rev [-%ld = %ld] def\n", i, i2);
 #endif
 
 		return stk->def;
 	}
 
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_STACK)
-	vui_debugf("Peek 0x%lX\n", stk->s[stk->n-1 - n]);
+	vui_debugf("Index rev [-%ld = %ld]\n", i, i2, stk->s[i2]);
 #endif
 
-	return stk->s[stk->n-1 - n];
+	return stk->s[i2];
+	//return NULL;
 }
 
-void* vui_stack_index(vui_stack* stk, unsigned int i)
+void* vui_stack_index(vui_stack* stk, size_t i)
 {
 	if (stk == NULL) return NULL;
 
-	if (i >= stk->n)
+	if (i < 0 || i >= stk->n)
 	{
 		return NULL;
 	}
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_STACK)
-	vui_debugf("Index [i] = 0x%lX\n", i, stk->s[i]);
+	vui_debugf("Index [%ld] = 0x%lX\n", i, stk->s[i]);
 #endif
 
 	return stk->s[i];
@@ -241,6 +262,8 @@ void* vui_stack_index(vui_stack* stk, unsigned int i)
 
 void vui_stack_foreach(vui_stack* stk, void (*func)(void* elem))
 {
+	if (stk == NULL) return;
+
 	for (size_t i = 0; i < stk->n; i++)
 	{
 		func(stk->s[i]);
@@ -249,6 +272,8 @@ void vui_stack_foreach(vui_stack* stk, void (*func)(void* elem))
 
 vui_stack* vui_stack_map(vui_stack* stk, void* (*func)(void* elem))
 {
+	if (stk == NULL) return NULL;
+
 	vui_stack* stk2 = vui_stack_new_prealloc(stk->n);
 
 	for (size_t i = 0; i < stk->n; i++)

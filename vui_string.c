@@ -11,7 +11,7 @@
 #include "vui_string.h"
 
 
-vui_string* vui_string_new_prealloc(vui_string* str, size_t n)
+vui_string* vui_string_new_prealloc_at(vui_string* str, size_t n)
 {
 	if (str == NULL)
 	{
@@ -26,18 +26,18 @@ vui_string* vui_string_new_prealloc(vui_string* str, size_t n)
 	return str;
 }
 
-vui_string* vui_string_new_array(vui_string* ptr, size_t n, const unsigned char* s)
+vui_string* vui_string_new_array_at(vui_string* ptr, size_t n, const unsigned char* s)
 {
-	vui_string* str = vui_string_new_prealloc(ptr, n);
+	vui_string* str = vui_string_new_prealloc_at(ptr, n);
 
 	vui_string_putn(str, n, s);
 
 	return str;
 }
 
-vui_string* vui_string_new_str(vui_string* ptr, const unsigned char* s)
+vui_string* vui_string_new_str_at(vui_string* ptr, const unsigned char* s)
 {
-	vui_string* str = vui_string_new(ptr);
+	vui_string* str = vui_string_new_at(ptr);
 
 	vui_string_puts(str, s);
 
@@ -46,7 +46,7 @@ vui_string* vui_string_new_str(vui_string* ptr, const unsigned char* s)
 
 vui_string* vui_string_dup(vui_string* ptr, const vui_string* orig)
 {
-	vui_string* str = vui_string_new_prealloc(ptr, orig->n);
+	vui_string* str = vui_string_new_prealloc_at(ptr, orig->n);
 
 	memcpy(str->s, orig->s, orig->n);
 
@@ -68,7 +68,11 @@ void vui_string_dtor(vui_string* str)
 
 	str->n = str->maxn = 0;
 
+	if (str->s == NULL) return;
+
 	free(str->s);
+
+	str->s = NULL;
 }
 
 unsigned char* vui_string_release(vui_string* str)

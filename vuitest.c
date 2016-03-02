@@ -320,7 +320,7 @@ int main(int argc, char** argv)
 	vui_translator* cmd_tr = vui_translator_new();
 
 	vui_state* cmd_tr_start = vui_state_new_putc(cmd_tr);
-	vui_string_new_str(&cmd_tr_start->name, "cmd_tr");
+	vui_string_new_str_at(&cmd_tr_start->name, "cmd_tr");
 
 
 	// :q

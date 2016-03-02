@@ -24,25 +24,29 @@ typedef struct vui_string
 // Create a new string, given how many bytes to preallocate
 // if str == NULL, malloc the string
 // otherwise, put it at *str
-vui_string* vui_string_new_prealloc(vui_string* str, size_t n);
+#define vui_string_new_prealloc(n) vui_string_new_prealloc_at(NULL, n)
+vui_string* vui_string_new_prealloc_at(vui_string* str, size_t n);
 
 // Create a new string
 // if str == NULL, malloc the string
 // otherwise, put it at *str
-static inline vui_string* vui_string_new(vui_string* str)
+#define vui_string_new() vui_string_new_at(NULL)
+static inline vui_string* vui_string_new_at(vui_string* str)
 {
-	return vui_string_new_prealloc(str, 32);
+	return vui_string_new_prealloc_at(str, 32);
 }
 
 
 // Create a new string
 // Copy n chars starting at c into the string
-vui_string* vui_string_new_array(vui_string* ptr, size_t n, const unsigned char* s);
+#define vui_string_new_array(n, s) vui_string_new_array_at(NULL, n, s)
+vui_string* vui_string_new_array_at(vui_string* ptr, size_t n, const unsigned char* s);
 
 
 // Create a new string
 // Copy a null-terminated string at s into the string
-vui_string* vui_string_new_str(vui_string* ptr, const unsigned char* s);
+#define vui_string_new_str(s) vui_string_new_str_at(NULL, s)
+vui_string* vui_string_new_str_at(vui_string* ptr, const unsigned char* s);
 
 // Clone a string
 vui_string* vui_string_dup(vui_string* ptr, const vui_string* orig);

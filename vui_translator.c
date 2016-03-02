@@ -46,7 +46,7 @@ vui_stack* vui_translator_run(vui_translator* tr, char* in)
 {
 	vui_stack_reset(tr->stk);
 
-	vui_stack_push(tr->stk, tr->str = vui_string_new(NULL));
+	vui_stack_push(tr->stk, tr->str = vui_string_new());
 
 	vui_next(vui_run_s(tr->st_start, in, 1), 0, 1);
 
@@ -62,7 +62,7 @@ vui_state* vui_translator_tfunc_push(vui_state* currstate, unsigned int c, int a
 
 	vui_string_shrink(tr->str); // shrink the previous string
 
-	vui_stack_push(tr->stk, tr->str = vui_string_new(NULL)); // push a new one
+	vui_stack_push(tr->stk, tr->str = vui_string_new()); // push a new one
 
 	return NULL;
 }

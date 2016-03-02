@@ -21,19 +21,23 @@ typedef struct vui_stack
 } vui_stack;
 
 // Create a new stack, given how many slots to preallocate
-vui_stack* vui_stack_new_prealloc(size_t maxn);
+#define vui_stack_new_prealloc(maxn) vui_stack_new_prealloc_at(NULL, maxn)
+vui_stack* vui_stack_new_prealloc_at(vui_stack* stk, size_t maxn);
 
 // Create a new stack
-static inline vui_stack* vui_stack_new(void)
+#define vui_stack_new() vui_stack_new_at(NULL)
+static inline vui_stack* vui_stack_new_at(vui_stack* stk)
 {
-	return vui_stack_new_prealloc(16);
+	return vui_stack_new_prealloc_at(stk, 16);
 }
 
 // Create a new stack and fill it with the given data
-vui_stack* vui_stack_new_v(size_t n, ...);
+#define vui_stack_new_v(n, ...) vui_stack_new_v_at(NULL, n, __VA_ARGS__)
+vui_stack* vui_stack_new_v_at(vui_stack* stk, size_t n, ...);
 
 // Create a new stack and fill it with the given data
-vui_stack* vui_stack_new_array(size_t n, void** elements);
+#define vui_stack_new_array(n, elements) vui_stack_new_array_at(NULL, n, elements)
+vui_stack* vui_stack_new_array_at(vui_stack* stk, size_t n, void** elements);
 
 // Destroy given stack and its internal buffer
 // Does not free any elements, but calling `vui_stack_reset` first does
@@ -79,10 +83,10 @@ void* vui_stack_peek(vui_stack* stk);
 
 // Return the i-th element from the top of the stack, or NULL if out of range
 // Is zero indexed, so vui_stack_index_end(stk, 0) == vui_stack_peek(stk)
-void* vui_stack_index_end(vui_stack* stk, size_t n);
+void* vui_stack_index_end(vui_stack* stk, size_t i);
 
 // Return the i-th element from the bottom of the stack, or NULL if out of range
-void* vui_stack_index(vui_stack* stk, unsigned int i);
+void* vui_stack_index(vui_stack* stk, size_t i);
 
 // Call given function on each element of the stack, from top to bottom
 void vui_stack_foreach(vui_stack* stk, void (*func)(void* elem));

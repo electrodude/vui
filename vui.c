@@ -821,7 +821,7 @@ vui_string* vui_register_get(unsigned int c)
 
 	if (reg == NULL)
 	{
-		reg = vui_string_new(NULL);
+		reg = vui_string_new();
 
 		vui_state* st_new = vui_state_new_s(NULL);
 		st_new->data = reg;
@@ -997,7 +997,7 @@ vui_cmdline* vui_cmdline_new(char* cmd, char* name, char* label, vui_translator*
 	cmdline->on_submit = on_submit;
 	cmdline->hist_last_entry = NULL;
 
-	vui_string_new(&cmdline->label);
+	vui_string_new_at(&cmdline->label);
 	vui_string_puts(&cmdline->label, label);
 	vui_string_get(&cmdline->label);
 
