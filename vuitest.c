@@ -306,6 +306,7 @@ int main(int argc, char** argv)
 	vui_bind_u(vui_normal_mode, KEY_RESIZE, vui_transition_new2(tfunc_winch, NULL));
 
 	vui_count_init();
+	vui_register_init();
 
 	vui_register_init();
 

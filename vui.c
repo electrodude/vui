@@ -22,10 +22,13 @@ vui_state* vui_curr_state;
 
 vui_state* vui_normal_mode;
 vui_state* vui_count_mode;
+vui_state* vui_register_select_mode;
 
 vui_state* vui_register_container; // register container state
 
 vui_string* vui_register_recording;
+
+vui_string* vui_register_curr;
 
 // non-extern globals
 int cols;
@@ -808,10 +811,29 @@ void vui_macro_init(unsigned int record, unsigned int execute)
 
 // registers
 
+static vui_state* vui_tfunc_register_select(vui_state* currstate, unsigned int c, int act, void* data)
+{
+	vui_string** reg = data;
+
+	if (act <= 0) return vui_return(act);
+
+	vui_showcmd_put(c);
+
+	*reg = vui_register_get(c);
+
+	return vui_return(act);
+}
+
 void vui_register_init(void)
 {
 	vui_register_container = vui_state_new_s(NULL);
 	vui_register_recording = NULL;
+
+	vui_register_select_mode = vui_state_new_t(vui_transition_new2(vui_tfunc_register_select, &vui_register_curr));
+	vui_string_reset(&vui_register_select_mode->name);
+	vui_string_puts(&vui_register_select_mode->name, "vui_register_select_mode");
+
+	vui_set_char_t(vui_normal_mode, '"', vui_transition_new_showcmd_put(vui_register_select_mode));
 }
 
 vui_string* vui_register_get(unsigned int c)
