@@ -124,7 +124,7 @@ void vui_stack_push(vui_stack* stk, void* s)
 	if (stk == NULL) return;
 
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_STACK)
-	vui_debugf("Push 0x%lX\n", s);
+	vui_debugf("Push %p\n", s);
 #endif
 
 	if (stk->maxn < stk->n + 1)
@@ -189,14 +189,14 @@ void* vui_stack_pop(vui_stack* stk)
 	if (stk->n <= 0)
 	{
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_STACK)
-		vui_debugf("Pop def 0x%lX\n", stk->def);
+		vui_debugf("Pop def %p\n", stk->def);
 #endif
 
 		return stk->def;
 	}
 
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_STACK)
-	vui_debugf("Pop 0x%lX\n", stk->s[stk->n-1]);
+	vui_debugf("Pop %p\n", stk->s[stk->n-1]);
 #endif
 
 	return stk->s[--stk->n];
@@ -209,14 +209,14 @@ void* vui_stack_peek(vui_stack* stk)
 	if (stk->n <= 0)
 	{
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_STACK)
-		vui_debugf("Peek def 0x%lX\n", stk->def);
+		vui_debugf("Peek def %p\n", stk->def);
 #endif
 
 		return stk->def;
 	}
 
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_STACK)
-	vui_debugf("Peek 0x%lX\n", stk->s[stk->n-1]);
+	vui_debugf("Peek %p\n", stk->s[stk->n-1]);
 #endif
 
 	return stk->s[stk->n-1];
@@ -254,7 +254,7 @@ void* vui_stack_index(vui_stack* stk, size_t i)
 		return NULL;
 	}
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_STACK)
-	vui_debugf("Index [%ld] = 0x%lX\n", i, stk->s[i]);
+	vui_debugf("Index [%ld] = %p\n", i, stk->s[i]);
 #endif
 
 	return stk->s[i];

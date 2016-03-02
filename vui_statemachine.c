@@ -104,7 +104,7 @@ static void vui_state_kill(vui_state* state)
 	if (state == NULL) return;
 
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_STATEMACHINE)
-	vui_debugf("Killing state 0x%lX\n", state);
+	vui_debugf("Killing state: \"%s\" (%p)\n", vui_state_name(state), state);
 #endif
 
 	vui_string_dtor(&state->name);
@@ -184,6 +184,8 @@ vui_state* vui_tfunc_multi(vui_state* currstate, unsigned int c, int act, void* 
 		vui_transition* t = funcs->s[i];
 		t->func(currstate, c, act, t->data);
 	}
+
+	return NULL;
 }
 
 vui_transition vui_transition_multi(vui_stack* funcs, vui_state* next)
@@ -344,7 +346,7 @@ void vui_set_string_t_nocall(vui_state* state, unsigned char* s, vui_transition 
 	if (t.next == NULL)
 	{
 #if defined(VUI_DEBUG)
-		vui_debugf("vui_set_string_t_nocall(0x%lX, \"%s\", {.next = 0x%lX, .func = 0x%lX, .data = 0x%lX}): bad transition!\n", state, s, next.next, next.func, next.data);
+		vui_debugf("vui_set_string_t_nocall(%p, \"%s\", {.next = %p, .func = %p, .data = %p}): bad transition!\n", state, s, next.next, next.func, next.data);
 #endif
 	}
 	else
@@ -390,7 +392,7 @@ void vui_set_buf_t(vui_state* state, unsigned char* s, size_t len, vui_transitio
 	if (t.next == NULL)
 	{
 #if defined(VUI_DEBUG)
-		vui_debugf("vui_set_buf_t(0x%lX, 0x%p, %d, {.next = 0x%lX, .func = 0x%lX, .data = 0x%lX}): bad transition!\n", state, s, len, next.next, next.func, next.data);
+		vui_debugf("vui_set_buf_t(%p, 0x%p, %d, {.next = %p, .func = %p, .data = %p}): bad transition!\n", state, s, len, next.next, next.func, next.data);
 #endif
 	}
 	else
@@ -437,7 +439,7 @@ void vui_set_string_t(vui_state* state, unsigned char* s, vui_transition next)
 	if (t.next == NULL)
 	{
 #if defined(VUI_DEBUG)
-		vui_debugf("vui_set_string_t(0x%lX, \"%s\", {.next = 0x%lX, .func = 0x%lX, .data = 0x%lX}): bad transition!\n", state, s, next.next, next.func, next.data);
+		vui_debugf("vui_set_string_t(%p, \"%s\", {.next = %p, .func = %p, .data = %p}): bad transition!\n", state, s, next.next, next.func, next.data);
 #endif
 	}
 	else
@@ -484,7 +486,7 @@ void vui_set_string_t_mid(vui_state* state, unsigned char* s, vui_transition mid
 	if (t.next == NULL)
 	{
 #if defined(VUI_DEBUG)
-		vui_debugf("vui_set_string_t_mid(0x%lX, \"%s\", {.next = 0x%lX, .func = 0x%lX, .data = 0x%lX}): bad transition!\n", state, s, next.next, next.func, next.data);
+		vui_debugf("vui_set_string_t_mid(%p, \"%s\", {.next = %p, .func = %p, .data = %p}): bad transition!\n", state, s, next.next, next.func, next.data);
 #endif
 	}
 	else
@@ -556,7 +558,7 @@ vui_state* vui_next_t(vui_state* currstate, unsigned int c, vui_transition t, in
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_STATEMACHINE)
 	if (act == VUI_ACT_RUN)
 	{
-		vui_debugf("source: \"%s\" (0x%lX)\n", vui_state_name(currstate), currstate);
+		vui_debugf("source: \"%s\" (%p)\n", vui_state_name(currstate), currstate);
 	}
 #endif
 
@@ -602,7 +604,7 @@ vui_state* vui_next_t(vui_state* currstate, unsigned int c, vui_transition t, in
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_STATEMACHINE)
 	if (act == VUI_ACT_RUN)
 	{
-		vui_debugf("destination: \"%s\" (0x%lX)\n", vui_state_name(nextstate), nextstate);
+		vui_debugf("destination: \"%s\" (%p)\n", vui_state_name(nextstate), nextstate);
 	}
 #endif
 
