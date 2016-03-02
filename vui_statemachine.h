@@ -194,6 +194,10 @@ static inline vui_transition vui_transition_stack_pop(vui_stack* stk)
 	return vui_transition_new2(vui_tfunc_stack_pop, stk);
 }
 
+vui_stack* vui_state_stack_new(void);
+void vui_state_stack_push(vui_stack* stk, vui_state* st);
+void vui_state_stack_push_nodup(vui_stack* stk, vui_state* st);
+vui_state* vui_state_stack_pop(vui_stack* stk);
 
 #ifdef __cplusplus
 }

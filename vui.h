@@ -81,7 +81,7 @@ static inline vui_state* vui_return(int act)
 {
 	if (act > 0)
 	{
-		return vui_stack_pop(vui_state_stack);
+		return vui_state_stack_pop(vui_state_stack);
 	}
 	else
 	{
@@ -93,9 +93,9 @@ static inline vui_state* vui_return_n(int act, size_t n)
 {
 	if (act > 0)
 	{
-		while (n-- > 0) vui_stack_pop(vui_state_stack);
+		while (n-- > 0) vui_state_stack_pop(vui_state_stack);
 
-		return vui_stack_pop(vui_state_stack);
+		return vui_state_stack_pop(vui_state_stack);
 	}
 	else
 	{

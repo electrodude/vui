@@ -193,8 +193,8 @@ static vui_state* tfunc_graphviz(vui_state* currstate, unsigned int c, int act, 
 	vui_reset();
 
 	vui_stack* gv_roots = vui_stack_new();
-	vui_stack_push(gv_roots, vui_normal_mode);
-	//vui_stack_push(gv_roots, cmd_tr_start);
+	vui_state_stack_push(gv_roots, vui_normal_mode);
+	//vui_state_stack_push(gv_roots, cmd_tr_start);
 
 	FILE* f = fopen("vui.dot", "w");
 	vui_gv_write(f, gv_roots);
@@ -361,8 +361,8 @@ int main(int argc, char** argv)
 
 	/*
 	vui_stack* gv_roots = vui_stack_new();
-	//vui_stack_push(gv_roots, vui_normal_mode);
-	//vui_stack_push(gv_roots, cmd_tr_start);
+	//vui_state_stack_push(gv_roots, vui_normal_mode);
+	//vui_state_stack_push(gv_roots, cmd_tr_start);
 
 	FILE* f = fopen("vui.dot", "w");
 	vui_gv_write(f, gv_roots);

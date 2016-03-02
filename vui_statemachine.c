@@ -592,7 +592,7 @@ vui_state* vui_next_t(vui_state* currstate, unsigned int c, vui_transition t, in
 	{
 		if (nextstate->push != NULL)
 		{
-			vui_stack_push_nodup(nextstate->push, nextstate);
+			vui_state_stack_push_nodup(nextstate->push, nextstate);
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_STATEMACHINE)
 			vui_debugf("push %d\n", nextstate->push->n);
 #endif
@@ -659,7 +659,7 @@ vui_state* vui_tfunc_stack_push(vui_state* currstate, unsigned int c, int act, v
 
 	if (act <= 0) return NULL;
 
-	vui_stack_push(stk, currstate);
+	vui_state_stack_push(stk, currstate);
 
 	return NULL;
 }
@@ -674,6 +674,47 @@ vui_state* vui_tfunc_stack_pop(vui_state* currstate, unsigned int c, int act, vo
 	}
 	else
 	{
-		return vui_stack_pop(stk);
+		return vui_state_stack_pop(stk);
+	}
+}
+
+static void vui_state_stack_elem_dtor(vui_state* st)
+{
+	vui_gc_decr(st);
+}
+
+vui_stack* vui_state_stack_new(void)
+{
+	vui_stack* stk = vui_stack_new();
+
+	stk->dtor = (void(*)(void*))vui_state_stack_elem_dtor;
+
+	return stk;
+}
+
+void vui_state_stack_push(vui_stack* stk, vui_state* st)
+{
+	if (st != stk->def)
+	{
+		vui_gc_incr(st);
+	}
+
+	vui_stack_push(stk, st);
+}
+
+void vui_state_stack_push_nodup(vui_stack* stk, vui_state* st)
+{
+	if (st == vui_stack_peek(stk)) return;
+
+	vui_state_stack_push(stk, st);
+}
+
+vui_state* vui_state_stack_pop(vui_stack* stk)
+{
+	vui_state* st = vui_stack_pop(stk);
+
+	if (st != NULL && st != stk->def)
+	{
+		vui_gc_decr(st);
 	}
 }

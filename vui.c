@@ -579,7 +579,7 @@ void vui_init(int width)
 		vui_set_char_t(vui_normal_mode, i, transition_normal);
 	}
 
-	vui_state_stack = vui_stack_new();
+	vui_state_stack = vui_state_stack_new();
 	vui_state_stack->def = vui_normal_mode;
 
 	vui_normal_mode->push = vui_state_stack;
