@@ -337,7 +337,7 @@ int main(int argc, char** argv)
 	vui_set_string_t_mid(cmd_tr_start, "map ", vui_transition_translator_putc(cmd_tr, NULL), vui_transition_translator_push(cmd_tr, cmd_tr_map));
 
 
-	vui_translator_new2(cmd_tr, cmd_tr_start);
+	vui_translator_replace(cmd_tr, cmd_tr_start);
 
 
 

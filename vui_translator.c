@@ -8,15 +8,10 @@
 
 #include "vui_translator.h"
 
-vui_state* vui_translator_deadend;
 
-vui_translator* vui_translator_identity;
-
+// general methods
 void vui_translator_init(void)
 {
-	vui_translator_identity = vui_translator_new();
-
-	vui_translator_new2(vui_translator_identity, vui_state_new_putc(vui_translator_identity));
 }
 
 vui_translator* vui_translator_new(void)
@@ -67,6 +62,18 @@ vui_state* vui_translator_tfunc_push(vui_state* currstate, unsigned int c, int a
 	return NULL;
 }
 
+// specific translator constructors
+vui_translator* vui_translator_new_identity(void)
+{
+	vui_translator* tr = vui_translator_new();
+
+	vui_translator_replace(tr, vui_state_new_putc(tr));
+
+	return tr;
+}
+
+
+// transition helpers
 vui_state* vui_translator_tfunc_putc(vui_state* currstate, unsigned int c, int act, void* data)
 {
 	vui_translator* tr = data;
@@ -106,6 +113,7 @@ vui_state* vui_translator_tfunc_puts(vui_state* currstate, unsigned int c, int a
 
 
 
+// fragment constructors
 static inline vui_transition t_escaper_end(vui_state* lt, vui_translator* tr, vui_state* returnto, unsigned char* action, unsigned char* reaction)
 {
 	vui_transition lt_mid = vui_transition_translator_putc(tr, NULL);

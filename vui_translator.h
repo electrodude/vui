@@ -19,13 +19,11 @@ typedef struct vui_translator
 	vui_string* str;
 } vui_translator;
 
-extern vui_state* vui_translator_deadend;
 
-extern vui_translator* vui_translator_identity;
-
+// general methods
 void vui_translator_init(void);
 vui_translator* vui_translator_new(void);
-static inline vui_translator* vui_translator_new2(vui_translator* tr, vui_state* st_start)
+static inline vui_translator* vui_translator_replace(vui_translator* tr, vui_state* st_start)
 {
 	vui_gc_decr(tr->st_start);
 	tr->st_start = st_start;
@@ -37,6 +35,9 @@ static inline vui_translator* vui_translator_new2(vui_translator* tr, vui_state*
 void vui_translator_kill(vui_translator* tr);
 
 vui_stack* vui_translator_run(vui_translator* tr, char* in);
+
+// specific translator constructors
+vui_translator* vui_translator_new_identity(void);
 
 // transition helpers
 vui_state* vui_translator_tfunc_push(vui_state* currstate, unsigned int c, int act, void* data);
@@ -67,7 +68,7 @@ static inline vui_transition vui_transition_translator_puts(vui_translator* tr, 
 // state constructors
 static inline vui_state* vui_state_new_deadend(void)
 {
-	return vui_state_new_s(vui_translator_deadend);
+	return vui_state_new_s(vui_state_new());
 }
 
 static inline vui_state* vui_state_new_putc(vui_translator* tr)

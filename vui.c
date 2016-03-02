@@ -1007,7 +1007,7 @@ vui_cmdline* vui_cmdline_new(char* cmd, char* name, char* label, vui_translator*
 	}
 	else
 	{
-		cmdline->tr = vui_translator_identity;
+		cmdline->tr = vui_translator_new_identity();
 	}
 
 	vui_state* cmdline_state = vui_state_new();
