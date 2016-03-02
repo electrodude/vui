@@ -38,7 +38,7 @@ typedef struct hist_entry
 
 typedef void vui_cmdline_submit_callback(vui_stack* cmd);
 
-typedef struct vui_cmdline_def
+typedef struct vui_cmdline
 {
 	vui_state* cmdline_state;
 	vui_cmdline_submit_callback* on_submit;
@@ -47,11 +47,11 @@ typedef struct vui_cmdline_def
 
 	int cmd_modified;
 
-	char* label;
+	vui_string label;
 
 	hist_entry* hist_curr_entry;
 	hist_entry* hist_last_entry;
-} vui_cmdline_def;
+} vui_cmdline;
 
 extern char* vui_bar;	// Pointer to status bar - changes, you must re-check this every time!
 extern int vui_crsrx;	// Current cursor position, or -1 if hidden
@@ -157,13 +157,15 @@ vui_state* vui_mode_new(                                           // create new
                         vui_transition func_exit                   // transition on exit from mode via escape
 );
 
-vui_cmdline_def* vui_cmdline_mode_new(                             // create new command mode (like : or / or ?)
-                            char* cmd,                             // default command to get to this mode
-                            char* name,                            // name (internal)
-                            char* label,                           // mode label (e.g. : or / or ?) (can be multicharacter)
-                            vui_translator* tr,                    // parser
-                            vui_cmdline_submit_callback on_submit  // callback to call on submission
+vui_cmdline* vui_cmdline_new(                                      // create new command mode (like : or / or ?)
+                        char* cmd,                                 // default command to get to this mode
+                        char* name,                                // name (internal)
+                        char* label,                               // mode label (e.g. : or / or ?) (can be multicharacter)
+                        vui_translator* tr,                        // parser
+                        vui_cmdline_submit_callback on_submit      // callback to call on submission
 );
+
+void vui_cmdline_kill(vui_cmdline* cmdline);
 
 
 // status line
@@ -175,6 +177,11 @@ void vui_status_clear(void);
 void vui_input(unsigned int c);
 
 void vui_reset(void);
+
+
+// deprecated old names
+#define vui_cmdline_mode_new vui_cmdline_new
+#define vui_cmdline_def vui_cmdline;
 
 #ifdef __cplusplus
 }

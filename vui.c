@@ -41,7 +41,7 @@ int cmd_base;
 int cmd_len;
 
 // cmdline history functions
-static hist_entry* hist_entry_new(vui_cmdline_def* cmdline)
+static hist_entry* hist_entry_new(vui_cmdline* cmdline)
 {
 	hist_entry* entry = malloc(sizeof(hist_entry));
 
@@ -109,7 +109,7 @@ static void hist_entry_shrink(hist_entry* entry)
 	entry->line = realloc(entry->line, entry->maxlen);
 }
 
-static void hist_last_entry_edit(vui_cmdline_def* cmdline)
+static void hist_last_entry_edit(vui_cmdline* cmdline)
 {
 	cmdline->cmd_modified = 1;
 
@@ -123,7 +123,7 @@ static void hist_last_entry_edit(vui_cmdline_def* cmdline)
 	cmdline->hist_curr_entry = cmdline->hist_last_entry;
 }
 
-static void hist_last_entry_clear(vui_cmdline_def* cmdline)
+static void hist_last_entry_clear(vui_cmdline* cmdline)
 {
 	cmdline->cmd_modified = 0;
 
@@ -246,14 +246,14 @@ static vui_state* tfunc_status_clear(vui_state* currstate, unsigned int c, int a
 // cmdline callbacks
 static vui_state* tfunc_normal_to_cmd(vui_state* currstate, unsigned int c, int act, void* data)
 {
-	vui_cmdline_def* cmdline = data;
+	vui_cmdline* cmdline = data;
 
 	if (act <= 0) return cmdline->cmdline_state;
 
 	vui_bar = vui_cmd;
 	vui_crsrx = 0;
 
-	char* label = cmdline->label;
+	char* label = cmdline->label.s;
 	while (*label)
 	{
 		vui_cmd[vui_crsrx++] = *label++;
@@ -274,7 +274,7 @@ static vui_state* tfunc_normal_to_cmd(vui_state* currstate, unsigned int c, int 
 
 static vui_state* tfunc_cmd_key(vui_state* currstate, unsigned int c, int act, void* data)
 {
-	vui_cmdline_def* cmdline = data;
+	vui_cmdline* cmdline = data;
 
 	if (act <= 0) return vui_return(act);
 
@@ -294,7 +294,7 @@ static vui_state* tfunc_cmd_key(vui_state* currstate, unsigned int c, int act, v
 
 static vui_state* tfunc_cmd_backspace(vui_state* currstate, unsigned int c, int act, void* data)
 {
-	vui_cmdline_def* cmdline = data;
+	vui_cmdline* cmdline = data;
 
 	if (act <= 0)
 	{
@@ -335,7 +335,7 @@ static vui_state* tfunc_cmd_backspace(vui_state* currstate, unsigned int c, int 
 
 static vui_state* tfunc_cmd_delete(vui_state* currstate, unsigned int c, int act, void* data)
 {
-	vui_cmdline_def* cmdline = data;
+	vui_cmdline* cmdline = data;
 
 	if (act <= 0) return vui_return(act);
 
@@ -360,7 +360,7 @@ static vui_state* tfunc_cmd_delete(vui_state* currstate, unsigned int c, int act
 
 static vui_state* tfunc_cmd_left(vui_state* currstate, unsigned int c, int act, void* data)
 {
-	vui_cmdline_def* cmdline = data;
+	vui_cmdline* cmdline = data;
 
 	if (act <= 0) return vui_return(act);
 
@@ -376,7 +376,7 @@ static vui_state* tfunc_cmd_left(vui_state* currstate, unsigned int c, int act, 
 
 static vui_state* tfunc_cmd_right(vui_state* currstate, unsigned int c, int act, void* data)
 {
-	vui_cmdline_def* cmdline = data;
+	vui_cmdline* cmdline = data;
 
 	if (act <= 0) return vui_return(act);
 
@@ -392,7 +392,7 @@ static vui_state* tfunc_cmd_right(vui_state* currstate, unsigned int c, int act,
 
 static vui_state* tfunc_cmd_up(vui_state* currstate, unsigned int c, int act, void* data)
 {
-	vui_cmdline_def* cmdline = data;
+	vui_cmdline* cmdline = data;
 
 	if (act <= 0) return vui_return(act);
 
@@ -426,7 +426,7 @@ static vui_state* tfunc_cmd_up(vui_state* currstate, unsigned int c, int act, vo
 
 static vui_state* tfunc_cmd_down(vui_state* currstate, unsigned int c, int act, void* data)
 {
-	vui_cmdline_def* cmdline = data;
+	vui_cmdline* cmdline = data;
 
 	if (act <= 0) return vui_return(act);
 
@@ -461,7 +461,7 @@ static vui_state* tfunc_cmd_down(vui_state* currstate, unsigned int c, int act, 
 
 static vui_state* tfunc_cmd_home(vui_state* currstate, unsigned int c, int act, void* data)
 {
-	vui_cmdline_def* cmdline = data;
+	vui_cmdline* cmdline = data;
 
 	if (act <= 0) return vui_return(act);
 
@@ -474,7 +474,7 @@ static vui_state* tfunc_cmd_home(vui_state* currstate, unsigned int c, int act, 
 
 static vui_state* tfunc_cmd_end(vui_state* currstate, unsigned int c, int act, void* data)
 {
-	vui_cmdline_def* cmdline = data;
+	vui_cmdline* cmdline = data;
 
 	if (act <= 0) return vui_return(act);
 
@@ -487,7 +487,7 @@ static vui_state* tfunc_cmd_end(vui_state* currstate, unsigned int c, int act, v
 
 static vui_state* tfunc_cmd_escape(vui_state* currstate, unsigned int c, int act, void* data)
 {
-	vui_cmdline_def* cmdline = data;
+	vui_cmdline* cmdline = data;
 
 	if (act <= 0) return vui_return_n(act, 1);
 
@@ -526,7 +526,7 @@ static vui_state* tfunc_cmd_escape(vui_state* currstate, unsigned int c, int act
 
 static vui_state* tfunc_cmd_enter(vui_state* currstate, unsigned int c, int act, void* data)
 {
-	vui_cmdline_def* cmdline = data;
+	vui_cmdline* cmdline = data;
 
 	if (act <= 0) return vui_return_n(act, 1);
 
@@ -978,12 +978,15 @@ vui_state* vui_mode_new(char* cmd, char* name, char* label, int mode, vui_transi
 	return state;
 }
 
-vui_cmdline_def* vui_cmdline_mode_new(char* cmd, char* name, char* label, vui_translator* tr, vui_cmdline_submit_callback on_submit)
+vui_cmdline* vui_cmdline_new(char* cmd, char* name, char* label, vui_translator* tr, vui_cmdline_submit_callback on_submit)
 {
-	vui_cmdline_def* cmdline = malloc(sizeof(vui_cmdline_def));
+	vui_cmdline* cmdline = malloc(sizeof(vui_cmdline));
 	cmdline->on_submit = on_submit;
-	cmdline->label = label;
 	cmdline->hist_last_entry = NULL;
+
+	vui_string_new(&cmdline->label);
+	vui_string_puts(&cmdline->label, label);
+	vui_string_get(&cmdline->label);
 
 	if (tr != NULL)
 	{
@@ -1052,6 +1055,14 @@ vui_cmdline_def* vui_cmdline_mode_new(char* cmd, char* name, char* label, vui_tr
 	hist_entry_new(cmdline);
 
 	return cmdline;
+}
+
+void vui_cmdline_kill(vui_cmdline* cmdline)
+{
+	vui_gc_decr(cmdline->cmdline_state);
+	vui_string_dtor(&cmdline->label);
+	vui_translator_kill(cmdline->tr);
+	free(cmdline);
 }
 
 void vui_status_set(const char* s)

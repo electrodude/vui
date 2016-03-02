@@ -38,8 +38,8 @@ int VUI_KEY_MODIFIER_CONTROL = -'@';
 
 FILE* dbgf;
 
-vui_cmdline_def* cmd_mode;
-vui_cmdline_def* search_mode;
+vui_cmdline* cmd_mode;
+vui_cmdline* search_mode;
 
 // Defined even if !defined(VUI_DEBUG), since we use it for debug output
 void vui_debugf(const char* format, ...)
@@ -308,9 +308,9 @@ int main(int argc, char** argv)
 
 
 
-	cmd_mode = vui_cmdline_mode_new(":", "command", ":", cmd_tr, on_cmd_submit);
+	cmd_mode = vui_cmdline_new(":", "command", ":", cmd_tr, on_cmd_submit);
 
-	search_mode = vui_cmdline_mode_new("/", "search", "/", NULL, on_search_submit);
+	search_mode = vui_cmdline_new("/", "search", "/", NULL, on_search_submit);
 
 
 	vui_bind(vui_normal_mode, "Q", vui_transition_new2(tfunc_quit, NULL));
