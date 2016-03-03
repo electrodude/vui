@@ -433,7 +433,7 @@ void vui_set_buf_t(vui_state* state, unsigned char* s, size_t len, vui_transitio
 			}
 			else
 			{
-				vui_string_putf(name, "0x%02x", s[1]);
+				vui_string_append_printf(name, "0x%02x", s[1]);
 			}
 			
 			vui_set_buf_t(nextst, s+1, len-1, next);

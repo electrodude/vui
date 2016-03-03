@@ -89,7 +89,8 @@ void vui_string_puts(vui_string* str, const unsigned char* s);
 void vui_string_putn(vui_string* str, size_t n, const unsigned char* s);
 
 // Append printf-formatted text
-void vui_string_putf(vui_string* str, const unsigned char* fmt, ...);
+#define vui_string_putf(str, fmt, ...) vui_string_append_printf(str, fmt, __VA_ARGS__)
+void vui_string_append_printf(vui_string* str, const unsigned char* fmt, ...);
 
 // Append a vui_string
 void vui_string_append(vui_string* str, const vui_string* str2);

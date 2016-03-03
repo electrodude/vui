@@ -152,7 +152,7 @@ void vui_string_putn(vui_string* str, size_t n, const unsigned char* s)
 	}
 }
 
-void vui_string_putf(vui_string* str, const unsigned char* fmt, ...)
+void vui_string_append_printf(vui_string* str, const unsigned char* fmt, ...)
 {
 	if (str == NULL) return;
 
