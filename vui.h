@@ -69,6 +69,8 @@ extern vui_state* vui_register_container; // macro container state
 
 extern vui_string* vui_register_recording;
 
+extern vui_string* vui_register_curr;
+
 
 // state machine helpers
 

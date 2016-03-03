@@ -213,6 +213,23 @@ static vui_state* tfunc_graphviz(vui_state* currstate, unsigned int c, int act, 
 }
 
 
+static vui_state* tfunc_paste(vui_state* currstate, unsigned int c, int act, void* data)
+{
+	if (act <= 0) return vui_return(act);
+
+	if (vui_count != 0)
+	{
+		vui_debugf("count: %d\n", vui_count);
+	}
+
+	vui_debugf("paste \"%s\"\n", vui_string_get(vui_register_curr));
+
+	vui_reset();
+
+	return vui_return(act);
+}
+
+
 static vui_state* tfunc_winch(vui_state* currstate, unsigned int c, int act, void* data)
 {
 	if (act <= 0) return vui_return(act);
@@ -362,6 +379,7 @@ int main(int argc, char** argv)
 
 	vui_bind(vui_normal_mode, "gv", vui_transition_new2(tfunc_graphviz, NULL));
 
+	vui_bind(vui_normal_mode, "p", vui_transition_new2(tfunc_paste, NULL));
 
 	// done initialization; run garbage collector
 	vui_gc_run();

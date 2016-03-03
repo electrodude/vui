@@ -246,325 +246,6 @@ vui_state* vui_tfunc_status_clear(vui_state* currstate, unsigned int c, int act,
 }
 
 
-// cmdline callbacks
-static vui_state* vui_tfunc_normal_to_cmd(vui_state* currstate, unsigned int c, int act, void* data)
-{
-	vui_cmdline* cmdline = data;
-
-	if (act <= 0) return cmdline->cmdline_state;
-
-	vui_bar = vui_cmd;
-	vui_crsrx = 0;
-
-	char* label = cmdline->label.s;
-	while (*label)
-	{
-		vui_cmd[vui_crsrx++] = *label++;
-	}
-
-	cmd_base = vui_crsrx;
-
-	cmd_len = cmd_base - 1;
-
-	cmdline->cmd_modified = 0;
-
-	cmdline->hist_curr_entry = cmdline->hist_last_entry;
-
-	memset(&vui_cmd[cmd_base], ' ', cols - cmd_base);
-
-	return cmdline->cmdline_state;
-}
-
-static vui_state* vui_tfunc_cmd_key(vui_state* currstate, unsigned int c, int act, void* data)
-{
-	vui_cmdline* cmdline = data;
-
-	if (act <= 0) return vui_return(act);
-
-	vui_bar = vui_cmd;
-
-	hist_last_entry_edit(cmdline);
-
-	if (vui_crsrx != cmd_len)
-	{
-		memmove(&vui_cmd[vui_crsrx + 1], &vui_cmd[vui_crsrx], cmd_len - vui_crsrx + 1);
-	}
-	vui_cmd[vui_crsrx++] = c;
-	cmd_len++;
-
-	return vui_return(act);
-}
-
-static vui_state* vui_tfunc_cmd_backspace(vui_state* currstate, unsigned int c, int act, void* data)
-{
-	vui_cmdline* cmdline = data;
-
-	if (act <= 0)
-	{
-		if (act == VUI_ACT_GC)
-		{
-			vui_gc_mark(vui_normal_mode);
-		}
-
-		return vui_return_n(act, (vui_crsrx <= cmd_base) ? 0 : 1);
-	}
-
-	if (cmd_len <= 0)
-	{
-		vui_bar = vui_status;
-		vui_crsrx = -1;
-		return vui_return_n(act, 1);
-	}
-
-	vui_bar = vui_cmd;
-
-	if (vui_crsrx > cmd_base)
-	{
-		hist_last_entry_edit(cmdline);
-
-		vui_cmd[cmd_len+1] = ' ';
-		vui_crsrx--;
-		memmove(&vui_cmd[vui_crsrx], &vui_cmd[vui_crsrx+1], cmd_len-vui_crsrx+1);
-		cmd_len--;
-
-		if (!cmd_len)
-		{
-			hist_last_entry_clear(cmdline);
-		}
-	}
-
-	return vui_return(act);
-}
-
-static vui_state* vui_tfunc_cmd_delete(vui_state* currstate, unsigned int c, int act, void* data)
-{
-	vui_cmdline* cmdline = data;
-
-	if (act <= 0) return vui_return(act);
-
-	vui_bar = vui_cmd;
-
-	if (vui_crsrx <= cmd_len)
-	{
-		hist_last_entry_edit(cmdline);
-
-		vui_cmd[cmd_len+1] = ' ';
-		memmove(&vui_cmd[vui_crsrx], &vui_cmd[vui_crsrx+1], cmd_len-vui_crsrx+1);
-		cmd_len--;
-
-		if (!cmd_len)
-		{
-			hist_last_entry_clear(cmdline);
-		}
-	}
-
-	return vui_return(act);
-}
-
-static vui_state* vui_tfunc_cmd_left(vui_state* currstate, unsigned int c, int act, void* data)
-{
-	vui_cmdline* cmdline = data;
-
-	if (act <= 0) return vui_return(act);
-
-	vui_bar = vui_cmd;
-
-	if (vui_crsrx > cmd_base)
-	{
-		vui_crsrx--;
-	}
-
-	return vui_return(act);
-}
-
-static vui_state* vui_tfunc_cmd_right(vui_state* currstate, unsigned int c, int act, void* data)
-{
-	vui_cmdline* cmdline = data;
-
-	if (act <= 0) return vui_return(act);
-
-	vui_bar = vui_cmd;
-
-	if (vui_crsrx <= cmd_len)
-	{
-		vui_crsrx++;
-	}
-
-	return vui_return(act);
-}
-
-static vui_state* vui_tfunc_cmd_up(vui_state* currstate, unsigned int c, int act, void* data)
-{
-	vui_cmdline* cmdline = data;
-
-	if (act <= 0) return vui_return(act);
-
-	vui_bar = vui_cmd;
-
-	if (cmdline->hist_curr_entry->prev != NULL && !cmdline->cmd_modified)
-	{
-#if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
-		if (cmdline->hist_curr_entry->prev == cmdline->hist_curr_entry)
-		{
-			vui_debugf("own prev!\n");
-		}
-#endif
-
-		cmdline->hist_curr_entry = cmdline->hist_curr_entry->prev;
-
-		memcpy(&vui_cmd[cmd_base], cmdline->hist_curr_entry->line, cmdline->hist_curr_entry->len);
-		vui_crsrx = cmd_base + cmdline->hist_curr_entry->len - 1;
-		cmd_len = vui_crsrx - 1;
-		memset(&vui_cmd[vui_crsrx], ' ', cols - vui_crsrx);
-	}
-#if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
-	else
-	{
-		vui_debugf("no prev\n");
-	}
-#endif
-
-	return vui_return(act);
-}
-
-static vui_state* vui_tfunc_cmd_down(vui_state* currstate, unsigned int c, int act, void* data)
-{
-	vui_cmdline* cmdline = data;
-
-	if (act <= 0) return vui_return(act);
-
-	vui_bar = vui_cmd;
-
-	if (cmdline->hist_curr_entry->next != NULL && !cmdline->cmd_modified)
-	{
-#if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
-		if (cmdline->hist_curr_entry->next == cmdline->hist_curr_entry)
-		{
-			vui_debugf("own next!\n");
-		}
-#endif
-
-		cmdline->hist_curr_entry = cmdline->hist_curr_entry->next;
-
-		memcpy(&vui_cmd[cmd_base], cmdline->hist_curr_entry->line, cmdline->hist_curr_entry->len);
-		vui_crsrx = cmd_base + cmdline->hist_curr_entry->len - 1;
-		cmd_len = vui_crsrx - 1;
-		cmd_len = vui_crsrx - 1;
-		memset(&vui_cmd[vui_crsrx], ' ', cols - vui_crsrx);
-	}
-#if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
-	else
-	{
-		vui_debugf("no next\n");
-	}
-#endif
-
-	return vui_return(act);
-}
-
-static vui_state* vui_tfunc_cmd_home(vui_state* currstate, unsigned int c, int act, void* data)
-{
-	vui_cmdline* cmdline = data;
-
-	if (act <= 0) return vui_return(act);
-
-	vui_bar = vui_cmd;
-
-	vui_crsrx = cmd_base;
-
-	return vui_return(act);
-}
-
-static vui_state* vui_tfunc_cmd_end(vui_state* currstate, unsigned int c, int act, void* data)
-{
-	vui_cmdline* cmdline = data;
-
-	if (act <= 0) return vui_return(act);
-
-	vui_bar = vui_cmd;
-
-	vui_crsrx = cmd_len + 1;
-
-	return vui_return(act);
-}
-
-static vui_state* vui_tfunc_cmd_escape(vui_state* currstate, unsigned int c, int act, void* data)
-{
-	vui_cmdline* cmdline = data;
-
-	if (act <= 0) return vui_return_n(act, 1);
-
-	vui_bar = vui_cmd;
-
-	if (cmdline->hist_curr_entry != cmdline->hist_last_entry && !cmdline->cmd_modified)
-	{
-		hist_entry_kill(cmdline->hist_curr_entry);
-		cmdline->hist_curr_entry = cmdline->hist_last_entry;
-	}
-
-	hist_entry_set(cmdline->hist_curr_entry, &vui_cmd[cmd_base], cmd_len);
-
-	vui_bar = vui_status;
-	vui_crsrx = -1;
-
-	hist_entry_shrink(cmdline->hist_curr_entry);
-
-	if (cmdline->hist_curr_entry->line[0] != 0)
-	{
-#if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
-		vui_debugf("new entry\n");
-#endif
-
-		hist_entry_new(cmdline);
-	}
-#if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
-	else
-	{
-		vui_debugf("no new entry\n");
-	}
-#endif
-
-	return vui_return_n(act, 1);
-}
-
-static vui_state* vui_tfunc_cmd_enter(vui_state* currstate, unsigned int c, int act, void* data)
-{
-	vui_cmdline* cmdline = data;
-
-	if (act <= 0) return vui_return_n(act, 1);
-
-	if (cmdline->hist_curr_entry != cmdline->hist_last_entry && !cmdline->cmd_modified)
-	{
-		hist_entry_kill(cmdline->hist_curr_entry);
-		cmdline->hist_curr_entry = cmdline->hist_last_entry;
-	}
-
-	hist_entry_set(cmdline->hist_curr_entry, &vui_cmd[cmd_base], cmd_len);
-
-	cmdline->on_submit(vui_translator_run(cmdline->tr, cmdline->hist_curr_entry->line));
-
-	vui_bar = vui_status;
-	vui_crsrx = -1;
-
-	hist_entry_shrink(cmdline->hist_curr_entry);
-
-	if (cmdline->hist_curr_entry->line[0] != 0)
-	{
-#if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
-		vui_debugf("new entry\n");
-#endif
-
-		hist_entry_new(cmdline);
-	}
-#if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
-	else
-	{
-		vui_debugf("no new entry\n");
-	}
-#endif
-
-	return vui_return_n(act, 1);
-}
 
 // init/resize
 void vui_init(int width)
@@ -852,7 +533,7 @@ vui_string* vui_register_get(unsigned int c)
 	}
 
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
-	vui_debugf("register %c: %s\n", c, reg->s);
+	vui_debugf("register \"%c: %s\n", c, reg->s);
 #endif
 
 	return reg;
@@ -939,34 +620,6 @@ void vui_map2(vui_state* mode, vui_string* action, vui_state* reaction_st, vui_s
 
 
 
-static vui_state* vui_tfunc_cmd_paste(vui_state* currstate, unsigned int c, int act, void* data)
-{
-	if (act <= 0) return vui_return(act);
-
-	vui_string* reg = vui_register_get(c);
-
-	if (reg != NULL)
-	{
-		vui_state* cmdline_state = vui_return(VUI_ACT_TEST);
-
-#if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
-		vui_debugf("paste %c\n", c);
-#endif
-		for (size_t i = 0; i < reg->n; i++)
-		{
-			vui_tfunc_cmd_key(cmdline_state, reg->s[i], act, data);
-		}
-	}
-	else
-	{
-#if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
-		vui_debugf("paste empty %c\n", c);
-#endif
-	}
-
-	return vui_return(act);
-}
-
 // new modes
 
 vui_state* vui_mode_new(char* cmd, char* name, char* label, int mode, vui_transition func_enter, vui_transition func_in, vui_transition func_exit)
@@ -1018,6 +671,379 @@ vui_state* vui_mode_new(char* cmd, char* name, char* label, int mode, vui_transi
 	return state;
 }
 
+
+// cmdline callbacks
+static vui_state* vui_tfunc_normal_to_cmd(vui_state* currstate, unsigned int c, int act, void* data)
+{
+	vui_cmdline* cmdline = data;
+
+	if (act <= 0) return cmdline->cmdline_state;
+
+	vui_bar = vui_cmd;
+	vui_crsrx = 0;
+
+	char* label = cmdline->label.s;
+	while (*label)
+	{
+		vui_cmd[vui_crsrx++] = *label++;
+	}
+
+	cmd_base = vui_crsrx;
+
+	cmd_len = cmd_base - 1;
+
+	cmdline->cmd_modified = 0;
+
+	cmdline->hist_curr_entry = cmdline->hist_last_entry;
+
+	memset(&vui_cmd[cmd_base], ' ', cols - cmd_base);
+
+	return cmdline->cmdline_state;
+}
+
+static vui_state* vui_tfunc_cmd_key(vui_state* currstate, unsigned int c, int act, void* data)
+{
+	vui_cmdline* cmdline = data;
+
+	if (act <= 0) return vui_return(act);
+
+	vui_bar = vui_cmd;
+
+	hist_last_entry_edit(cmdline);
+
+	// TODO: make special characters display properly
+
+	if (vui_crsrx != cmd_len)
+	{
+		memmove(&vui_cmd[vui_crsrx + 1], &vui_cmd[vui_crsrx], cmd_len - vui_crsrx + 1);
+	}
+	vui_cmd[vui_crsrx++] = c;
+	cmd_len++;
+
+	return vui_return(act);
+}
+
+static vui_state* vui_tfunc_cmd_backspace(vui_state* currstate, unsigned int c, int act, void* data)
+{
+	vui_cmdline* cmdline = data;
+
+	if (act <= 0)
+	{
+		if (act == VUI_ACT_GC)
+		{
+			vui_gc_mark(vui_normal_mode);
+		}
+
+		return vui_return_n(act, (vui_crsrx <= cmd_base) ? 0 : 1);
+	}
+
+	if (cmd_len <= 0)
+	{
+		vui_bar = vui_status;
+		vui_crsrx = -1;
+		return vui_return_n(act, 1);
+	}
+
+	vui_bar = vui_cmd;
+
+	if (vui_crsrx > cmd_base)
+	{
+		hist_last_entry_edit(cmdline);
+
+		vui_cmd[cmd_len+1] = ' ';
+		vui_crsrx--;
+		memmove(&vui_cmd[vui_crsrx], &vui_cmd[vui_crsrx+1], cmd_len-vui_crsrx+1);
+		cmd_len--;
+
+		if (!cmd_len)
+		{
+			hist_last_entry_clear(cmdline);
+		}
+	}
+
+	return vui_return(act);
+}
+
+static vui_state* vui_tfunc_cmd_delete(vui_state* currstate, unsigned int c, int act, void* data)
+{
+	vui_cmdline* cmdline = data;
+
+	if (act <= 0) return vui_return(act);
+
+	vui_bar = vui_cmd;
+
+	if (vui_crsrx <= cmd_len)
+	{
+		hist_last_entry_edit(cmdline);
+
+		vui_cmd[cmd_len+1] = ' ';
+		memmove(&vui_cmd[vui_crsrx], &vui_cmd[vui_crsrx+1], cmd_len-vui_crsrx+1);
+		cmd_len--;
+
+		if (!cmd_len)
+		{
+			hist_last_entry_clear(cmdline);
+		}
+	}
+
+	return vui_return(act);
+}
+
+static vui_state* vui_tfunc_cmd_left(vui_state* currstate, unsigned int c, int act, void* data)
+{
+	vui_cmdline* cmdline = data;
+
+	if (act <= 0) return vui_return(act);
+
+	vui_bar = vui_cmd;
+
+	if (vui_crsrx > cmd_base)
+	{
+		vui_crsrx--;
+	}
+
+	return vui_return(act);
+}
+
+static vui_state* vui_tfunc_cmd_right(vui_state* currstate, unsigned int c, int act, void* data)
+{
+	vui_cmdline* cmdline = data;
+
+	if (act <= 0) return vui_return(act);
+
+	vui_bar = vui_cmd;
+
+	if (vui_crsrx <= cmd_len)
+	{
+		vui_crsrx++;
+	}
+
+	return vui_return(act);
+}
+
+static vui_state* vui_tfunc_cmd_up(vui_state* currstate, unsigned int c, int act, void* data)
+{
+	vui_cmdline* cmdline = data;
+
+	if (act <= 0) return vui_return(act);
+
+	vui_bar = vui_cmd;
+
+	if (cmdline->hist_curr_entry->prev != NULL && !cmdline->cmd_modified)
+	{
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
+		if (cmdline->hist_curr_entry->prev == cmdline->hist_curr_entry)
+		{
+			vui_debugf("own prev!\n");
+		}
+#endif
+
+		cmdline->hist_curr_entry = cmdline->hist_curr_entry->prev;
+
+		memcpy(&vui_cmd[cmd_base], cmdline->hist_curr_entry->line, cmdline->hist_curr_entry->len);
+		vui_crsrx = cmd_base + cmdline->hist_curr_entry->len - 1;
+		cmd_len = vui_crsrx - 1;
+		memset(&vui_cmd[vui_crsrx], ' ', cols - vui_crsrx);
+	}
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
+	else
+	{
+		vui_debugf("no prev\n");
+	}
+#endif
+
+	return vui_return(act);
+}
+
+static vui_state* vui_tfunc_cmd_down(vui_state* currstate, unsigned int c, int act, void* data)
+{
+	vui_cmdline* cmdline = data;
+
+	if (act <= 0) return vui_return(act);
+
+	vui_bar = vui_cmd;
+
+	if (cmdline->hist_curr_entry->next != NULL && !cmdline->cmd_modified)
+	{
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
+		if (cmdline->hist_curr_entry->next == cmdline->hist_curr_entry)
+		{
+			vui_debugf("own next!\n");
+		}
+#endif
+
+		cmdline->hist_curr_entry = cmdline->hist_curr_entry->next;
+
+		memcpy(&vui_cmd[cmd_base], cmdline->hist_curr_entry->line, cmdline->hist_curr_entry->len);
+		vui_crsrx = cmd_base + cmdline->hist_curr_entry->len - 1;
+		cmd_len = vui_crsrx - 1;
+		cmd_len = vui_crsrx - 1;
+		memset(&vui_cmd[vui_crsrx], ' ', cols - vui_crsrx);
+	}
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
+	else
+	{
+		vui_debugf("no next\n");
+	}
+#endif
+
+	return vui_return(act);
+}
+
+static vui_state* vui_tfunc_cmd_home(vui_state* currstate, unsigned int c, int act, void* data)
+{
+	vui_cmdline* cmdline = data;
+
+	if (act <= 0) return vui_return(act);
+
+	vui_bar = vui_cmd;
+
+	vui_crsrx = cmd_base;
+
+	return vui_return(act);
+}
+
+static vui_state* vui_tfunc_cmd_end(vui_state* currstate, unsigned int c, int act, void* data)
+{
+	vui_cmdline* cmdline = data;
+
+	if (act <= 0) return vui_return(act);
+
+	vui_bar = vui_cmd;
+
+	vui_crsrx = cmd_len + 1;
+
+	return vui_return(act);
+}
+
+static vui_state* vui_tfunc_cmd_escape(vui_state* currstate, unsigned int c, int act, void* data)
+{
+	vui_cmdline* cmdline = data;
+
+	if (act <= 0) return vui_return_n(act, 1);
+
+	vui_bar = vui_cmd;
+
+	if (cmdline->hist_curr_entry != cmdline->hist_last_entry && !cmdline->cmd_modified)
+	{
+		hist_entry_kill(cmdline->hist_curr_entry);
+		cmdline->hist_curr_entry = cmdline->hist_last_entry;
+	}
+
+	hist_entry_set(cmdline->hist_curr_entry, &vui_cmd[cmd_base], cmd_len);
+
+	vui_bar = vui_status;
+	vui_crsrx = -1;
+
+	hist_entry_shrink(cmdline->hist_curr_entry);
+
+	if (cmdline->hist_curr_entry->line[0] != 0)
+	{
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
+		vui_debugf("new entry\n");
+#endif
+
+		hist_entry_new(cmdline);
+	}
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
+	else
+	{
+		vui_debugf("no new entry\n");
+	}
+#endif
+
+	return vui_return_n(act, 1);
+}
+
+static vui_state* vui_tfunc_cmd_enter(vui_state* currstate, unsigned int c, int act, void* data)
+{
+	vui_cmdline* cmdline = data;
+
+	if (act <= 0) return vui_return_n(act, 1);
+
+	if (cmdline->hist_curr_entry != cmdline->hist_last_entry && !cmdline->cmd_modified)
+	{
+		hist_entry_kill(cmdline->hist_curr_entry);
+		cmdline->hist_curr_entry = cmdline->hist_last_entry;
+	}
+
+	hist_entry_set(cmdline->hist_curr_entry, &vui_cmd[cmd_base], cmd_len);
+
+	cmdline->on_submit(vui_translator_run(cmdline->tr, cmdline->hist_curr_entry->line));
+
+	vui_bar = vui_status;
+	vui_crsrx = -1;
+
+	hist_entry_shrink(cmdline->hist_curr_entry);
+
+	if (cmdline->hist_curr_entry->line[0] != 0)
+	{
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
+		vui_debugf("new entry\n");
+#endif
+
+		hist_entry_new(cmdline);
+	}
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
+	else
+	{
+		vui_debugf("no new entry\n");
+	}
+#endif
+
+	return vui_return_n(act, 1);
+}
+
+static vui_state* vui_tfunc_cmd_prepaste(vui_state* currstate, unsigned int c, int act, void* data)
+{
+	if (act <= 0) return vui_return(act);
+
+	vui_tfunc_cmd_key(currstate, '"', act, data);
+
+	return vui_return(act);
+}
+
+static vui_state* vui_tfunc_cmd_paste(vui_state* currstate, unsigned int c, int act, void* data)
+{
+	vui_cmdline* cmdline = data;
+
+	if (act <= 0) return vui_return(act);
+
+	vui_tfunc_cmd_backspace(currstate, c, act, data);
+
+	vui_string* reg = vui_register_get(c);
+
+	if (reg != NULL)
+	{
+		vui_state* cmdline_state = vui_return(VUI_ACT_TEST);
+
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
+		vui_debugf("paste %c\n", c);
+#endif
+		for (size_t i = 0; i < reg->n; i++)
+		{
+			vui_tfunc_cmd_key(cmdline_state, reg->s[i], act, data);
+		}
+	}
+	else
+	{
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
+		vui_debugf("paste empty %c\n", c);
+#endif
+	}
+
+	return vui_return(act);
+}
+
+static vui_state* vui_tfunc_cmd_paste_cancel(vui_state* currstate, unsigned int c, int act, void* data)
+{
+	if (act <= 0) return vui_return(act);
+
+	vui_tfunc_cmd_backspace(currstate, c, act, data);
+
+	return vui_return(act);
+}
+
 vui_cmdline* vui_cmdline_new(char* cmd, char* name, char* label, vui_translator* tr, vui_cmdline_submit_callback on_submit)
 {
 	vui_cmdline* cmdline = malloc(sizeof(vui_cmdline));
@@ -1065,6 +1091,11 @@ vui_cmdline* vui_cmdline_new(char* cmd, char* name, char* label, vui_translator*
 	vui_transition transition_macro_paste = vui_transition_new3(cmdline_state, vui_tfunc_cmd_paste, cmdline);
 	vui_state* paste_state = vui_state_new_t(transition_macro_paste);
 
+	vui_transition transition_paste_cancel = vui_transition_new3(cmdline_state, vui_tfunc_cmd_paste_cancel, cmdline);
+	vui_set_char_t_u(paste_state, VUI_KEY_ESCAPE, transition_paste_cancel);
+	vui_set_char_t_u(paste_state, VUI_KEY_ENTER, transition_paste_cancel);
+	vui_set_char_t_u(paste_state, VUI_KEY_BACKSPACE, transition_paste_cancel);
+
 	for (unsigned int i=32; i<127; i++)
 	{
 		vui_set_char_t(cmdline_state, i, transition_cmd_key);
@@ -1082,7 +1113,7 @@ vui_cmdline* vui_cmdline_new(char* cmd, char* name, char* label, vui_translator*
 	vui_set_char_t_u(cmdline_state, VUI_KEY_HOME, transition_cmd_home);
 	vui_set_char_t_u(cmdline_state, VUI_KEY_END, transition_cmd_end);
 
-	vui_set_char_s_u(cmdline_state, 'R' + VUI_KEY_MODIFIER_CONTROL, paste_state);
+	vui_set_char_t_u(cmdline_state, 'R' + VUI_KEY_MODIFIER_CONTROL, vui_transition_new3(paste_state, vui_tfunc_cmd_prepaste, cmdline));
 
 #if 0
 	vui_state* keyescapestate = vui_state_new_t(transition_cmd_key);
