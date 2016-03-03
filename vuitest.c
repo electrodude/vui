@@ -115,8 +115,7 @@ static void on_winch(void)
 
 static void quit(void)
 {
-	endwin();
-	printf("Quitting!\n");
+	vui_debugf("Quitting!\n");
 
 	if (cmd_mode != NULL) vui_cmdline_kill(cmd_mode);
 	if (search_mode != NULL) vui_cmdline_kill(search_mode);
@@ -125,7 +124,10 @@ static void quit(void)
 
 	vui_gc_run();
 
-	printf("live GC objects: %ld\n", vui_gc_nlive);
+	vui_debugf("live GC objects: %ld\n", vui_gc_nlive);
+
+	endwin();
+	puts("Quitting!");
 
 	exit(0);
 }
@@ -138,17 +140,21 @@ static void sighandler(int signo)
 
         switch (signo)
         {
+		case SIGINT:
+		case SIGQUIT:
+		case SIGTERM:
+		{
+			endwin();
+			puts("Terminating!");
+			exit(1);
+		}
+
                 case SIGWINCH:
                 {
 			ungetch(KEY_RESIZE);
 
                         break;
                 }
-
-		case SIGINT:
-		{
-			quit();
-		}
 
                 default:
                 {
@@ -312,6 +318,9 @@ int main(int argc, char** argv)
 	struct sigaction sa;
 	memset(&sa, 0, sizeof(struct sigaction));
 	sa.sa_handler = sighandler;
+	sigaction(SIGINT  , &sa, NULL);
+	sigaction(SIGQUIT , &sa, NULL);
+	sigaction(SIGTERM , &sa, NULL);
 	sigaction(SIGWINCH, &sa, NULL);
 
 
