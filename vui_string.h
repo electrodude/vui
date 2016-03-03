@@ -24,8 +24,8 @@ typedef struct vui_string
 // Create a new string, given how many bytes to preallocate
 // if str == NULL, malloc the string
 // otherwise, put it at *str
-#define vui_string_new_prealloc(n) vui_string_new_prealloc_at(NULL, n)
-vui_string* vui_string_new_prealloc_at(vui_string* str, size_t n);
+#define vui_string_new_prealloc(maxn) vui_string_new_prealloc_at(NULL, maxn)
+vui_string* vui_string_new_prealloc_at(vui_string* str, size_t maxn);
 
 // Create a new string
 // if str == NULL, malloc the string

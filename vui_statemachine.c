@@ -250,6 +250,7 @@ vui_transition vui_transition_run_str_s(vui_state* st, vui_string* str)
 	vui_transition_run_s_data* data = malloc(sizeof(vui_transition_run_s_data));
 	data->st = st;
 	vui_string_dup_at(&data->str, str);
+	vui_string_shrink(&data->str);
 
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_STATEMACHINE)
 	vui_debugf("vui_transition_run_str_s(\"%s\" (%p), \"%s\")\n", vui_state_name(st), st, vui_string_get(&data->str));
@@ -258,11 +259,12 @@ vui_transition vui_transition_run_str_s(vui_state* st, vui_string* str)
 	return vui_transition_new2(vui_tfunc_run_s_s, data);
 }
 
-vui_transition vui_transition_run_s_s(vui_state* st, char* str)
+vui_transition vui_transition_run_s_s(vui_state* st, unsigned char* str)
 {
 	vui_transition_run_s_data* data = malloc(sizeof(vui_transition_run_s_data));
 	data->st = st;
 	vui_string_new_str_at(&data->str, str);
+	vui_string_shrink(&data->str);
 
 	return vui_transition_new2(vui_tfunc_run_s_s, data);
 }
@@ -657,9 +659,9 @@ vui_state* vui_run_buf_p(vui_state** sp, unsigned char* buf, size_t len, int act
 
 vui_state* vui_run_buf(vui_state* st, unsigned char* buf, size_t len, int act)
 {
-	while (len--)
+	for (size_t i = 0; i < len; i++)
 	{
-		st = vui_next(st, *buf++, act);
+		st = vui_next(st, buf[i], act);
 	}
 
 	return st;

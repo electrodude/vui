@@ -4,6 +4,7 @@
 
 #include "vui_utf8.h"
 
+static unsigned char vui_utf8_str[16];
 
 unsigned char* vui_utf8_encode(unsigned int c, unsigned char* s)
 {
@@ -81,8 +82,24 @@ unsigned char* vui_utf8_encode(unsigned int c, unsigned char* s)
 	return s;
 }
 
+vui_string* vui_utf8_encode_str(unsigned int c)
+{
+	vui_string* str = vui_string_new_prealloc(16);
+	str->n = vui_utf8_encode(c, str->s) - str->s;
+	vui_string_shrink(str);
+	return str;
+}
+
 unsigned char* vui_utf8_encode_alloc(unsigned int c)
 {
-	unsigned char* s = malloc(16);
-	return realloc(s, vui_utf8_encode(c, s) - s);
+	vui_string str;
+	vui_string_new_prealloc_at(&str, 16);
+	str.n = vui_utf8_encode(c, str.s) - str.s;
+	return vui_string_get(&str);
+}
+
+unsigned char* vui_utf8_encode_static(unsigned int c)
+{
+	vui_utf8_encode(c, vui_utf8_str);
+	return vui_utf8_str;
 }

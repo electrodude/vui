@@ -37,13 +37,13 @@ void vui_translator_kill(vui_translator* tr)
 	free(tr);
 }
 
-vui_stack* vui_translator_run(vui_translator* tr, char* in)
+vui_stack* vui_translator_run(vui_translator* tr, unsigned char* s)
 {
 	vui_stack_reset(tr->stk);
 
 	vui_stack_push(tr->stk, tr->str = vui_string_new());
 
-	vui_next(vui_run_s(tr->st_start, in, 1), 0, 1);
+	vui_next(vui_run_s(tr->st_start, s, 1), 0, 1);
 
 	return tr->stk;
 }
@@ -140,6 +140,7 @@ vui_frag* vui_frag_accept_escaped(vui_translator* tr)
 
 	vui_transition leave = vui_transition_translator_push(tr, exit);
 	vui_set_char_t(escaper, ' ', leave);
+	vui_set_char_t(escaper, 0, leave);
 
 	vui_stack_push(exits, exit);
 
@@ -160,20 +161,20 @@ vui_frag* vui_frag_accept_escaped(vui_translator* tr)
 	t_escaper_end(lt, tr, escaper, "enter>", "\n");
 	t_escaper_end(lt, tr, escaper, "tab>", "\t");
 	t_escaper_end(lt, tr, escaper, "lt>", "<");
-	t_escaper_end(lt, tr, escaper, "left>", vui_utf8_encode_alloc(VUI_KEY_LEFT));
-	t_escaper_end(lt, tr, escaper, "l>", vui_utf8_encode_alloc(VUI_KEY_LEFT));
-	t_escaper_end(lt, tr, escaper, "right>", vui_utf8_encode_alloc(VUI_KEY_RIGHT));
-	t_escaper_end(lt, tr, escaper, "r>", vui_utf8_encode_alloc(VUI_KEY_RIGHT));
-	t_escaper_end(lt, tr, escaper, "up>", vui_utf8_encode_alloc(VUI_KEY_UP));
-	t_escaper_end(lt, tr, escaper, "u>", vui_utf8_encode_alloc(VUI_KEY_UP));
-	t_escaper_end(lt, tr, escaper, "down>", vui_utf8_encode_alloc(VUI_KEY_DOWN));
-	t_escaper_end(lt, tr, escaper, "d>", vui_utf8_encode_alloc(VUI_KEY_DOWN));
-	t_escaper_end(lt, tr, escaper, "home>", vui_utf8_encode_alloc(VUI_KEY_HOME));
-	t_escaper_end(lt, tr, escaper, "end>", vui_utf8_encode_alloc(VUI_KEY_END));
-	t_escaper_end(lt, tr, escaper, "backspace>", vui_utf8_encode_alloc(VUI_KEY_BACKSPACE));
-	t_escaper_end(lt, tr, escaper, "bs>", vui_utf8_encode_alloc(VUI_KEY_BACKSPACE));
-	t_escaper_end(lt, tr, escaper, "delete>", vui_utf8_encode_alloc(VUI_KEY_DELETE));
-	t_escaper_end(lt, tr, escaper, "del>", vui_utf8_encode_alloc(VUI_KEY_DELETE));
+	t_escaper_end(lt, tr, escaper, "left>", vui_utf8_encode_static(VUI_KEY_LEFT));
+	t_escaper_end(lt, tr, escaper, "l>", vui_utf8_encode_static(VUI_KEY_LEFT));
+	t_escaper_end(lt, tr, escaper, "right>", vui_utf8_encode_static(VUI_KEY_RIGHT));
+	t_escaper_end(lt, tr, escaper, "r>", vui_utf8_encode_static(VUI_KEY_RIGHT));
+	t_escaper_end(lt, tr, escaper, "up>", vui_utf8_encode_static(VUI_KEY_UP));
+	t_escaper_end(lt, tr, escaper, "u>", vui_utf8_encode_static(VUI_KEY_UP));
+	t_escaper_end(lt, tr, escaper, "down>", vui_utf8_encode_static(VUI_KEY_DOWN));
+	t_escaper_end(lt, tr, escaper, "d>", vui_utf8_encode_static(VUI_KEY_DOWN));
+	t_escaper_end(lt, tr, escaper, "home>", vui_utf8_encode_static(VUI_KEY_HOME));
+	t_escaper_end(lt, tr, escaper, "end>", vui_utf8_encode_static(VUI_KEY_END));
+	t_escaper_end(lt, tr, escaper, "backspace>", vui_utf8_encode_static(VUI_KEY_BACKSPACE));
+	t_escaper_end(lt, tr, escaper, "bs>", vui_utf8_encode_static(VUI_KEY_BACKSPACE));
+	t_escaper_end(lt, tr, escaper, "delete>", vui_utf8_encode_static(VUI_KEY_DELETE));
+	t_escaper_end(lt, tr, escaper, "del>", vui_utf8_encode_static(VUI_KEY_DELETE));
 	t_escaper_end(lt, tr, escaper, "escape>", "\x27");
 	t_escaper_end(lt, tr, escaper, "esc>", "\x27");
 	t_escaper_end(lt, tr, escaper, "space>", " ");

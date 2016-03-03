@@ -34,7 +34,7 @@ static inline vui_translator* vui_translator_replace(vui_translator* tr, vui_sta
 
 void vui_translator_kill(vui_translator* tr);
 
-vui_stack* vui_translator_run(vui_translator* tr, char* in);
+vui_stack* vui_translator_run(vui_translator* tr, unsigned char* s);
 
 // specific translator constructors
 vui_translator* vui_translator_new_identity(void);

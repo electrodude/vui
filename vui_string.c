@@ -11,7 +11,7 @@
 #include "vui_string.h"
 
 
-vui_string* vui_string_new_prealloc_at(vui_string* str, size_t n)
+vui_string* vui_string_new_prealloc_at(vui_string* str, size_t maxn)
 {
 	if (str == NULL)
 	{
@@ -19,7 +19,7 @@ vui_string* vui_string_new_prealloc_at(vui_string* str, size_t n)
 	}
 
 	str->n = 0;
-	str->maxn = n;
+	str->maxn = maxn;
 	str->s = malloc(str->maxn);
 	str->s[0] = 0;
 
