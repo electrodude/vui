@@ -31,9 +31,7 @@ typedef struct hist_entry
 	struct hist_entry* prev;
 	struct hist_entry* next;
 
-	char* line;
-	size_t len;
-	size_t maxlen;
+	vui_string line;
 } hist_entry;
 
 typedef void vui_cmdline_submit_callback(vui_stack* cmd);

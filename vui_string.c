@@ -148,7 +148,7 @@ void vui_string_putn(vui_string* str, size_t n, const unsigned char* s)
 
 	for (size_t i = 0; i < n; i++)
 	{
-		vui_string_putc(str, *s);
+		vui_string_putc(str, *s++);
 	}
 }
 

@@ -36,12 +36,15 @@ int cols;
 char* vui_cmd;
 char* vui_status;
 
+char* vui_cmd_base;
+
 int vui_showcmd_start = -1;
 int vui_showcmd_end;
 int vui_showcmd_cursor;
 
-int cmd_base;
-int cmd_len;
+size_t cmd_base;
+size_t cmd_crsrx;
+size_t cmd_len;
 
 // cmdline history functions
 static hist_entry* hist_entry_new(vui_cmdline* cmdline)
@@ -59,11 +62,7 @@ static hist_entry* hist_entry_new(vui_cmdline* cmdline)
 
 	entry->next = NULL;
 
-	entry->len = 1;
-	entry->maxlen = cols*2;
-	entry->line = malloc(entry->maxlen);
-
-	entry->line[0] = 0;
+	vui_string_new_prealloc_at(&entry->line, cols*2);
 
 	return entry;
 }
@@ -85,31 +84,22 @@ static void hist_entry_kill(hist_entry* entry)
 	}
 
 	// free entry's line
-	free(entry->line);
+	vui_string_dtor(&entry->line);
 
 	// free entry
 	free(entry);
 }
 
-static void hist_entry_set(hist_entry* entry, char* str, int len)
+static void hist_entry_set(hist_entry* entry, unsigned char* str, size_t len)
 {
-	entry->len = len + 1;
-	if (entry->maxlen < entry->len)
-	{
-		entry->maxlen = entry->len*2;
-		entry->line = realloc(entry->line, entry->maxlen);
-	}
-
-	memcpy(entry->line, str, entry->len);
-
-	entry->line[len] = 0;
+	vui_string_reset(&entry->line);
+	vui_string_putn(&entry->line, len, str);
+	vui_string_get(&entry->line);
 }
 
 static void hist_entry_shrink(hist_entry* entry)
 {
-	entry->maxlen = entry->len;
-
-	entry->line = realloc(entry->line, entry->maxlen);
+	vui_string_shrink(&entry->line);
 }
 
 static void hist_last_entry_edit(vui_cmdline* cmdline)
@@ -121,7 +111,7 @@ static void hist_last_entry_edit(vui_cmdline* cmdline)
 		return;
 	}
 
-	hist_entry_set(cmdline->hist_last_entry, cmdline->hist_curr_entry->line, cmdline->hist_curr_entry->len);
+	hist_entry_set(cmdline->hist_last_entry, cmdline->hist_curr_entry->line.s, cmdline->hist_curr_entry->line.n);
 
 	cmdline->hist_curr_entry = cmdline->hist_last_entry;
 }
@@ -130,8 +120,7 @@ static void hist_last_entry_clear(vui_cmdline* cmdline)
 {
 	cmdline->cmd_modified = 0;
 
-	cmdline->hist_last_entry->len = 1;
-	cmdline->hist_last_entry->line[0] = 0;
+	vui_string_reset(&cmdline->hist_last_entry->line);
 }
 
 
@@ -679,24 +668,29 @@ static vui_state* vui_tfunc_normal_to_cmd(vui_state* currstate, unsigned int c, 
 
 	if (act <= 0) return cmdline->cmdline_state;
 
-	vui_bar = vui_cmd;
-	vui_crsrx = 0;
 
-	char* label = cmdline->label.s;
+	vui_cmd_base = vui_cmd;
+	cmd_base = 0;
+
+	unsigned char* label = cmdline->label.s;
 	while (*label)
 	{
-		vui_cmd[vui_crsrx++] = *label++;
+		*vui_cmd_base++ = *label++;
+		cmd_base++;
 	}
 
-	cmd_base = vui_crsrx;
-
-	cmd_len = cmd_base - 1;
+	cmd_len = 0;
+	cmd_crsrx = 0;
 
 	cmdline->cmd_modified = 0;
 
 	cmdline->hist_curr_entry = cmdline->hist_last_entry;
 
-	memset(&vui_cmd[cmd_base], ' ', cols - cmd_base);
+	memset(vui_cmd_base, ' ', cols - cmd_base);
+
+
+	vui_bar = vui_cmd;
+	vui_crsrx = cmd_base + cmd_crsrx;
 
 	return cmdline->cmdline_state;
 }
@@ -707,18 +701,20 @@ static vui_state* vui_tfunc_cmd_key(vui_state* currstate, unsigned int c, int ac
 
 	if (act <= 0) return vui_return(act);
 
-	vui_bar = vui_cmd;
-
 	hist_last_entry_edit(cmdline);
 
 	// TODO: make special characters display properly
 
-	if (vui_crsrx != cmd_len)
+	// if cursor is not at EOL, shift line right
+	if (vui_crsrx < cmd_base + cmd_len)
 	{
-		memmove(&vui_cmd[vui_crsrx + 1], &vui_cmd[vui_crsrx], cmd_len - vui_crsrx + 1);
+		memmove(&vui_cmd_base[cmd_crsrx + 1], &vui_cmd_base[cmd_crsrx], cmd_len - 1);
 	}
-	vui_cmd[vui_crsrx++] = c;
+	vui_cmd_base[cmd_crsrx++] = c;
 	cmd_len++;
+
+	vui_bar = vui_cmd;
+	vui_crsrx = cmd_base + cmd_crsrx;
 
 	return vui_return(act);
 }
@@ -729,37 +725,36 @@ static vui_state* vui_tfunc_cmd_backspace(vui_state* currstate, unsigned int c, 
 
 	if (act <= 0)
 	{
-		if (act == VUI_ACT_GC)
-		{
-			vui_gc_mark(vui_normal_mode);
-		}
-
-		return vui_return_n(act, (vui_crsrx <= cmd_base) ? 0 : 1);
+		return vui_return_n(act, (cmd_len) ? 0 : 1);
 	}
 
-	if (cmd_len <= 0)
+
+	if (!cmd_len)
 	{
 		vui_bar = vui_status;
 		vui_crsrx = -1;
 		return vui_return_n(act, 1);
 	}
 
-	vui_bar = vui_cmd;
-
-	if (vui_crsrx > cmd_base)
+	if (cmd_crsrx > 0)
 	{
 		hist_last_entry_edit(cmdline);
 
-		vui_cmd[cmd_len+1] = ' ';
-		vui_crsrx--;
-		memmove(&vui_cmd[vui_crsrx], &vui_cmd[vui_crsrx+1], cmd_len-vui_crsrx+1);
+		//vui_cmd_base[cmd_len] = ' ';
+		cmd_crsrx--;
+		memmove(&vui_cmd_base[cmd_crsrx], &vui_cmd_base[cmd_crsrx+1], cmd_len - cmd_crsrx);
+		vui_cmd_base[cmd_len] = ' ';
 		cmd_len--;
 
-		if (!cmd_len)
+		if (cmd_len)
 		{
 			hist_last_entry_clear(cmdline);
 		}
 	}
+
+
+	vui_bar = vui_cmd;
+	vui_crsrx = cmd_base + cmd_crsrx;
 
 	return vui_return(act);
 }
@@ -770,21 +765,23 @@ static vui_state* vui_tfunc_cmd_delete(vui_state* currstate, unsigned int c, int
 
 	if (act <= 0) return vui_return(act);
 
-	vui_bar = vui_cmd;
 
-	if (vui_crsrx <= cmd_len)
+	if (cmd_crsrx < cmd_len)
 	{
 		hist_last_entry_edit(cmdline);
 
-		vui_cmd[cmd_len+1] = ' ';
-		memmove(&vui_cmd[vui_crsrx], &vui_cmd[vui_crsrx+1], cmd_len-vui_crsrx+1);
+		vui_cmd_base[cmd_len] = ' ';
+		memmove(&vui_cmd_base[cmd_crsrx], &vui_cmd[vui_crsrx+1], cmd_len - cmd_crsrx);
 		cmd_len--;
 
-		if (!cmd_len)
+		if (cmd_len)
 		{
 			hist_last_entry_clear(cmdline);
 		}
 	}
+
+	vui_bar = vui_cmd;
+	vui_crsrx = cmd_base + cmd_crsrx;
 
 	return vui_return(act);
 }
@@ -795,12 +792,15 @@ static vui_state* vui_tfunc_cmd_left(vui_state* currstate, unsigned int c, int a
 
 	if (act <= 0) return vui_return(act);
 
-	vui_bar = vui_cmd;
 
-	if (vui_crsrx > cmd_base)
+	if (cmd_crsrx > 0)
 	{
-		vui_crsrx--;
+		cmd_crsrx--;
 	}
+
+
+	vui_bar = vui_cmd;
+	vui_crsrx = cmd_base + cmd_crsrx;
 
 	return vui_return(act);
 }
@@ -811,12 +811,15 @@ static vui_state* vui_tfunc_cmd_right(vui_state* currstate, unsigned int c, int 
 
 	if (act <= 0) return vui_return(act);
 
-	vui_bar = vui_cmd;
 
-	if (vui_crsrx <= cmd_len)
+	if (cmd_crsrx < cmd_len)
 	{
-		vui_crsrx++;
+		cmd_crsrx++;
 	}
+
+
+	vui_bar = vui_cmd;
+	vui_crsrx = cmd_base + cmd_crsrx;
 
 	return vui_return(act);
 }
@@ -827,7 +830,6 @@ static vui_state* vui_tfunc_cmd_up(vui_state* currstate, unsigned int c, int act
 
 	if (act <= 0) return vui_return(act);
 
-	vui_bar = vui_cmd;
 
 	if (cmdline->hist_curr_entry->prev != NULL && !cmdline->cmd_modified)
 	{
@@ -840,10 +842,10 @@ static vui_state* vui_tfunc_cmd_up(vui_state* currstate, unsigned int c, int act
 
 		cmdline->hist_curr_entry = cmdline->hist_curr_entry->prev;
 
-		memcpy(&vui_cmd[cmd_base], cmdline->hist_curr_entry->line, cmdline->hist_curr_entry->len);
-		vui_crsrx = cmd_base + cmdline->hist_curr_entry->len - 1;
-		cmd_len = vui_crsrx - 1;
-		memset(&vui_cmd[vui_crsrx], ' ', cols - vui_crsrx);
+		memcpy(vui_cmd_base, cmdline->hist_curr_entry->line.s, cmdline->hist_curr_entry->line.n);
+		cmd_len = cmdline->hist_curr_entry->line.n;
+		cmd_crsrx = cmd_len;
+		memset(&vui_cmd_base[cmd_crsrx], ' ', cols - cmd_base);
 	}
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
 	else
@@ -851,6 +853,9 @@ static vui_state* vui_tfunc_cmd_up(vui_state* currstate, unsigned int c, int act
 		vui_debugf("no prev\n");
 	}
 #endif
+
+	vui_bar = vui_cmd;
+	vui_crsrx = cmd_base + cmd_crsrx;
 
 	return vui_return(act);
 }
@@ -861,7 +866,6 @@ static vui_state* vui_tfunc_cmd_down(vui_state* currstate, unsigned int c, int a
 
 	if (act <= 0) return vui_return(act);
 
-	vui_bar = vui_cmd;
 
 	if (cmdline->hist_curr_entry->next != NULL && !cmdline->cmd_modified)
 	{
@@ -874,11 +878,10 @@ static vui_state* vui_tfunc_cmd_down(vui_state* currstate, unsigned int c, int a
 
 		cmdline->hist_curr_entry = cmdline->hist_curr_entry->next;
 
-		memcpy(&vui_cmd[cmd_base], cmdline->hist_curr_entry->line, cmdline->hist_curr_entry->len);
-		vui_crsrx = cmd_base + cmdline->hist_curr_entry->len - 1;
-		cmd_len = vui_crsrx - 1;
-		cmd_len = vui_crsrx - 1;
-		memset(&vui_cmd[vui_crsrx], ' ', cols - vui_crsrx);
+		memcpy(vui_cmd_base, cmdline->hist_curr_entry->line.s, cmdline->hist_curr_entry->line.n);
+		cmd_len = cmdline->hist_curr_entry->line.n;
+		cmd_crsrx = cmd_len;
+		memset(&vui_cmd_base[cmd_crsrx], ' ', cols - cmd_base);
 	}
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
 	else
@@ -886,6 +889,9 @@ static vui_state* vui_tfunc_cmd_down(vui_state* currstate, unsigned int c, int a
 		vui_debugf("no next\n");
 	}
 #endif
+
+	vui_bar = vui_cmd;
+	vui_crsrx = cmd_base + cmd_crsrx;
 
 	return vui_return(act);
 }
@@ -896,9 +902,12 @@ static vui_state* vui_tfunc_cmd_home(vui_state* currstate, unsigned int c, int a
 
 	if (act <= 0) return vui_return(act);
 
-	vui_bar = vui_cmd;
 
-	vui_crsrx = cmd_base;
+	cmd_crsrx = 0;
+
+
+	vui_bar = vui_cmd;
+	vui_crsrx = cmd_base + cmd_crsrx;
 
 	return vui_return(act);
 }
@@ -909,9 +918,12 @@ static vui_state* vui_tfunc_cmd_end(vui_state* currstate, unsigned int c, int ac
 
 	if (act <= 0) return vui_return(act);
 
-	vui_bar = vui_cmd;
 
-	vui_crsrx = cmd_len + 1;
+	cmd_crsrx = cmd_len;
+
+
+	vui_bar = vui_cmd;
+	vui_crsrx = cmd_base + cmd_crsrx;
 
 	return vui_return(act);
 }
@@ -922,7 +934,6 @@ static vui_state* vui_tfunc_cmd_escape(vui_state* currstate, unsigned int c, int
 
 	if (act <= 0) return vui_return_n(act, 1);
 
-	vui_bar = vui_cmd;
 
 	if (cmdline->hist_curr_entry != cmdline->hist_last_entry && !cmdline->cmd_modified)
 	{
@@ -930,14 +941,12 @@ static vui_state* vui_tfunc_cmd_escape(vui_state* currstate, unsigned int c, int
 		cmdline->hist_curr_entry = cmdline->hist_last_entry;
 	}
 
-	hist_entry_set(cmdline->hist_curr_entry, &vui_cmd[cmd_base], cmd_len);
+	hist_entry_set(cmdline->hist_curr_entry, vui_cmd_base, cmd_len);
 
-	vui_bar = vui_status;
-	vui_crsrx = -1;
 
 	hist_entry_shrink(cmdline->hist_curr_entry);
 
-	if (cmdline->hist_curr_entry->line[0] != 0)
+	if (cmdline->hist_curr_entry->line.n > 0)
 	{
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
 		vui_debugf("new entry\n");
@@ -951,6 +960,9 @@ static vui_state* vui_tfunc_cmd_escape(vui_state* currstate, unsigned int c, int
 		vui_debugf("no new entry\n");
 	}
 #endif
+
+	vui_bar = vui_status;
+	vui_crsrx = -1;
 
 	return vui_return_n(act, 1);
 }
@@ -961,22 +973,21 @@ static vui_state* vui_tfunc_cmd_enter(vui_state* currstate, unsigned int c, int 
 
 	if (act <= 0) return vui_return_n(act, 1);
 
+
 	if (cmdline->hist_curr_entry != cmdline->hist_last_entry && !cmdline->cmd_modified)
 	{
 		hist_entry_kill(cmdline->hist_curr_entry);
 		cmdline->hist_curr_entry = cmdline->hist_last_entry;
 	}
 
-	hist_entry_set(cmdline->hist_curr_entry, &vui_cmd[cmd_base], cmd_len);
+	hist_entry_set(cmdline->hist_curr_entry, vui_cmd_base, cmd_len);
 
-	cmdline->on_submit(vui_translator_run(cmdline->tr, cmdline->hist_curr_entry->line));
+	cmdline->on_submit(vui_translator_run_str(cmdline->tr, &cmdline->hist_curr_entry->line));
 
-	vui_bar = vui_status;
-	vui_crsrx = -1;
 
 	hist_entry_shrink(cmdline->hist_curr_entry);
 
-	if (cmdline->hist_curr_entry->line[0] != 0)
+	if (cmdline->hist_curr_entry->line.n > 0)
 	{
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
 		vui_debugf("new entry\n");
@@ -990,6 +1001,9 @@ static vui_state* vui_tfunc_cmd_enter(vui_state* currstate, unsigned int c, int 
 		vui_debugf("no new entry\n");
 	}
 #endif
+
+	vui_bar = vui_status;
+	vui_crsrx = -1;
 
 	return vui_return_n(act, 1);
 }

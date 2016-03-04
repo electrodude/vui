@@ -43,7 +43,18 @@ vui_stack* vui_translator_run(vui_translator* tr, unsigned char* s)
 
 	vui_stack_push(tr->stk, tr->str = vui_string_new());
 
-	vui_next(vui_run_s(tr->st_start, s, 1), 0, 1);
+	vui_next(vui_run_s(tr->st_start, s, VUI_ACT_RUN), 0, VUI_ACT_RUN);
+
+	return tr->stk;
+}
+
+vui_stack* vui_translator_run_str(vui_translator* tr, vui_string* str)
+{
+	vui_stack_reset(tr->stk);
+
+	vui_stack_push(tr->stk, tr->str = vui_string_new());
+
+	vui_next(vui_run_str(tr->st_start, str, VUI_ACT_RUN), 0, VUI_ACT_RUN);
 
 	return tr->stk;
 }
