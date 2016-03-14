@@ -734,4 +734,6 @@ vui_state* vui_state_stack_pop(vui_stack* stk)
 	{
 		vui_gc_decr(st);
 	}
+
+	return st;
 }
