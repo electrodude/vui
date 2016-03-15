@@ -122,12 +122,12 @@ static void quit(void)
 
 	vui_deinit();
 
-	vui_gc_run();
-
 	vui_debugf("live GC objects: %ld\n", vui_gc_nlive);
 
+	vui_debugf("Quitting!\n");
+
 	endwin();
-	puts("Quitting!");
+	printf("Quitting!\n");
 
 	exit(0);
 }

@@ -281,6 +281,10 @@ void vui_deinit(void)
 
 	vui_gc_decr(vui_normal_mode);
 
+	vui_stack_reset(vui_state_stack);
+
+	vui_gc_run();
+
 	vui_stack_kill(vui_state_stack);
 
 	free(vui_cmd);
