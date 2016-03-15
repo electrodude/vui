@@ -45,8 +45,14 @@ vui_stack* vui_stack_new_array_at(vui_stack* stk, size_t n, void** elements);
 vui_stack* vui_stack_dup_at(vui_stack* stk, vui_stack* orig);
 
 // Destroy given stack and its internal buffer
-// Does not free any elements, but calling `vui_stack_reset` first does
+// Calls vui_stack_reset on itself first.
 void vui_stack_kill(vui_stack* stk);
+
+// Destroy given stack's internal buffer, but does not free the stack itself
+// If you want to use the given stack again, you must call vui_stack_new* on
+//  it first.
+// Use this for non-dynamically-allocated vui_stacks
+void vui_stack_dtor(vui_stack* stk);
 
 // Reset stack size to n
 // Does nothing if stack is already the same size or smaller

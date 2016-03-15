@@ -26,7 +26,7 @@ vui_string* vui_string_new_prealloc_at(vui_string* str, size_t maxn)
 	return str;
 }
 
-vui_string* vui_string_new_array_at(vui_string* str, size_t n, const unsigned char* s)
+vui_string* vui_string_new_array_at(vui_string* str, size_t n, const char* s)
 {
 	str = vui_string_new_prealloc_at(str, n);
 
@@ -35,7 +35,7 @@ vui_string* vui_string_new_array_at(vui_string* str, size_t n, const unsigned ch
 	return str;
 }
 
-vui_string* vui_string_new_str_at(vui_string* str, const unsigned char* s)
+vui_string* vui_string_new_str_at(vui_string* str, const char* s)
 {
 	str = vui_string_new_at(str);
 
@@ -59,7 +59,7 @@ void vui_string_kill(vui_string* str)
 {
 	if (str == NULL) return;
 
-	free(str->s);
+	vui_string_dtor(str);
 
 	free(str);
 }
@@ -77,13 +77,13 @@ void vui_string_dtor(vui_string* str)
 	str->s = NULL;
 }
 
-unsigned char* vui_string_release(vui_string* str)
+char* vui_string_release(vui_string* str)
 {
 	if (str == NULL) return NULL;
 
 	vui_string_shrink(str);
 
-	unsigned char* s = str->s;
+	char* s = str->s;
 
 	free(str);
 
@@ -107,7 +107,7 @@ char* vui_string_shrink(vui_string* str)
 }
 
 
-void vui_string_putc(vui_string* str, unsigned char c)
+void vui_string_putc(vui_string* str, char c)
 {
 	if (str == NULL) return;
 
@@ -128,7 +128,7 @@ void vui_string_putc(vui_string* str, unsigned char c)
 	str->s[str->n++] = c;
 }
 
-void vui_string_puts(vui_string* str, const unsigned char* s)
+void vui_string_puts(vui_string* str, const char* s)
 {
 	if (str == NULL) return;
 
@@ -140,7 +140,7 @@ void vui_string_puts(vui_string* str, const unsigned char* s)
 	}
 }
 
-void vui_string_putn(vui_string* str, size_t n, const unsigned char* s)
+void vui_string_putn(vui_string* str, size_t n, const char* s)
 {
 	if (str == NULL) return;
 
@@ -152,7 +152,7 @@ void vui_string_putn(vui_string* str, size_t n, const unsigned char* s)
 	}
 }
 
-void vui_string_append_printf(vui_string* str, const unsigned char* fmt, ...)
+void vui_string_append_printf(vui_string* str, const char* fmt, ...)
 {
 	if (str == NULL) return;
 
@@ -215,7 +215,7 @@ void vui_string_put(vui_string* str, unsigned int c)
 {
 	if (str == NULL) return;
 
-	unsigned char s[16];
+	char s[16];
 	vui_utf8_encode(c, s);
 
 	vui_string_puts(str, s);

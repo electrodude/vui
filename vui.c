@@ -90,7 +90,7 @@ static void hist_entry_kill(hist_entry* entry)
 	free(entry);
 }
 
-static void hist_entry_set(hist_entry* entry, unsigned char* str, size_t len)
+static void hist_entry_set(hist_entry* entry, char* str, size_t len)
 {
 	vui_string_reset(&entry->line);
 	vui_string_putn(&entry->line, len, str);
@@ -177,6 +177,7 @@ void vui_showcmd_setup(int start, int length)
 		int oldlen = vui_showcmd_end - vui_showcmd_start + 1;
 		int newlen = end - start + 1;
 
+		// TODO: fix me
 	}
 
 
@@ -586,7 +587,7 @@ void vui_bind_u(vui_state* mode, unsigned int c, vui_transition t)
 	vui_set_char_t_u(mode, c, t);
 }
 
-void vui_bind(vui_state* mode, unsigned char* s, vui_transition t)
+void vui_bind(vui_state* mode, char* s, vui_transition t)
 {
 	vui_set_string_t_mid(mode, s, vui_transition_new_showcmd_put(NULL), t);
 }
@@ -672,7 +673,7 @@ static vui_state* vui_tfunc_normal_to_cmd(vui_state* currstate, unsigned int c, 
 	vui_cmd_base = vui_cmd;
 	cmd_base = 0;
 
-	unsigned char* label = cmdline->label.s;
+	char* label = cmdline->label.s;
 	while (*label)
 	{
 		*vui_cmd_base++ = *label++;

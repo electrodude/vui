@@ -64,9 +64,7 @@ void vui_stack_kill(vui_stack* stk)
 {
 	if (stk == NULL) return;
 
-	vui_stack_reset(stk);
-
-	free(stk->s);
+	vui_stack_dtor(stk);
 
 	free(stk);
 }
@@ -74,6 +72,8 @@ void vui_stack_kill(vui_stack* stk)
 void vui_stack_dtor(vui_stack* stk)
 {
 	if (stk == NULL) return;
+
+	vui_stack_reset(stk);
 
 	stk->n = stk->maxn = 0;
 

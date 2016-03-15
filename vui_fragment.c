@@ -42,7 +42,7 @@ static vui_state* vui_frag_state_dup(vui_state* orig)
 
 	for (unsigned int i=0; i<VUI_MAXSTATE; i++)
 	{
-		vui_transition t = orig->next[i];
+		vui_transition t = vui_state_index(orig, i);
 		if (t.next != NULL)
 		{
 			t.next = vui_frag_state_dup(t.next);

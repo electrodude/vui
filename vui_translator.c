@@ -37,7 +37,7 @@ void vui_translator_kill(vui_translator* tr)
 	free(tr);
 }
 
-vui_stack* vui_translator_run(vui_translator* tr, unsigned char* s)
+vui_stack* vui_translator_run(vui_translator* tr, char* s)
 {
 	vui_stack_reset(tr->stk);
 
@@ -125,7 +125,7 @@ vui_state* vui_translator_tfunc_puts(vui_state* currstate, unsigned int c, int a
 
 
 // fragment constructors
-static inline vui_transition t_escaper_end(vui_state* lt, vui_translator* tr, vui_state* returnto, unsigned char* action, unsigned char* reaction)
+static inline void t_escaper_end(vui_state* lt, vui_translator* tr, vui_state* returnto, char* action, char* reaction)
 {
 	vui_transition lt_mid = vui_transition_translator_putc(tr, NULL);
 
@@ -154,8 +154,6 @@ vui_frag* vui_frag_accept_escaped(vui_translator* tr)
 	vui_set_char_t(escaper, 0, leave);
 
 	vui_stack_push(exits, exit);
-
-	vui_state* eschelper = vui_state_new_t(vui_transition_translator_putc(tr, escaper));
 
 	vui_stack* lt_abort_funcs = vui_stack_new_v(2,
 		vui_transition_multi_stage(vui_transition_translator_putc(tr, NULL)),

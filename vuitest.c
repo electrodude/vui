@@ -179,6 +179,9 @@ static vui_state* tfunc_quit(vui_state* currstate, unsigned int c, int act, void
 	vui_debugf("quit\n");
 
 	quit();
+
+	// never happens
+	return vui_return(act);
 }
 
 static vui_state* tfunc_gc(vui_state* currstate, unsigned int c, int act, void* data)

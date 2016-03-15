@@ -49,7 +49,7 @@ void vui_gv_putc(FILE* f, int c)
 	}
 }
 
-void vui_gv_puts(FILE* f, unsigned char* s)
+void vui_gv_puts(FILE* f, char* s)
 {
 	while (*s)
 	{
@@ -149,13 +149,12 @@ void vui_gv_print_s(FILE* f, vui_state* s)
 
 	for (unsigned int i = 0; i < VUI_MAXSTATE; i++)
 	{
-		vui_transition t = s->next[i];
+		vui_transition t = vui_state_index(s, i);       // TODO: use this
 		vui_state* next = vui_next(s, i, VUI_ACT_TEST);
 
 		if (next->iter_data.st != s)
 		{
 			int lastj = -1;
-			vui_state* lastnext = NULL;
 
 			int firstmatch = 1;
 
@@ -173,7 +172,6 @@ void vui_gv_print_s(FILE* f, vui_state* s)
 					if (lastj == -1) // first match
 					{
 						lastj = j; // record start of range
-						lastnext = next;
 
 						if (!firstmatch)
 						{

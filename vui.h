@@ -145,7 +145,7 @@ vui_state* vui_register_execute(vui_state* currstate, unsigned int c, int act);
 // keybinds
 
 void vui_bind_u(vui_state* mode, unsigned int c, vui_transition t);
-void vui_bind(vui_state* mode, unsigned char* s, vui_transition t);
+void vui_bind(vui_state* mode, char* s, vui_transition t);
 void vui_bind_str(vui_state* mode, vui_string* s, vui_transition t);
 
 void vui_map(vui_state* mode, vui_string* action, vui_string* reaction);

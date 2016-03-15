@@ -1,4 +1,4 @@
-CCFLAGS+=-g -O2
+CCFLAGS+=-Wall -g -O2
 LDFLAGS+=-lcurses
 CC=gcc -std=c99
 LD=gcc

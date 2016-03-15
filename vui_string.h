@@ -18,7 +18,7 @@ typedef struct vui_string
 	size_t n;         // current length of string
 	                  //  (not counting null terminator)
 	size_t maxn;      // allocated length of buffer
-	unsigned char* s; // pointer to buffer
+	char* s;          // pointer to buffer
 } vui_string;
 
 // Create a new string, given how many bytes to preallocate
@@ -40,13 +40,13 @@ static inline vui_string* vui_string_new_at(vui_string* str)
 // Create a new string
 // Copy n chars starting at c into the string
 #define vui_string_new_array(n, s) vui_string_new_array_at(NULL, n, s)
-vui_string* vui_string_new_array_at(vui_string* str, size_t n, const unsigned char* s);
+vui_string* vui_string_new_array_at(vui_string* str, size_t n, const char* s);
 
 
 // Create a new string
 // Copy a null-terminated string at s into the string
 #define vui_string_new_str(s) vui_string_new_str_at(NULL, s)
-vui_string* vui_string_new_str_at(vui_string* str, const unsigned char* s);
+vui_string* vui_string_new_str_at(vui_string* str, const char* s);
 
 // Clone a string
 #define vui_string_dup(orig) vui_string_dup_at(NULL, orig)
@@ -61,7 +61,7 @@ void vui_string_dtor(vui_string* str);
 // Destroy string, returning its internal buffer
 // The caller assumes responsibilty for free()ing the returned buffer.
 // Appends null terminator
-unsigned char* vui_string_release(vui_string* str);
+char* vui_string_release(vui_string* str);
 
 
 // Reset a string to zero length
@@ -80,17 +80,17 @@ char* vui_string_shrink(vui_string* str);
 
 
 // Append a character
-void vui_string_putc(vui_string* str, unsigned char c);
+void vui_string_putc(vui_string* str, char c);
 
 // Append a null-terminated string
-void vui_string_puts(vui_string* str, const unsigned char* s);
+void vui_string_puts(vui_string* str, const char* s);
 
 // Append a string that is n characters long
-void vui_string_putn(vui_string* str, size_t n, const unsigned char* s);
+void vui_string_putn(vui_string* str, size_t n, const char* s);
 
 // Append printf-formatted text
 #define vui_string_putf(str, fmt, ...) vui_string_append_printf(str, fmt, __VA_ARGS__)
-void vui_string_append_printf(vui_string* str, const unsigned char* fmt, ...);
+void vui_string_append_printf(vui_string* str, const char* fmt, ...);
 
 // Append a vui_string
 void vui_string_append(vui_string* str, const vui_string* str2);
@@ -102,7 +102,7 @@ void vui_string_put(vui_string* str, unsigned int c);
 // Appends null terminator
 // Returns pointer to internal buffer
 // The pointer is only valid until the next call to `vui_string_put*`.
-static inline unsigned char* vui_string_get(vui_string* str)
+static inline char* vui_string_get(vui_string* str)
 {
 	if (str == NULL) return NULL;
 

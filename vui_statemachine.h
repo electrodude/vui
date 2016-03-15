@@ -80,10 +80,13 @@ void vui_state_replace(vui_state* state, vui_transition search, vui_transition r
 void vui_state_cp(vui_state* dest, const vui_state* src);
 void vui_state_fill(vui_state* dest, vui_transition t);
 
-static inline unsigned char* vui_state_name(vui_state* st)
+static inline char* vui_state_name(vui_state* st)
 {
 	return vui_string_get(&st->name);
 }
+
+
+#define vui_state_index(st, c) (st->next[(unsigned char) c])
 
 
 static inline vui_transition vui_transition_new1(vui_state* next)
@@ -108,7 +111,7 @@ vui_transition* vui_transition_multi_stage(vui_transition t);
 
 vui_state* vui_tfunc_run_s_s(vui_state* currstate, unsigned int c, int act, void* data);
 vui_transition vui_transition_run_str_s(vui_state* st, vui_string* str);
-vui_transition vui_transition_run_s_s(vui_state* st, unsigned char* str);
+vui_transition vui_transition_run_s_s(vui_state* st, char* str);
 
 vui_state* vui_tfunc_run_c_s(vui_state* currstate, unsigned int c, int act, void* data);
 static inline vui_transition vui_transition_run_c_s(vui_state* other)
@@ -149,32 +152,32 @@ static inline void vui_set_range_s_u(vui_state* state, unsigned int c1, unsigned
 	vui_set_range_t_u(state, c1, c2, vui_transition_new1(next));
 }
 
-void vui_set_string_t_nocall(vui_state* state, unsigned char* s, vui_transition next);
-static inline void vui_set_string_s_nocall(vui_state* state, unsigned char* s, vui_state* next)
+void vui_set_string_t_nocall(vui_state* state, char* s, vui_transition next);
+static inline void vui_set_string_s_nocall(vui_state* state, char* s, vui_state* next)
 {
 	vui_set_string_t_nocall(state, s, vui_transition_new1(next));
 }
 
-void vui_set_string_t(vui_state* state, unsigned char* s, vui_transition next);
-static inline void vui_set_string_s(vui_state* state, unsigned char* s, vui_state* next)
+void vui_set_string_t(vui_state* state, char* s, vui_transition next);
+static inline void vui_set_string_s(vui_state* state, char* s, vui_state* next)
 {
 	vui_set_string_t(state, s, vui_transition_new1(next));
 }
 
-void vui_set_buf_t(vui_state* state, unsigned char* s, size_t len, vui_transition next);
-static inline void vui_set_buf_s(vui_state* state, unsigned char* s, size_t len, vui_state* next)
+void vui_set_buf_t(vui_state* state, char* s, size_t len, vui_transition next);
+static inline void vui_set_buf_s(vui_state* state, char* s, size_t len, vui_state* next)
 {
 	vui_set_buf_t(state, s, len, vui_transition_new1(next));
 }
 
-void vui_set_string_t_mid(vui_state* state, unsigned char* s, vui_transition mid, vui_transition next);
+void vui_set_string_t_mid(vui_state* state, char* s, vui_transition mid, vui_transition next);
 
 
 
 vui_state* vui_next_t(vui_state* currstate, unsigned int c, vui_transition t, int act);
 static inline vui_state* vui_next(vui_state* currstate, unsigned char c, int act)
 {
-	return vui_next_t(currstate, c, currstate->next[c], act);
+	return vui_next_t(currstate, c, vui_state_index(currstate, c), act);
 }
 
 vui_state* vui_next_u(vui_state* currstate, unsigned int c, int act);
@@ -182,20 +185,20 @@ vui_state* vui_next_u(vui_state* currstate, unsigned int c, int act);
 vui_state* vui_run_c_p(vui_state** sp, unsigned char c, int act);
 vui_state* vui_run_c_p_u(vui_state** sp, unsigned int c, int act);
 
-vui_state* vui_run_s_p(vui_state** sp, unsigned char* s, int act);
-vui_state* vui_run_s(vui_state* st, unsigned char* s, int act);
+vui_state* vui_run_s_p(vui_state** sp, char* s, int act);
+vui_state* vui_run_s(vui_state* st, char* s, int act);
 
 vui_state* vui_run_buf_p(vui_state** sp, unsigned char* buf, size_t len, int act);
 vui_state* vui_run_buf(vui_state* st, unsigned char* buf, size_t len, int act);
 
 static inline vui_state* vui_run_str_p(vui_state** sp, vui_string* str, int act)
 {
-	return vui_run_buf_p(sp, str->s, str->n, act);
+	return vui_run_buf_p(sp, (unsigned char*)str->s, str->n, act);
 }
 
 static inline vui_state* vui_run_str(vui_state* st, vui_string* str, int act)
 {
-	return vui_run_buf(st, str->s, str->n, act);
+	return vui_run_buf(st, (unsigned char*)str->s, str->n, act);
 }
 
 vui_state* vui_tfunc_stack_push(vui_state* currstate, unsigned int c, int act, void* data);
