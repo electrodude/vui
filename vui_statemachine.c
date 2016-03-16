@@ -151,8 +151,25 @@ void vui_state_replace(vui_state* state, vui_transition search, vui_transition r
 	}
 }
 
+static vui_state vui_dummy_zero_state = {};
+
 void vui_state_cp(vui_state* dest, const vui_state* src)
 {
+	if (src == NULL)
+	{
+		src = &vui_dummy_zero_state;
+
+		vui_string* name = &dest->name;
+		vui_string_reset(name);
+		vui_string_puts(name, "NULL");
+	}
+	else
+	{
+		vui_string* name = &dest->name;
+		vui_string_reset(name);
+		vui_string_append(name, &src->name);
+	}
+
 	for (unsigned int i=0; i<VUI_MAXSTATE; i++)
 	{
 		vui_set_char_t(dest, i, vui_state_index(src, i));
@@ -160,11 +177,6 @@ void vui_state_cp(vui_state* dest, const vui_state* src)
 
 	dest->data = src->data;
 	dest->push = src->push;
-
-	vui_string* name = &dest->name;
-	vui_string_reset(name);
-	vui_string_puts(name, "dup ");
-	vui_string_append(name, &src->name);
 }
 
 void vui_state_fill(vui_state* dest, vui_transition t)
@@ -252,10 +264,6 @@ vui_transition vui_transition_run_str_s(vui_state* st, vui_string* str)
 	vui_string_dup_at(&data->str, str);
 	vui_string_shrink(&data->str);
 
-#if defined(VUI_DEBUG) && defined(VUI_DEBUG_STATEMACHINE)
-	vui_debugf("vui_transition_run_str_s(\"%s\" (%p), \"%s\")\n", vui_state_name(st), st, vui_string_get(&data->str));
-#endif
-
 	return vui_transition_new2(vui_tfunc_run_s_s, data);
 }
 
@@ -340,7 +348,7 @@ void vui_set_char_t_u(vui_state* state, unsigned int c, vui_transition next)
 
 void vui_set_range_t(vui_state* state, unsigned char c1, unsigned char c2, vui_transition next)
 {
-	for (unsigned char c = c1; c != c2+1; c++)
+	for (unsigned int c = c1; c != c2+1; c++)
 	{
 		vui_set_char_t(state, c, next);
 	}
@@ -584,6 +592,7 @@ vui_state* vui_next_t(vui_state* currstate, unsigned int c, vui_transition t, in
 
 	if (act == VUI_ACT_MAP)
 	{
+		/*
 		if (t.next != NULL)
 		{
 			return t.next;
@@ -593,6 +602,8 @@ vui_state* vui_next_t(vui_state* currstate, unsigned int c, vui_transition t, in
 			// BROKEN: t isn't a pointer
 			return t.next = vui_state_new_s(NULL);
 		}
+		*/
+		return t.next;
 	}
 	else if (t.func != NULL && (act || t.next == NULL))
 	{

@@ -396,17 +396,40 @@ int main(int argc, char** argv)
 	// done initialization; run garbage collector
 	vui_gc_run();
 
-	/*
+#if 0
 	vui_stack* gv_roots = vui_stack_new();
 	//vui_state_stack_push(gv_roots, vui_normal_mode);
 	//vui_state_stack_push(gv_roots, cmd_tr_start);
+	vui_state_stack_push(gv_roots, vui_frag_release(vui_frag_catv(4,
+					vui_frag_union(vui_frag_new_regexp("a[a-c\\]-_]df"),
+					vui_frag_new_string("asdg")),
+					vui_frag_union(vui_frag_new_string("asef"),
+					vui_frag_new_string("aseg")),
+					vui_frag_new_any(),
+					vui_frag_union(vui_frag_new_string("atef"),
+					vui_frag_new_string("ateg"))
+					), NULL));
 
 	FILE* f = fopen("vui.dot", "w");
 	vui_gv_write(f, gv_roots);
 	fclose(f);
 
+	vui_debugf("Quitting!\n");
+
+	endwin();
+	printf("Quitting!\n");
+
 	exit(0);
-	*/
+#endif
+
+#if 0
+	const char* init_input = ":map a :map<sp>b<sp>:map<lt>sp>c<lt>sp>:q<lt>lt>cr><lt>cr><cr>\n";
+
+	for (const char* p = init_input; *p; p++)
+	{
+		vui_input(*p);
+	}
+#endif
 
 	vui_debugf("live GC objects: %ld\n", vui_gc_nlive);
 

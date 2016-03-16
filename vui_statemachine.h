@@ -14,13 +14,14 @@ extern "C"
 #define VUI_STATE_BITS 8
 #define VUI_MAXSTATE (1 << VUI_STATE_BITS)
 
-typedef struct vui_state vui_state;
 
 #define VUI_ACT_GC     -2
 #define VUI_ACT_MAP    -1
 #define VUI_ACT_TEST    0
 #define VUI_ACT_RUN     1
 #define VUI_ACT_EMUL    2
+
+typedef struct vui_state vui_state;
 
 /*
  * \param currstate previous state
@@ -86,8 +87,13 @@ static inline char* vui_state_name(vui_state* st)
 }
 
 
-#define vui_state_index(st, c) (st->next[(unsigned char) c])
+#define vui_state_index(st, c) (st->next[(unsigned char)c])
 
+
+static inline vui_transition vui_transition_new0(void)
+{
+	return (vui_transition){.next = NULL, .func = NULL, .data = NULL};
+}
 
 static inline vui_transition vui_transition_new1(vui_state* next)
 {

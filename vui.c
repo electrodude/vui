@@ -745,7 +745,6 @@ static vui_state* vui_tfunc_cmd_backspace(vui_state* currstate, unsigned int c, 
 	{
 		hist_last_entry_edit(cmdline);
 
-		//vui_cmd_base[cmd_len] = ' ';
 		cmd_crsrx--;
 		memmove(&vui_cmd_base[cmd_crsrx], &vui_cmd_base[cmd_crsrx+1], cmd_len - cmd_crsrx);
 		vui_cmd_base[cmd_len] = ' ';
@@ -1131,6 +1130,7 @@ vui_cmdline* vui_cmdline_new(char* cmd, char* name, char* label, vui_translator*
 	vui_set_char_t_u(cmdline_state, VUI_KEY_DELETE, transition_cmd_delete);
 	vui_set_char_t_u(cmdline_state, VUI_KEY_HOME, transition_cmd_home);
 	vui_set_char_t_u(cmdline_state, VUI_KEY_END, transition_cmd_end);
+	vui_set_char_t_u(cmdline_state, 'E' + VUI_KEY_MODIFIER_CONTROL, transition_cmd_end);
 
 	vui_set_char_t_u(cmdline_state, 'R' + VUI_KEY_MODIFIER_CONTROL, vui_transition_new3(paste_state, vui_tfunc_cmd_prepaste, cmdline));
 

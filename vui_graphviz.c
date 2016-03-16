@@ -22,9 +22,13 @@ void vui_gv_putc(FILE* f, int c)
 		{
 			fprintf(f, "'\\''");
 		}
+		else if (c == '"')
+		{
+			fprintf(f, "\\\"");
+		}
 		else if (c == '\\')
 		{
-			fprintf(f, "\\\\\\\\");
+			fprintf(f, "'\\\\'");
 		}
 		else
 		{
@@ -66,7 +70,7 @@ void vui_gv_puts(FILE* f, char* s)
 			}
 			else if (c == '\\')
 			{
-				fprintf(f, "\\\\\\\\");
+				fprintf(f, "\\\\");
 			}
 			else
 			{

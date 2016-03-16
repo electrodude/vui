@@ -95,6 +95,15 @@ void vui_string_append_printf(vui_string* str, const char* fmt, ...);
 // Append a vui_string
 void vui_string_append(vui_string* str, const vui_string* str2);
 
+// Append a vui_string, escaping things as necessary
+void vui_string_append_quote(vui_string* str, const vui_string* str2);
+
+// Append the data starting at start and ending at the byte before end
+static inline void vui_string_append_stretch(vui_string* str, const char* start, const char* end)
+{
+	vui_string_putn(str, end - start, start);
+}
+
 // Append a codepoint to be encoded as UTF-8
 void vui_string_put(vui_string* str, unsigned int c);
 

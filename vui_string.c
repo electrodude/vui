@@ -211,6 +211,54 @@ void vui_string_append(vui_string* str, const vui_string* str2)
 	str->n = n;
 }
 
+void vui_string_append_quote(vui_string* str, const vui_string* str2)
+{
+	if (str == NULL) return;
+
+	if (str2 == NULL) return;
+
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_STRING)
+	vui_debugf("append_quote(\"%s\", \"%s\")\n", vui_string_get(str), vui_string_get(str));
+#endif
+
+	for (size_t i = 0; i < str2->n; i++)
+	{
+		char c = str2->s[i];
+
+		switch (c)
+		{
+			case '\n':
+				vui_string_puts(str, "\\\n");
+				break;
+			case '\r':
+				vui_string_puts(str, "\\\r");
+				break;
+			case '\t':
+				vui_string_puts(str, "\\\t");
+				break;
+			case '\0':
+				vui_string_puts(str, "\\\0");
+				break;
+			case '\\':
+				vui_string_puts(str, "\\\\\\\\");
+				break;
+			case '"':
+				vui_string_puts(str, "\\\"");
+				break;
+			default:
+				if (c >= 32 && c < 127)
+				{
+					vui_string_putc(str, c);
+				}
+				else
+				{
+					vui_string_append_printf(str, "\\x%2x", c);
+				}
+				break;
+		}
+	}
+}
+
 void vui_string_put(vui_string* str, unsigned int c)
 {
 	if (str == NULL) return;
