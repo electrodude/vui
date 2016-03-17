@@ -49,7 +49,7 @@ void vui_debugf(const char* format, ...)
 	va_list argp;
 	va_start(argp, format);
 
-	size_t len = COLS;
+	size_t len = COLS > 256 ? COLS : 256;
 
 	char line[len];
 
@@ -310,11 +310,11 @@ int main(int argc, char** argv)
 
 	setvbuf(dbgf, NULL, _IOLBF, BUFSIZ);
 
-	vui_debugf("start\n");
-
 	initscr();
 	cbreak();
 	noecho();
+
+	vui_debugf("start\n");
 
 	endwin();
 
