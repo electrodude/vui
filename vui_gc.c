@@ -8,6 +8,10 @@ static int vui_gc_gen;
 
 size_t vui_gc_nlive = 0;
 
+
+#define VUI_GC_FOREACH(curr) for (vui_gc_header** curr = &vui_gc_first; *curr != NULL; curr = &(*curr)->gc_next)
+
+
 void vui_gc_register_header(vui_gc_header* obj, vui_gc_dtor dtor)
 {
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_GC)
@@ -37,11 +41,9 @@ void vui_gc_run(void)
 	vui_gc_gen++;
 
 	// mark
-	vui_gc_header** curr = &vui_gc_first;
-
 	size_t n = 0;
 
-	while (*curr != NULL)
+	VUI_GC_FOREACH(curr)
 	{
 		vui_gc_header* gc = *curr;
 
@@ -57,8 +59,6 @@ void vui_gc_run(void)
 			vui_gc_mark_header(gc);
 		}
 
-		curr = &(*curr)->gc_next;
-
 		n++;
 	}
 
@@ -67,9 +67,9 @@ void vui_gc_run(void)
 #endif
 
 	// sweep
-	n = 0;
+	vui_gc_header** curr = &vui_gc_first;
 
-	curr = &vui_gc_first;
+	n = 0;
 
 	while (*curr != NULL)
 	{
@@ -104,6 +104,22 @@ void vui_gc_run(void)
 
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_GC)
 	vui_debugf("vui_gc: sweep: checked %d objects\n", n);
+#endif
+
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_GC)
+	// describe
+	n = 0;
+
+	VUI_GC_FOREACH(curr)
+	{
+		vui_gc_header* gc = *curr;
+
+		gc->dtor(gc, VUI_GC_DTOR_DESCRIBE);
+
+		n++;
+	}
+
+	vui_debugf("vui_gc: describe: %d objects still exist\n", n);
 #endif
 
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_GC)

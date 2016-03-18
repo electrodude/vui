@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "vui_debug.h"
+
 #include "vui_utf8.h"
 #include "vui.h"
 
@@ -145,7 +147,7 @@ vui_frag* vui_frag_accept_escaped(vui_translator* tr)
 
 	escaper->gv_norank = 1;
 
-	vui_stack* exits = vui_stack_new();
+	vui_stack* exits = vui_state_stack_new();
 
 	vui_state* exit = vui_state_new();
 
@@ -153,7 +155,7 @@ vui_frag* vui_frag_accept_escaped(vui_translator* tr)
 	vui_set_char_t(escaper, ' ', leave);
 	vui_set_char_t(escaper, 0, leave);
 
-	vui_stack_push(exits, exit);
+	vui_state_stack_push(exits, exit);
 
 	vui_stack* lt_abort_funcs = vui_stack_new_v(2,
 		vui_transition_multi_stage(vui_transition_translator_putc(tr, NULL)),

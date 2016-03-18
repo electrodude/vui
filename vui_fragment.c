@@ -24,7 +24,7 @@ void vui_frag_kill(vui_frag* frag)
 {
 	vui_gc_decr(frag->entry);
 
-	vui_stack_kill(frag->exits);
+	vui_state_stack_kill(frag->exits);
 
 	free(frag);
 }
@@ -70,9 +70,12 @@ vui_frag* vui_frag_dup(vui_frag* orig)
 
 vui_state* vui_frag_release(vui_frag* frag, vui_state* exit)
 {
-	for (size_t i = 0; i < frag->exits->n; i++)
+	if (exit != NULL)
 	{
-		vui_state_cp(frag->exits->s[i], exit);
+		for (size_t i = 0; i < frag->exits->n; i++)
+		{
+			vui_state_cp(frag->exits->s[i], exit);
+		}
 	}
 
 	vui_state* entry = frag->entry;
@@ -87,7 +90,7 @@ vui_state* vui_frag_release(vui_frag* frag, vui_state* exit)
 
 vui_frag* vui_frag_new_string_t(char* s, vui_transition t)
 {
-	vui_stack* exits = vui_stack_new();
+	vui_stack* exits = vui_state_stack_new();
 
 	vui_state* st_start = vui_state_new_s(NULL);
 
@@ -109,7 +112,7 @@ vui_frag* vui_frag_new_string_t(char* s, vui_transition t)
 		vui_string_putc(&st_curr->name, *s);
 	}
 
-	vui_stack_push(exits, st_curr);
+	vui_state_stack_push(exits, st_curr);
 
 	return vui_frag_new(st_start, exits);
 }
@@ -156,7 +159,7 @@ static int vui_getchar_escaped(char** s, int* escaped)
 
 vui_frag* vui_frag_new_regexp_t(char* s, vui_transition t)
 {
-	vui_stack* exits = vui_stack_new();
+	vui_stack* exits = vui_state_stack_new();
 
 	vui_state* st_start = vui_state_new_s(NULL);
 
@@ -225,14 +228,14 @@ vui_frag* vui_frag_new_regexp_t(char* s, vui_transition t)
 		vui_string_append_stretch(&st_curr->name, sb, s);
 	}
 
-	vui_stack_push(exits, st_curr);
+	vui_state_stack_push(exits, st_curr);
 
 	return vui_frag_new(st_start, exits);
 }
 
 vui_frag* vui_frag_new_any_t(vui_transition t)
 {
-	vui_stack* exits = vui_stack_new();
+	vui_stack* exits = vui_state_stack_new();
 
 	vui_state* st_start = vui_state_new_s(NULL);
 
@@ -249,7 +252,7 @@ vui_frag* vui_frag_new_any_t(vui_transition t)
 	vui_set_range_t(st_curr, 0, 255, t);
 	st_curr = st_next;
 
-	vui_stack_push(exits, st_curr);
+	vui_state_stack_push(exits, st_curr);
 
 	return vui_frag_new(st_start, exits);
 }

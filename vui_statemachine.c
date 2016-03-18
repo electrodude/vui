@@ -132,7 +132,7 @@ static void vui_state_gc_dtor(void* obj, vui_gc_dtor_mode mode)
 	}
 	else if (mode == VUI_GC_DTOR_DESCRIBE)
 	{
-#if defined(VUI_DEBUG) && defined(VUI_DEBUG_STATEMACHINE)
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_GC)
 		vui_debugf("vui_gc: \"%s\" (%p)\n", vui_state_name(st), st);
 #endif
 	}
@@ -629,23 +629,31 @@ vui_state* vui_tfunc_stack_pop(vui_state* currstate, unsigned int c, int act, vo
 	}
 }
 
-static void vui_state_stack_elem_dtor(vui_state* st)
+void vui_state_stack_elem_dtor(vui_state* st)
 {
 	vui_gc_decr(st);
 }
 
-vui_stack* vui_state_stack_new(void)
+vui_stack* vui_state_stack_convert(vui_stack* stk)
 {
-	vui_stack* stk = vui_stack_new();
+	for (size_t i = 0; i < stk->n; i++)
+	{
+		vui_gc_incr((vui_state*)stk->s[i]);
+	}
 
 	stk->dtor = (void(*)(void*))vui_state_stack_elem_dtor;
+
+	if (vui_stack_def_get(stk) != NULL)
+	{
+		vui_gc_incr((vui_state*)vui_stack_def_get(stk));
+	}
 
 	return stk;
 }
 
 void vui_state_stack_push(vui_stack* stk, vui_state* st)
 {
-	if (st != stk->def)
+	if (st != NULL)
 	{
 		vui_gc_incr(st);
 	}
@@ -664,10 +672,27 @@ vui_state* vui_state_stack_pop(vui_stack* stk)
 {
 	vui_state* st = vui_stack_pop(stk);
 
-	if (st != NULL && st != stk->def)
+	if (st != NULL)
 	{
 		vui_gc_decr(st);
 	}
 
 	return st;
+}
+
+void vui_state_stack_set_def(vui_stack* stk, vui_state* def)
+{
+	vui_state* def_old = vui_stack_def_get(stk);
+
+	if (def_old != NULL)
+	{
+		vui_gc_decr(def_old);
+	}
+
+	vui_stack_def_set(stk, def);
+
+	if (def != NULL)
+	{
+		vui_gc_incr(def);
+	}
 }

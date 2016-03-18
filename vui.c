@@ -262,7 +262,7 @@ void vui_init(int width)
 	}
 
 	vui_state_stack = vui_state_stack_new();
-	vui_state_stack->def = vui_normal_mode;
+	vui_state_stack_set_def(vui_state_stack, vui_normal_mode);
 
 	vui_normal_mode->push = vui_state_stack;
 
@@ -291,9 +291,13 @@ void vui_deinit(void)
 
 	vui_stack_reset(vui_state_stack);
 
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
+	vui_debugf("vui_normal_mode->root = %d\n", vui_normal_mode->gc.root);
+#endif
+
 	vui_gc_run();
 
-	vui_stack_kill(vui_state_stack);
+	vui_state_stack_kill(vui_state_stack);
 
 	free(vui_cmd);
 	free(vui_status);
@@ -511,6 +515,8 @@ void vui_register_init(void)
 {
 	vui_register_container = vui_state_new_s(NULL);
 	vui_register_recording = NULL;
+
+	vui_gc_incr(vui_register_container);
 
 	vui_register_select_mode = vui_state_new_t(vui_transition_new2(vui_tfunc_register_select, &vui_register_curr));
 	vui_string_reset(&vui_register_select_mode->name);

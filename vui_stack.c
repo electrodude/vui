@@ -75,6 +75,11 @@ void vui_stack_dtor(vui_stack* stk)
 
 	vui_stack_reset(stk);
 
+	if (stk->dtor != NULL && vui_stack_def_get(stk) != NULL)
+	{
+		stk->dtor(vui_stack_def_get(stk));
+	}
+
 	stk->n = stk->maxn = 0;
 
 	if (stk->s == NULL) return;

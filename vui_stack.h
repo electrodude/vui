@@ -54,6 +54,21 @@ void vui_stack_kill(vui_stack* stk);
 // Use this for non-dynamically-allocated vui_stacks
 void vui_stack_dtor(vui_stack* stk);
 
+static inline void vui_stack_def_set(vui_stack* stk, void* def)
+{
+	if (stk == NULL) return;
+
+	stk->def = def;
+}
+
+static inline void* vui_stack_def_get(vui_stack* stk)
+{
+	if (stk == NULL) return NULL;
+
+	return stk->def;
+}
+
+
 // Reset stack size to n
 // Does nothing if stack is already the same size or smaller
 // Calls dtor(elem) on each element as it is removed, from top to bottom
