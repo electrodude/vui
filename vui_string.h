@@ -95,7 +95,10 @@ void vui_string_append_printf(vui_string* str, const char* fmt, ...);
 // Append a vui_string
 void vui_string_append(vui_string* str, const vui_string* str2);
 
-// Append a vui_string, escaping things as necessary
+// Append a character, escaping it if necessary
+void vui_string_putq(vui_string* str, char c);
+
+// Append a vui_string, escaping characters as necessary
 void vui_string_append_quote(vui_string* str, const vui_string* str2);
 
 // Append the data starting at start and ending at the byte before end

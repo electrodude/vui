@@ -527,7 +527,13 @@ vui_string* vui_register_get(unsigned int c)
 	}
 
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
-	vui_debugf("register \"%c: %s\n", c, reg->s);
+	vui_string str;
+	vui_string_new_at(&str);
+	vui_string_append_quote(&str, reg);
+
+	vui_debugf("variable %s: %s\n", s, vui_string_get(&str));
+
+	vui_string_dtor(&str);
 #endif
 
 	return reg;
@@ -551,7 +557,13 @@ void vui_register_endrecord(void)
 		vui_string_get(vui_register_recording);	// append null terminator
 
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
-		vui_debugf("finished recording macro: %s\n", vui_register_recording->s);
+		vui_string str;
+		vui_string_new_at(&str);
+		vui_string_append_quote(&str, vui_register_recording);
+
+		vui_debugf("finished recording macro: %s\n", vui_string_get(&str));
+
+		vui_string_dtor(&str);
 #endif
 
 		vui_register_recording = NULL;

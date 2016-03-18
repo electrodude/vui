@@ -231,7 +231,13 @@ static vui_state* tfunc_paste(vui_state* currstate, unsigned int c, int act, voi
 		vui_debugf("count: %d\n", vui_count);
 	}
 
-	vui_debugf("paste \"%s\"\n", vui_string_get(vui_register_curr));
+	vui_string str;
+	vui_string_new_at(&str);
+	vui_string_append_quote(&str, vui_register_curr);
+
+	vui_debugf("paste \"%s\"\n", vui_string_get(&str));
+
+	vui_string_dtor(&str);
 
 	vui_reset();
 

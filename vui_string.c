@@ -211,6 +211,43 @@ void vui_string_append(vui_string* str, const vui_string* str2)
 	str->n = n;
 }
 
+void vui_string_putq(vui_string* str, char c)
+{
+	if (str == NULL) return;
+
+	switch (c)
+	{
+		case '\n':
+			vui_string_puts(str, "\\n");
+			break;
+		case '\r':
+			vui_string_puts(str, "\\r");
+			break;
+		case '\t':
+			vui_string_puts(str, "\\t");
+			break;
+		case '\0':
+			vui_string_puts(str, "\\0");
+			break;
+		case '\\':
+			vui_string_puts(str, "\\\\");
+			break;
+		case '"':
+			vui_string_puts(str, "\\\"");
+			break;
+		default:
+			if (c >= 32 && c < 127)
+			{
+				vui_string_putc(str, c);
+			}
+			else
+			{
+				vui_string_append_printf(str, "\\x%2x", (unsigned char)c);
+			}
+			break;
+	}
+}
+
 void vui_string_append_quote(vui_string* str, const vui_string* str2)
 {
 	if (str == NULL) return;
@@ -223,39 +260,7 @@ void vui_string_append_quote(vui_string* str, const vui_string* str2)
 
 	for (size_t i = 0; i < str2->n; i++)
 	{
-		char c = str2->s[i];
-
-		switch (c)
-		{
-			case '\n':
-				vui_string_puts(str, "\\\n");
-				break;
-			case '\r':
-				vui_string_puts(str, "\\\r");
-				break;
-			case '\t':
-				vui_string_puts(str, "\\\t");
-				break;
-			case '\0':
-				vui_string_puts(str, "\\\0");
-				break;
-			case '\\':
-				vui_string_puts(str, "\\\\\\\\");
-				break;
-			case '"':
-				vui_string_puts(str, "\\\"");
-				break;
-			default:
-				if (c >= 32 && c < 127)
-				{
-					vui_string_putc(str, c);
-				}
-				else
-				{
-					vui_string_append_printf(str, "\\x%2x", c);
-				}
-				break;
-		}
+		vui_string_putq(str, str2->s[i]);
 	}
 }
 
