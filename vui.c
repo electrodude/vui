@@ -97,6 +97,14 @@ static void hist_entry_set(hist_entry* entry, char* str, size_t len)
 	vui_string_get(&entry->line);
 }
 
+static void hist_entry_get(hist_entry* entry, char* str, size_t *len)
+{
+	size_t n = entry->line.n;
+	memcpy(str, entry->line.s, n);
+
+	*len = n;
+}
+
 static void hist_entry_shrink(hist_entry* entry)
 {
 	vui_string_shrink(&entry->line);
@@ -885,8 +893,8 @@ static vui_state* vui_tfunc_cmd_up(vui_state* currstate, unsigned int c, int act
 
 		cmdline->hist_curr_entry = cmdline->hist_curr_entry->prev;
 
-		memcpy(vui_cmd_base, cmdline->hist_curr_entry->line.s, cmdline->hist_curr_entry->line.n);
-		cmd_len = cmdline->hist_curr_entry->line.n;
+		hist_entry_get(cmdline->hist_curr_entry, vui_cmd_base, &cmd_len);
+
 		cmd_crsrx = cmd_len;
 		memset(&vui_cmd_base[cmd_crsrx], ' ', cols - cmd_base);
 	}
@@ -921,8 +929,8 @@ static vui_state* vui_tfunc_cmd_down(vui_state* currstate, unsigned int c, int a
 
 		cmdline->hist_curr_entry = cmdline->hist_curr_entry->next;
 
-		memcpy(vui_cmd_base, cmdline->hist_curr_entry->line.s, cmdline->hist_curr_entry->line.n);
-		cmd_len = cmdline->hist_curr_entry->line.n;
+		hist_entry_get(cmdline->hist_curr_entry, vui_cmd_base, &cmd_len);
+
 		cmd_crsrx = cmd_len;
 		memset(&vui_cmd_base[cmd_crsrx], ' ', cols - cmd_base);
 	}
