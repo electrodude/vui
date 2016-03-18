@@ -725,7 +725,7 @@ static vui_state* vui_tfunc_cmd_key(vui_state* currstate, unsigned int c, int ac
 	// if cursor is not at EOL, shift line right
 	if (vui_crsrx < cmd_base + cmd_len)
 	{
-		memmove(&vui_cmd_base[cmd_crsrx + 1], &vui_cmd_base[cmd_crsrx], cmd_len - 1);
+		memmove(&vui_cmd_base[cmd_crsrx + 1], &vui_cmd_base[cmd_crsrx], cmd_len - cmd_crsrx);
 	}
 	vui_cmd_base[cmd_crsrx++] = c;
 	cmd_len++;
