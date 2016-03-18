@@ -135,6 +135,10 @@ void vui_macro_init(unsigned int record, unsigned int execute);
 // registers
 void vui_register_init(void);
 
+vui_string* vui_variable_check(char* s);
+vui_string* vui_variable_get(char* s);
+
+vui_string* vui_register_check(unsigned int c);
 vui_string* vui_register_get(unsigned int c);
 
 void vui_register_record(unsigned int c);

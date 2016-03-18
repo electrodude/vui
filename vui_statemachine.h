@@ -15,8 +15,7 @@ extern "C"
 #define VUI_MAXSTATE (1 << VUI_STATE_BITS)
 
 
-#define VUI_ACT_GC     -2
-#define VUI_ACT_MAP    -1
+#define VUI_ACT_GC     -1
 #define VUI_ACT_TEST    0
 #define VUI_ACT_RUN     1
 #define VUI_ACT_EMUL    2
@@ -158,16 +157,10 @@ static inline void vui_set_range_s_u(vui_state* state, unsigned int c1, unsigned
 	vui_set_range_t_u(state, c1, c2, vui_transition_new1(next));
 }
 
-void vui_set_string_t_nocall(vui_state* state, char* s, vui_transition next);
-static inline void vui_set_string_s_nocall(vui_state* state, char* s, vui_state* next)
+void vui_set_string_t_preserve(vui_state* state, char* s, vui_transition next);
+static inline void vui_set_string_s_preserve(vui_state* state, char* s, vui_state* next)
 {
-	vui_set_string_t_nocall(state, s, vui_transition_new1(next));
-}
-
-void vui_set_string_t(vui_state* state, char* s, vui_transition next);
-static inline void vui_set_string_s(vui_state* state, char* s, vui_state* next)
-{
-	vui_set_string_t(state, s, vui_transition_new1(next));
+	vui_set_string_t_preserve(state, s, vui_transition_new1(next));
 }
 
 void vui_set_buf_t(vui_state* state, char* s, size_t len, vui_transition next);
@@ -177,6 +170,13 @@ static inline void vui_set_buf_s(vui_state* state, char* s, size_t len, vui_stat
 }
 
 void vui_set_string_t_mid(vui_state* state, char* s, vui_transition mid, vui_transition next);
+
+//void vui_set_string_t(vui_state* state, char* s, vui_transition next);
+#define vui_set_string_t(state, s, next) vui_set_string_t_mid(state, s, vui_transition_new0(), next)
+static inline void vui_set_string_s(vui_state* state, char* s, vui_state* next)
+{
+	vui_set_string_t(state, s, vui_transition_new1(next));
+}
 
 
 
@@ -207,6 +207,17 @@ static inline vui_state* vui_run_str(vui_state* st, vui_string* str, int act)
 	return vui_run_buf(st, (unsigned char*)str->s, str->n, act);
 }
 
+vui_state* vui_lookup_s(vui_state* st, char* s);
+
+vui_state* vui_lookup_buf(vui_state* st, unsigned char* buf, size_t len);
+
+static inline vui_state* vui_lookup_str(vui_state* st, vui_string* str)
+{
+	return vui_lookup_buf(st, (unsigned char*)str->s, str->n);
+}
+
+
+// state stack
 vui_state* vui_tfunc_stack_push(vui_state* currstate, unsigned int c, int act, void* data);
 static inline vui_transition vui_transition_stack_push(vui_stack* stk, vui_state* next)
 {
@@ -223,6 +234,7 @@ vui_stack* vui_state_stack_new(void);
 void vui_state_stack_push(vui_stack* stk, vui_state* st);
 void vui_state_stack_push_nodup(vui_stack* stk, vui_state* st);
 vui_state* vui_state_stack_pop(vui_stack* stk);
+#define vui_state_stack_peek(stk) vui_stack_peek(stk)
 
 #ifdef __cplusplus
 }

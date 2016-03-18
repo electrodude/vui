@@ -511,19 +511,22 @@ void vui_register_init(void)
 	vui_set_char_t(vui_normal_mode, '"', vui_transition_new_showcmd_put(vui_register_select_mode));
 }
 
-vui_string* vui_register_get(unsigned int c)
+vui_string* vui_variable_check(char* s)
 {
-	vui_state* st = vui_next_u(vui_register_container, c, VUI_ACT_MAP);
-	vui_string* reg = (vui_string*)st->data;
+	return vui_lookup_s(vui_register_container, s)->data;
+}
+
+vui_string* vui_variable_get(char* s)
+{
+	vui_state* st = vui_lookup_s(vui_register_container, s);
+
+	vui_string* reg = st->data;
 
 	if (reg == NULL)
 	{
 		reg = vui_string_new();
 
-		vui_state* st_new = vui_state_new_s(NULL);
-		st_new->data = reg;
-
-		vui_set_char_s_u(vui_register_container, c, st_new);
+		st->data = reg;
 	}
 
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
@@ -537,6 +540,26 @@ vui_string* vui_register_get(unsigned int c)
 #endif
 
 	return reg;
+}
+
+vui_string* vui_register_check(unsigned int c)
+{
+	char s[16];
+	s[0] = '@';
+
+	vui_utf8_encode(c, &s[1]);
+
+	return vui_variable_check(s);
+}
+
+vui_string* vui_register_get(unsigned int c)
+{
+	char s[16];
+	s[0] = '@';
+
+	vui_utf8_encode(c, &s[1]);
+
+	return vui_variable_get(s);
 }
 
 void vui_register_record(unsigned int c)
@@ -574,23 +597,27 @@ void vui_register_endrecord(void)
 
 vui_state* vui_register_execute(vui_state* currstate, unsigned int c, int act)
 {
-	vui_state* st = vui_next_u(vui_register_container, c, VUI_ACT_MAP);
-	void* data = st->data;
+	char s[16];
+	s[0] = '@';
 
-	if (data == NULL)
+	vui_utf8_encode(c, &s[1]);
+
+	vui_state* st = vui_lookup_s(vui_register_container, s);
+	vui_string* reg = st->data;
+
+	if (reg == NULL)
 	{
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
-		vui_debugf("stopped recursive macro %c\n", c);
+		vui_debugf("nonexistent macro %c\n", c);
 #endif
+		return currstate;
 	}
-
-	vui_string* reg = vui_register_get(c);
 
 	st->data = NULL;
 
-	vui_state* nextstate = vui_run_s(currstate, reg->s, act);
+	vui_state* nextstate = vui_run_str(currstate, reg, act);
 
-	st->data = data;
+	st->data = reg;
 
 	return nextstate;
 }
@@ -669,7 +696,7 @@ vui_state* vui_mode_new(char* cmd, char* name, char* label, int mode, vui_transi
 		vui_set_char_t(state, i, func_in);
 	}
 
-	vui_set_string_t_nocall(vui_normal_mode, cmd, func_enter);
+	vui_set_string_t(vui_normal_mode, cmd, func_enter);
 	vui_set_char_t_u(state, VUI_KEY_ESCAPE, func_exit);
 
 	state->push = vui_state_stack;
@@ -1103,7 +1130,7 @@ vui_cmdline* vui_cmdline_new(char* cmd, char* name, char* label, vui_translator*
 
 	vui_transition transition_normal_to_cmd = vui_transition_new3(cmdline_state, vui_tfunc_normal_to_cmd, cmdline);
 
-	vui_set_string_t_nocall(vui_normal_mode, cmd, transition_normal_to_cmd);
+	vui_set_string_t(vui_normal_mode, cmd, transition_normal_to_cmd);
 
 	vui_transition transition_cmd_key = vui_transition_new3(cmdline_state, vui_tfunc_cmd_key, cmdline);
 	vui_transition transition_cmd_escape = vui_transition_new3(NULL, vui_tfunc_cmd_escape, cmdline);
@@ -1197,7 +1224,20 @@ void vui_input(unsigned int c)
 		vui_string_put(vui_register_recording, c);
 	}
 
-	vui_run_c_p_u(&vui_curr_state, c, VUI_ACT_RUN);
+	vui_state* new_state = vui_next_u(vui_curr_state, c, VUI_ACT_RUN);
+
+	if (new_state != NULL)
+	{
+		vui_curr_state = new_state;
+	}
+
+	if (vui_curr_state->push != NULL)
+	{
+		vui_state_stack_push_nodup(vui_curr_state->push, vui_curr_state);
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_STATEMACHINE)
+		vui_debugf("push %d\n", vui_curr_state->push->n);
+#endif
+	}
 }
 
 void vui_reset(void)

@@ -342,7 +342,7 @@ void vui_set_char_t_u(vui_state* state, unsigned int c, vui_transition next)
 	{
 		char s[16];
 		vui_utf8_encode(c, s);
-		vui_set_string_t_nocall(state, s, next);
+		vui_set_string_t(state, s, next);
 	}
 }
 
@@ -362,193 +362,98 @@ void vui_set_range_t_u(vui_state* state, unsigned int c1, unsigned int c2, vui_t
 	}
 }
 
-void vui_set_string_t_nocall(vui_state* state, char* s, vui_transition next)
-{
-	vui_transition t = vui_state_index(state, *s);
-
-	if (t.next == NULL)
-	{
-#if defined(VUI_DEBUG)
-		vui_debugf("vui_set_string_t_nocall(%p, \"%s\", {.next = %p, .func = %p, .data = %p}): bad transition!\n", state, s, next.next, next.func, next.data);
-#endif
-	}
-	else
-	{
-		if (s[1])
-		{
-			vui_transition t = vui_state_index(state, *s);
-			vui_state* state2 = t.next;
-
-			if (state2 == NULL) return;
-
-			vui_state* nextst = vui_state_dup(state2);
-
-			nextst->push = NULL;
-
-			vui_set_char_t(state, *s, vui_transition_new1(nextst));
-
-			vui_string* name = &nextst->name;
-			vui_string_reset(name);
-			vui_string_puts(name, "string ");
-			if (s[1] < 128)
-			{
-				vui_string_putc(name, s[1]);
-			}
-			else
-			{
-				vui_string_puts(name, "??");
-			}
-
-			vui_set_string_t_nocall(nextst, s+1, next);
-		}
-		else
-		{
-			vui_set_char_t(state, *s, next);
-		}
-	}
-}
-
 void vui_set_buf_t(vui_state* state, char* s, size_t len, vui_transition next)
 {
-	vui_transition t = vui_state_index(state, *s);
-
-	if (t.next == NULL)
+	while (len > 1)
 	{
-#if defined(VUI_DEBUG)
-		vui_debugf("vui_set_buf_t(%p, 0x%p, %d, {.next = %p, .func = %p, .data = %p}): bad transition!\n", state, s, len, next.next, next.func, next.data);
-#endif
+		vui_transition t = vui_state_index(state, *s);
+		vui_state* state2 = t.next;
+
+		if (state2 == NULL) state2 = state;
+
+		vui_state* nextst = vui_state_dup(state2);
+
+		nextst->push = NULL;
+
+
+
+		t.next = nextst;
+
+		vui_set_char_t(state, *s, t);
+
+		vui_string* name = &nextst->name;
+		vui_string_reset(name);
+		vui_string_puts(name, "string ");
+		vui_string_putq(name, s[1]);
+
+		s++;
+		len--;
+		state = nextst;
 	}
-	else
-	{
-		if (len > 1)
-		{
-			vui_transition t = vui_state_index(state, *s);
-			vui_state* state2 = t.next;
 
-			if (state2 == NULL) return;
-
-			vui_state* nextst = vui_state_dup(state2);
-
-			nextst->push = NULL;
-
-			t.next = nextst;
-
-			vui_set_char_t(state, *s, t);
-
-			vui_string* name = &nextst->name;
-			vui_string_reset(name);
-			if (s[1] >= 32 && s[1] < 128)
-			{
-				vui_string_putc(name, s[1]);
-			}
-			else
-			{
-				vui_string_append_printf(name, "0x%02x", s[1]);
-			}
-			
-			vui_set_buf_t(nextst, s+1, len-1, next);
-		}
-		else
-		{
-			vui_set_char_t(state, *s, next);
-		}
-	}
+	vui_set_char_t(state, *s, next);
 }
 
-void vui_set_string_t(vui_state* state, char* s, vui_transition next)
+void vui_set_string_t_preserve(vui_state* state, char* s, vui_transition next)
 {
-	vui_transition t = vui_state_index(state, *s);
-
-	if (t.next == NULL)
+	while (s[1])
 	{
-#if defined(VUI_DEBUG)
-		vui_debugf("vui_set_string_t(%p, \"%s\", {.next = %p, .func = %p, .data = %p}): bad transition!\n", state, s, next.next, next.func, next.data);
-#endif
+		vui_transition t = vui_state_index(state, *s);
+		vui_state* state2 = t.next;
+
+		if (state2 == NULL) state2 = state;
+
+		vui_state* nextst = vui_state_dup(state2);
+
+		nextst->push = NULL;
+
+
+
+		t.next = nextst;
+
+		vui_set_char_t(state, *s, t);
+
+		vui_string* name = &nextst->name;
+		vui_string_reset(name);
+		vui_string_puts(name, "string ");
+		vui_string_putq(name, s[1]);
+
+		s++;
+		state = nextst;
 	}
-	else
-	{
-		if (s[1])
-		{
-			vui_transition t = vui_state_index(state, *s);
-			vui_state* state2 = t.next;
 
-			if (state2 == NULL) return;
-
-			vui_state* nextst = vui_state_dup(state2);
-
-			nextst->push = NULL;
-
-			t.next = nextst;
-
-			vui_set_char_t(state, *s, t);
-
-			vui_string* name = &nextst->name;
-			vui_string_reset(name);
-			if (s[1] < 128)
-			{
-				vui_string_putc(name, s[1]);
-			}
-			else
-			{
-				vui_string_puts(name, "??");
-			}
-			
-			vui_set_string_t(nextst, s+1, next);
-		}
-		else
-		{
-			vui_set_char_t(state, *s, next);
-		}
-	}
+	vui_set_char_t(state, *s, next);
 }
 
 void vui_set_string_t_mid(vui_state* state, char* s, vui_transition mid, vui_transition next)
 {
-	vui_transition t = vui_state_index(state, *s);
-
-	if (t.next == NULL)
+	while (s[1])
 	{
-#if defined(VUI_DEBUG)
-		vui_debugf("vui_set_string_t_mid(%p, \"%s\", {.next = %p, .func = %p, .data = %p}): bad transition!\n", state, s, next.next, next.func, next.data);
-#endif
+		vui_transition t = vui_state_index(state, *s);
+		vui_state* state2 = t.next;
+
+		if (state2 == NULL) state2 = state;
+
+		vui_state* nextst = vui_state_dup(state2);
+
+		nextst->push = NULL;
+
+		t = mid;
+
+		t.next = nextst;
+
+		vui_set_char_t(state, *s, t);
+
+		vui_string* name = &nextst->name;
+		vui_string_reset(name);
+		vui_string_puts(name, "string ");
+		vui_string_putq(name, s[1]);
+
+		s++;
+		state = nextst;
 	}
-	else
-	{
-		if (s[1])
-		{
-			vui_transition t = vui_state_index(state, *s);
-			vui_state* state2 = t.next;
 
-			if (state2 == NULL) return;
-
-			vui_state* nextst = vui_state_dup(state2);
-
-			nextst->push = NULL;
-
-			t = mid;
-
-			t.next = nextst;
-
-			vui_set_char_t(state, *s, t);
-
-			vui_string* name = &nextst->name;
-			vui_string_reset(name);
-			if (s[1] < 128)
-			{
-				vui_string_putc(name, s[1]);
-			}
-			else
-			{
-				vui_string_puts(name, "??");
-			}
-
-			vui_set_string_t_mid(nextst, s+1, mid, next);
-		}
-		else
-		{
-			vui_set_char_t(state, *s, next);
-		}
-	}
+	vui_set_char_t(state, *s, next);
 }
 
 vui_state* vui_next_u(vui_state* currstate, unsigned int c, int act)
@@ -590,43 +495,14 @@ vui_state* vui_next_t(vui_state* currstate, unsigned int c, vui_transition t, in
 	vui_state* nextstate = NULL;
 
 
-	if (act == VUI_ACT_MAP)
-	{
-		/*
-		if (t.next != NULL)
-		{
-			return t.next;
-		}
-		else
-		{
-			// BROKEN: t isn't a pointer
-			return t.next = vui_state_new_s(NULL);
-		}
-		*/
-		return t.next;
-	}
-	else if (t.func != NULL && (act || t.next == NULL))
+	if (t.func != NULL && (act > 0 || t.next == NULL))
 	{
 		vui_state* retnext = t.func(currstate, c, act, t.data);
-		nextstate =  t.next  != NULL ? t.next  :
-		             retnext != NULL ? retnext :
-		             currstate;
+		nextstate =  t.next != NULL ? t.next : retnext;
 	}
 	else
 	{
-		nextstate = t.next  != NULL ? t.next  :
-		            currstate;
-	}
-
-	if (nextstate != NULL && act > 0)
-	{
-		if (nextstate->push != NULL)
-		{
-			vui_state_stack_push_nodup(nextstate->push, nextstate);
-#if defined(VUI_DEBUG) && defined(VUI_DEBUG_STATEMACHINE)
-			vui_debugf("push %d\n", nextstate->push->n);
-#endif
-		}
+		nextstate = t.next;
 	}
 
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_STATEMACHINE)
@@ -657,7 +533,7 @@ vui_state* vui_run_s_p(vui_state** sp, char* s, int act)
 
 vui_state* vui_run_s(vui_state* st, char* s, int act)
 {
-	for (;*s;s++)
+	for (;*s && st != NULL;s++)
 	{
 		st = vui_next(st, (unsigned char)*s, act);
 	}
@@ -675,6 +551,51 @@ vui_state* vui_run_buf(vui_state* st, unsigned char* buf, size_t len, int act)
 	for (size_t i = 0; i < len; i++)
 	{
 		st = vui_next(st, buf[i], act);
+	}
+
+	return st;
+}
+
+
+vui_state* vui_lookup_s(vui_state* st, char* s)
+{
+	for (;*s;s++)
+	{
+		vui_state* nextst = vui_next(st, (unsigned char)*s, VUI_ACT_RUN);
+
+		if (nextst == NULL)
+		{
+			nextst = vui_state_new_s(NULL);
+			vui_string_reset(&st->name);
+			vui_string_puts(&st->name, "lookup ");
+			vui_string_puts(&st->name, s);
+
+			vui_set_char_s(st, (unsigned char)*s, nextst);
+		}
+
+		st = nextst;
+	}
+
+	return st;
+}
+
+vui_state* vui_lookup_buf(vui_state* st, unsigned char* buf, size_t len)
+{
+	for (size_t i = 0; i < len; i++)
+	{
+		vui_state* nextst = vui_next(st, buf[i], VUI_ACT_RUN);
+
+		if (nextst == NULL)
+		{
+			nextst = vui_state_new_s(NULL);
+			vui_string_reset(&st->name);
+			vui_string_puts(&st->name, "lookup ");
+			vui_string_putq(&st->name, buf[i]);
+
+			vui_set_char_s(st, buf[i], nextst);
+		}
+
+		st = nextst;
 	}
 
 	return st;
