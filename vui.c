@@ -577,7 +577,15 @@ void vui_register_record(unsigned int c)
 
 	vui_register_recording = reg;
 
-	vui_status_set("recording");
+	vui_string str;
+	vui_string_new_at(&str);
+
+	vui_string_puts(&str, "recording @");
+	vui_string_put(&str, c);
+
+	vui_status_set(vui_string_get(&str));
+
+	vui_string_dtor(&str);
 }
 
 void vui_register_endrecord(void)
