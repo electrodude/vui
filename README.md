@@ -4,7 +4,7 @@ User interface library that provides a Vi-like status bar and command line and i
 
 Currently under heavy construction, meaning the API is very likely to change, but it is currently generally usable.  
 
-The library itself uses no external dependencies (although the demo does).
+The library itself has no external dependencies, although the demo depends on ncurses.
 
 ## Features
 
@@ -32,11 +32,15 @@ The library itself uses no external dependencies (although the demo does).
 * DFA-based parser for cmdline and other things
   * currently used by `vuitest` to unescape arguments to `:map`
   * I've only tried it with regular languages so far, but I think it will eventually be able to parse any deterministic context-free language
+  * will support at least the following types: `vui_string`, `vui_state`, `vui_stack` of `vui_state`s, `vui_frag`.
+  * `vui_fragf`: varargs function like `sprintf`, but makes a state machine fragment instead of a string
 * saving and loading state machines to disk
 
 
 ## Demo
-vui comes with a ncurses-based demo in `vuitest.c`.  Clone or download the repository, `cd` into it, and run `make vuitest && ./vuitest`. As you push keys, text will appear in window.  The same text is appended to a file `log`, if you want to scroll back.  
+vui comes with a ncurses-based demo in `vuitest.c`.  Clone or download the repository, `cd` into it, and run `make vuitest && ./vuitest`. As you push keys, text will appear in an ncurses window on the left half of the screen.  The same text is appended to a file `log`.  
+
+Hopefully, `vuitest` will one day become a full-fledged state machine editor with a `vi`-like interface.
 
 `:q<Enter>`, `Q`, and `ZZ` all quit.  `:` and `/` enter Vi-like command and search modes.  Search mode does nothing (other than make a log entry), but command mode has some commands:
 * `:q`: quit
