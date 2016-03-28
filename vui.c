@@ -8,6 +8,9 @@
 #include "vui_utf8.h"
 #include "vui_gc.h"
 
+#include "vui_fragment.h"
+#include "vui_combinator.h"
+
 #include "vui.h"
 
 // extern globals
@@ -1047,7 +1050,7 @@ static vui_state* vui_tfunc_cmd_enter(vui_state* currstate, unsigned int c, int 
 
 	hist_entry_set(cmdline->hist_curr_entry, vui_cmd_base, cmd_len);
 
-	cmdline->on_submit(vui_translator_run_str(cmdline->tr, &cmdline->hist_curr_entry->line));
+	cmdline->on_submit(vui_tr_run_str(cmdline->tr, &cmdline->hist_curr_entry->line));
 
 
 	hist_entry_shrink(cmdline->hist_curr_entry);
@@ -1123,7 +1126,7 @@ static vui_state* vui_tfunc_cmd_paste_cancel(vui_state* currstate, unsigned int 
 	return vui_return(act);
 }
 
-vui_cmdline* vui_cmdline_new(char* cmd, char* name, char* label, vui_translator* tr, vui_cmdline_submit_callback on_submit)
+vui_cmdline* vui_cmdline_new(char* cmd, char* name, char* label, vui_tr* tr, vui_cmdline_submit_callback on_submit)
 {
 	vui_cmdline* cmdline = malloc(sizeof(vui_cmdline));
 	cmdline->on_submit = on_submit;
@@ -1139,7 +1142,7 @@ vui_cmdline* vui_cmdline_new(char* cmd, char* name, char* label, vui_translator*
 	}
 	else
 	{
-		cmdline->tr = vui_translator_new_identity();
+		cmdline->tr = vui_tr_new_identity();
 	}
 
 	vui_state* cmdline_state = vui_state_new();
@@ -1212,7 +1215,7 @@ void vui_cmdline_kill(vui_cmdline* cmdline)
 {
 	vui_gc_decr(cmdline->cmdline_state);
 	vui_string_dtor(&cmdline->label);
-	vui_translator_kill(cmdline->tr);
+	vui_tr_kill(cmdline->tr);
 	free(cmdline);
 }
 

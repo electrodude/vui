@@ -236,6 +236,7 @@ void vui_state_stack_elem_dtor(vui_state* st);
 vui_stack* vui_state_stack_convert(vui_stack* stk);
 #define vui_state_stack_new_at(stk) vui_state_stack_convert(vui_stack_new_at(stk))
 #define vui_state_stack_new() vui_state_stack_convert(vui_stack_new())
+#define vui_state_stack_new_v(n, ...) vui_state_stack_convert(vui_stack_new_v(n, __VA_ARGS__))
 #define vui_state_stack_kill(stk) vui_stack_kill(stk)
 void vui_state_stack_push(vui_stack* stk, vui_state* st);
 void vui_state_stack_push_nodup(vui_stack* stk, vui_state* st);

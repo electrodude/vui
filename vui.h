@@ -41,7 +41,7 @@ typedef struct vui_cmdline
 	vui_state* cmdline_state;
 	vui_cmdline_submit_callback* on_submit;
 
-	vui_translator* tr;
+	vui_tr* tr;
 
 	int cmd_modified;
 
@@ -192,7 +192,7 @@ vui_cmdline* vui_cmdline_new(                                      // create new
                         char* cmd,                                 // default command to get to this mode
                         char* name,                                // name (internal)
                         char* label,                               // mode label (e.g. : or / or ?) (can be multicharacter)
-                        vui_translator* tr,                        // parser
+                        vui_tr* tr,                                // parser
                         vui_cmdline_submit_callback on_submit      // callback to call on submission
 );
 

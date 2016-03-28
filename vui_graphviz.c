@@ -156,18 +156,21 @@ void vui_gv_print_s(FILE* f, vui_state* s)
 		vui_transition t = vui_state_index(s, i);       // TODO: use this
 		vui_state* next = vui_next(s, i, VUI_ACT_TEST);
 
-		if (next->iter_data.st != s)
+		if (next == NULL || next->iter_data.st != s)
 		{
 			int lastj = -1;
 
 			int firstmatch = 1;
 
-			fprintf(f, "\"];\n\t\"%d\" -> \"%d\" [", s->iter_id, next->iter_id);
-			if (next->push != NULL || next->gc.root || next->gv_norank)
+			if (next != NULL)
 			{
-				fprintf(f, "constraint = false, ");
+				fprintf(f, "\"];\n\t\"%d\" -> \"%d\" [", s->iter_id, next->iter_id);
+				if (next->push != NULL || next->gc.root || next->gv_norank)
+				{
+					//fprintf(f, "constraint = false, ");
+				}
+				fprintf(f, "label=\"");
 			}
-			fprintf(f, "label=\"");
 
 			for (unsigned int j = 0; j < VUI_MAXSTATE; j++)
 			{
@@ -205,7 +208,10 @@ void vui_gv_print_s(FILE* f, vui_state* s)
 			}
 		}
 
-		next->iter_data.st = s;
+		if (next != NULL)
+		{
+			next->iter_data.st = s;
+		}
 	}
 
 

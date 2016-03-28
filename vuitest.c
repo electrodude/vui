@@ -126,7 +126,6 @@ static void quit(void)
 	vui_debugf("live GC objects: %ld\n", vui_gc_nlive);
 #endif
 
-
 	vui_debugf("Quitting!\n");
 
 	endwin();
@@ -261,7 +260,7 @@ static vui_state* tfunc_winch(vui_state* currstate, unsigned int c, int act, voi
 
 void on_cmd_submit(vui_stack* cmd)
 {
-#define arg_str(i) vui_stack_index(cmd, i)
+#define arg_str(i) (vui_tr_obj_cast(vui_stack_index(cmd, i), VUI_TR_OBJ_STRING)->obj.str)
 #define arg(i) vui_string_get(arg_str(i))
 
 	char* op = arg(0);
@@ -310,7 +309,7 @@ void on_cmd_submit(vui_stack* cmd)
 
 void on_search_submit(vui_stack* cmd)
 {
-	vui_debugf("search: \"%s\"\n", vui_string_get(vui_stack_peek(cmd)));
+	vui_debugf("search: \"%s\"\n", vui_string_get(vui_tr_obj_cast(vui_stack_peek(cmd), VUI_TR_OBJ_STRING)->obj.str));
 }
 
 
@@ -360,11 +359,11 @@ int main(int argc, char** argv)
 
 	vui_showcmd_setup(COLS - 20, 10);
 
-	vui_translator_init();
+	vui_tr_init();
 
 
 	// make cmdline parser
-	vui_translator* cmd_tr = vui_translator_new();
+	vui_tr* cmd_tr = vui_tr_new();
 
 	vui_state* cmd_tr_start = vui_state_new_putc(cmd_tr);
 	vui_string_new_str_at(&cmd_tr_start->name, "cmd_tr");
@@ -373,7 +372,7 @@ int main(int argc, char** argv)
 	// :q
 	vui_state* cmd_tr_q = vui_state_new_deadend();
 
-	vui_set_string_t_mid(cmd_tr_start, "q", vui_transition_translator_putc(cmd_tr, NULL), vui_transition_translator_putc(cmd_tr, cmd_tr_q));
+	vui_set_string_t_mid(cmd_tr_start, "q", vui_transition_tr_append(cmd_tr, NULL), vui_transition_tr_append(cmd_tr, cmd_tr_q));
 
 
 	// :map a b
@@ -381,10 +380,10 @@ int main(int argc, char** argv)
 	                                         vui_frag_cat(vui_frag_accept_escaped(cmd_tr), vui_frag_accept_escaped(cmd_tr)),
 						 vui_state_new_deadend());
 
-	vui_set_string_t_mid(cmd_tr_start, "map ", vui_transition_translator_putc(cmd_tr, NULL), vui_transition_translator_push(cmd_tr, cmd_tr_map));
+	vui_set_string_t_mid(cmd_tr_start, "map ", vui_transition_tr_append(cmd_tr, NULL), vui_transition_tr_new_string(cmd_tr, cmd_tr_map));
 
 
-	vui_translator_replace(cmd_tr, cmd_tr_start);
+	vui_tr_replace(cmd_tr, cmd_tr_start);
 
 
 
@@ -448,25 +447,15 @@ int main(int argc, char** argv)
 	{
 		int c = wgetch(statusline);
 
-		char c2[3] = {"??"};
-		if (c >= 32 && c < 127)
-		{
-			c2[0] = c;
-			c2[1] = 0;
-		}
-		else if (c >= 0 && c < 32)
-		{
-			c2[0] = '^';
-			c2[1] = c + '@';
-		}
-		else
-		{
-			c2[0] = '?';
-			c2[1] = '?';
-		}
-
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_TEST)
-		vui_debugf("char %d: %s\n", c, c2);
+		vui_string str;
+		vui_string_new_at(&str);
+		vui_string_append_printf(&str, "char %d: ", c);
+		vui_string_putq(&str, c);
+		vui_string_putc(&str, '\n');
+		vui_debugf("%s", vui_string_get(&str));
+
+		vui_string_dtor(&str);
 #endif
 
 		if (c >= 0)
