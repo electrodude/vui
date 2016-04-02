@@ -37,15 +37,17 @@ static void vui_state_union(vui_state* lhs, vui_state* rhs)
 
 	for (unsigned int i = 0; i < VUI_MAXSTATE; i++)
 	{
-		if (vui_state_index(rhs, i).next != NULL)
+		if (vui_state_index(rhs, i)->next != NULL)
 		{
-			if (vui_state_index(lhs, i).next == NULL)
+			if (vui_state_index(lhs, i)->next == NULL)
 			{
-				vui_state_index(lhs, i).next = vui_state_index(rhs, i).next;
+				vui_transition* t2 = vui_transition_dup(vui_state_index(lhs, i));
+				t2->next = vui_state_index(rhs, i)->next;
+				vui_state_index(lhs, i) = t2;
 			}
 			else
 			{
-				vui_state_union(vui_state_index(lhs, i).next, vui_state_index(rhs, i).next);
+				vui_state_union(vui_state_index(lhs, i)->next, vui_state_index(rhs, i)->next);
 			}
 		}
 	}

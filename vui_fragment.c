@@ -46,10 +46,11 @@ static vui_state* vui_frag_state_dup(vui_state* orig)
 
 	for (unsigned int i=0; i<VUI_MAXSTATE; i++)
 	{
-		vui_transition t = vui_state_index(orig, i);
-		if (t.next != NULL)
+		vui_transition* t = vui_state_index(orig, i);
+		if (t->next != NULL)
 		{
-			t.next = vui_frag_state_dup(t.next);
+			t = vui_transition_dup(t);
+			t->next = vui_frag_state_dup(t->next);
 		}
 		vui_set_char_t(state, i, t);
 	}
@@ -88,7 +89,7 @@ vui_state* vui_frag_release(vui_frag* frag, vui_state* exit)
 
 // constructors for various useful fragments
 
-vui_frag* vui_frag_new_string_t(char* s, vui_transition t)
+vui_frag* vui_frag_new_string_t(char* s, vui_transition* t)
 {
 	vui_stack* exits = vui_state_stack_new();
 
@@ -104,8 +105,9 @@ vui_frag* vui_frag_new_string_t(char* s, vui_transition t)
 	for (;*s;s++)
 	{
 		vui_state* st_next = vui_state_new_s(NULL);
-		t.next = st_next;
-		vui_set_char_t(st_curr, *s, t);
+		vui_transition* t2 = vui_transition_dup(t);
+		t2->next = st_next;
+		vui_set_char_t(st_curr, *s, t2);
 		st_curr = st_next;
 
 		vui_string_reset(&st_curr->name);
@@ -157,7 +159,7 @@ static int vui_getchar_escaped(char** s, int* escaped)
 	}
 }
 
-vui_frag* vui_frag_new_regexp_t(char* s, vui_transition t)
+vui_frag* vui_frag_new_regexp_t(char* s, vui_transition* t)
 {
 	vui_stack* exits = vui_state_stack_new();
 
@@ -173,7 +175,8 @@ vui_frag* vui_frag_new_regexp_t(char* s, vui_transition t)
 	while (*s)
 	{
 		vui_state* st_next = vui_state_new_s(NULL);
-		t.next = st_next;
+		vui_transition* t2 = vui_transition_dup(t);
+		t2->next = st_next;
 
 		char* sb = s;
 
@@ -185,7 +188,7 @@ vui_frag* vui_frag_new_regexp_t(char* s, vui_transition t)
 			switch (c)
 			{
 				case '.':
-					vui_set_range_t(st_curr, 0, 255, t);
+					vui_set_range_t(st_curr, 0, 255, t2);
 					break;
 				case '[':
 					c = 0;
@@ -204,16 +207,16 @@ vui_frag* vui_frag_new_regexp_t(char* s, vui_transition t)
 							else if (c == '-')
 							{
 								c = vui_getchar_escaped(&s, &escaped);
-								vui_set_range_t(st_curr, pc, c, t);
+								vui_set_range_t(st_curr, pc, c, t2);
 								continue;
 							}
 						}
 
-						vui_set_char_t(st_curr, c, t);
+						vui_set_char_t(st_curr, c, t2);
 					}
 					break;
 				default:
-					vui_set_char_t(st_curr, c, t);
+					vui_set_char_t(st_curr, c, t2);
 					break;
 			}
 		}
@@ -233,7 +236,7 @@ vui_frag* vui_frag_new_regexp_t(char* s, vui_transition t)
 	return vui_frag_new(st_start, exits);
 }
 
-vui_frag* vui_frag_new_any_t(vui_transition t)
+vui_frag* vui_frag_new_any_t(vui_transition* t)
 {
 	vui_stack* exits = vui_state_stack_new();
 
@@ -248,8 +251,9 @@ vui_frag* vui_frag_new_any_t(vui_transition t)
 	vui_string_reset(&st_next->name);
 	vui_string_putc(&st_next->name, '.');
 
-	t.next = st_next;
-	vui_set_range_t(st_curr, 0, 255, t);
+	vui_transition* t2 = vui_transition_dup(t);
+	t2->next = st_next;
+	vui_set_range_t(st_curr, 0, 255, t2);
 	st_curr = st_next;
 
 	vui_state_stack_push(exits, st_curr);

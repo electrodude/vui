@@ -72,7 +72,7 @@ extern vui_string* vui_register_curr;
 
 // state machine helpers
 
-static inline vui_transition vui_transition_return(void)
+static inline vui_transition* vui_transition_return(void)
 {
 	return vui_transition_stack_pop(vui_state_stack);
 }
@@ -112,7 +112,7 @@ void vui_showcmd_reset(void);
 void vui_showcmd_setup(int start, int length);
 
 vui_state* vui_tfunc_showcmd_put(vui_state* currstate, unsigned int c, int act, void* data);
-static inline vui_transition vui_transition_new_showcmd_put(vui_state* next)
+static inline vui_transition* vui_transition_new_showcmd_put(vui_state* next)
 {
 	return vui_transition_new3(next, vui_tfunc_showcmd_put, NULL);
 }
@@ -148,28 +148,28 @@ vui_state* vui_register_execute(vui_state* currstate, unsigned int c, int act);
 
 // keybinds
 
-void vui_bind_u(vui_state* mode, unsigned int c, vui_transition t);
-void vui_bind(vui_state* mode, char* s, vui_transition t);
-void vui_bind_str(vui_state* mode, vui_string* s, vui_transition t);
+void vui_bind_u(vui_state* mode, unsigned int c, vui_transition* t);
+void vui_bind(vui_state* mode, char* s, vui_transition* t);
+void vui_bind_str(vui_state* mode, vui_string* s, vui_transition* t);
 
 void vui_map(vui_state* mode, vui_string* action, vui_string* reaction);
 void vui_map2(vui_state* mode, vui_string* action, vui_state* reaction_st, vui_string* reaction_str);
 
 // misc callbacks
 vui_state* vui_tfunc_normal(vui_state* currstate, unsigned int c, int act, void* data);
-static inline vui_transition vui_transition_new_normal(void)
+static inline vui_transition* vui_transition_new_normal(void)
 {
 	return vui_transition_new3(vui_normal_mode, vui_tfunc_normal, NULL);
 }
 
 vui_state* vui_tfunc_status_set(vui_state* currstate, unsigned int c, int act, void* data);
-static inline vui_transition vui_transition_new_status_set(vui_state* next, char* str)
+static inline vui_transition* vui_transition_new_status_set(vui_state* next, char* str)
 {
 	return vui_transition_new3(next, vui_tfunc_status_set, str);
 }
 
 vui_state* vui_tfunc_status_clear(vui_state* currstate, unsigned int c, int act, void* data);
-static inline vui_transition vui_transition_new_clear(vui_state* next)
+static inline vui_transition* vui_transition_new_clear(vui_state* next)
 {
 	return vui_transition_new3(next, vui_tfunc_status_clear, NULL);
 }
@@ -183,9 +183,9 @@ vui_state* vui_mode_new(                                           // create new
                         char* name,                                // mode name
                         char* label,                               // mode label (e.g. -- INSERT --)
                         int mode,                                  // flags
-                        vui_transition func_enter,                 // transition on entry into mode
-                        vui_transition func_in,                    // transition while in mode
-                        vui_transition func_exit                   // transition on exit from mode via escape
+                        vui_transition* func_enter,                // transition on entry into mode
+                        vui_transition* func_in,                   // transition while in mode
+                        vui_transition* func_exit                  // transition on exit from mode via escape
 );
 
 vui_cmdline* vui_cmdline_new(                                      // create new command mode (like : or / or ?)

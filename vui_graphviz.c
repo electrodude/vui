@@ -11,7 +11,7 @@ int vui_transition_cmp(vui_transition* t1, vui_transition* t2)
 
 int vui_transition_samedest(vui_state* currstate, unsigned int c, vui_transition* t1, vui_transition* t2)
 {
-	return t1 == t2 || t1->next == t2->next || (t1->func == t2->func && t1->data == t2->data && vui_next_t(currstate, c, *t1, VUI_ACT_TEST) == vui_next_t(currstate, c, *t2, VUI_ACT_TEST));
+	return t1 == t2 || t1->next == t2->next || (t1->func == t2->func && t1->data == t2->data && vui_next_t(currstate, c, t1, VUI_ACT_TEST) == vui_next_t(currstate, c, t2, VUI_ACT_TEST));
 }
 
 void vui_gv_putc(FILE* f, int c)
@@ -153,7 +153,7 @@ void vui_gv_print_s(FILE* f, vui_state* s)
 
 	for (unsigned int i = 0; i < VUI_MAXSTATE; i++)
 	{
-		vui_transition t = vui_state_index(s, i);       // TODO: use this
+		vui_transition* t = vui_state_index(s, i);       // TODO: use this
 		vui_state* next = vui_next(s, i, VUI_ACT_TEST);
 
 		if (next == NULL || next->iter_data.st != s)

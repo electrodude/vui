@@ -63,17 +63,20 @@ vui_stack* vui_tr_run(vui_tr* tr, char* s)
 
 vui_stack* vui_tr_run_str(vui_tr* tr, vui_string* str)
 {
-	tr->str = str;
-
+	// clear old stuff
 	vui_stack_reset(tr->stk);
 
 	vui_stack_reset(tr->st_stk);
 
+	// reinitialize
 	tr->tos = vui_tr_obj_new(VUI_TR_OBJ_EMPTY, NULL);
 
 	vui_tr_stack_push(tr, tr->tos);
 
+
 	vui_state* st = tr->st_start;
+
+	tr->str = str;
 
 	tr->s_err = NULL;
 
@@ -641,7 +644,7 @@ vui_state* vui_tr_tfunc_apply(vui_state* currstate, unsigned int c, int act, voi
 // fragment constructors
 static inline void t_escaper_end(vui_state* lt, vui_tr* tr, vui_state* returnto, char* action, char* reaction)
 {
-	vui_transition lt_mid = vui_transition_tr_append(tr, NULL);
+	vui_transition* lt_mid = vui_transition_tr_append(tr, NULL);
 
 	vui_stack* lt_end_funcs = vui_stack_new_v(2,
 			vui_transition_multi_stage(vui_transition_tr_drop(tr, NULL)),
@@ -663,7 +666,7 @@ vui_frag* vui_frag_accept_escaped(vui_tr* tr)
 
 	vui_state* exit = vui_state_new();
 
-	vui_transition leave = vui_transition_tr_new_string(tr, exit);
+	vui_transition* leave = vui_transition_tr_new_string(tr, exit);
 	vui_set_char_t(escaper, ' ', leave);
 	vui_set_char_t(escaper, 0, leave);
 

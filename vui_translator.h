@@ -155,22 +155,22 @@ vui_state* vui_tr_tfunc_push(vui_state* currstate, unsigned int c, int act, void
 vui_state* vui_tr_tfunc_pop(vui_state* currstate, unsigned int c, int act, void* data);
 vui_state* vui_tr_tfunc_peek(vui_state* currstate, unsigned int c, int act, void* data);
 
-static inline vui_transition vui_transition_tr_new_string(vui_tr* tr, vui_state* next)
+static inline vui_transition* vui_transition_tr_new_string(vui_tr* tr, vui_state* next)
 {
 	return vui_transition_new3(next, vui_tr_tfunc_new_string, tr);
 }
 
-static inline vui_transition vui_transition_tr_append(vui_tr* tr, vui_state* next)
+static inline vui_transition* vui_transition_tr_append(vui_tr* tr, vui_state* next)
 {
 	return vui_transition_new3(next, vui_tr_tfunc_append, tr);
 }
 
-static inline vui_transition vui_transition_tr_drop(vui_tr* tr, vui_state* next)
+static inline vui_transition* vui_transition_tr_drop(vui_tr* tr, vui_state* next)
 {
 	return vui_transition_new3(next, vui_tr_tfunc_drop, tr);
 }
 
-static inline vui_transition vui_transition_tr_cat(vui_tr* tr, vui_state* next)
+static inline vui_transition* vui_transition_tr_cat(vui_tr* tr, vui_state* next)
 {
 	return vui_transition_new3(next, vui_tr_tfunc_cat, tr);
 }
