@@ -470,30 +470,26 @@ static vui_state* vui_tfunc_record_enter(vui_state* currstate, unsigned int c, i
 	}
 }
 
-void vui_macro_init(unsigned int record, unsigned int execute)
+void vui_macro_init(const char* record, const char* execute)
 {
 	vui_transition* transition_macro_record = vui_transition_new3(vui_normal_mode, vui_tfunc_macro_record, NULL);
 	state_macro_record = vui_state_new_t(transition_macro_record);
 
-	char sr[16];
-	vui_utf8_encode(record, sr);
 	vui_string_reset(&state_macro_record->name);
-	vui_string_puts(&state_macro_record->name, sr);
+	vui_string_puts(&state_macro_record->name, record);
 
 	vui_transition* transition_record_enter = vui_transition_new2(vui_tfunc_record_enter, NULL);
 
-	vui_set_char_t_u(vui_normal_mode, record, transition_record_enter);
+	vui_set_string_t(vui_normal_mode, record, transition_record_enter);
 
 	vui_transition* transition_macro_execute = vui_transition_new3(vui_normal_mode, vui_tfunc_macro_execute, NULL);
 
 	vui_state* state_macro_execute = vui_state_new_t(transition_macro_execute);
 
-	char se[16];
-	vui_utf8_encode(execute, se);
 	vui_string_reset(&state_macro_execute->name);
-	vui_string_puts(&state_macro_execute->name, se);
+	vui_string_puts(&state_macro_execute->name, execute);
 
-	vui_set_char_t_u(vui_normal_mode, execute, vui_transition_new_showcmd_put(state_macro_execute));
+	vui_set_string_t(vui_normal_mode, execute, vui_transition_new_showcmd_put(state_macro_execute));
 }
 
 
@@ -588,7 +584,7 @@ void vui_register_record(unsigned int c)
 	vui_string_new_at(&str);
 
 	vui_string_puts(&str, "recording @");
-	vui_string_put(&str, c);
+	vui_string_putq(&str, c);
 
 	vui_status_set(vui_string_get(&str));
 

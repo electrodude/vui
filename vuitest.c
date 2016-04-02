@@ -355,7 +355,7 @@ int main(int argc, char** argv)
 
 	vui_register_init();
 
-	vui_macro_init('q', '@');
+	vui_macro_init("q", "@");
 
 	vui_showcmd_setup(COLS - 20, 10);
 

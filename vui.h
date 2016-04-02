@@ -130,7 +130,7 @@ void vui_resize(int width);		// change width
 void vui_count_init(void);
 
 // macros
-void vui_macro_init(unsigned int record, unsigned int execute);
+void vui_macro_init(const char* record, const char* execute);
 
 // registers
 void vui_register_init(void);
