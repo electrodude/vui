@@ -292,15 +292,13 @@ void vui_deinit(void)
 
 	vui_gc_decr(vui_normal_mode);
 
-	vui_stack_reset(vui_state_stack);
+	vui_state_stack_kill(vui_state_stack);
 
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
 	vui_debugf("vui_normal_mode->root = %d\n", vui_normal_mode->gc.root);
 #endif
 
 	vui_gc_run();
-
-	vui_state_stack_kill(vui_state_stack);
 
 	free(vui_cmd);
 	free(vui_status);
