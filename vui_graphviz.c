@@ -1,3 +1,7 @@
+#include <string.h>
+
+#include "vui_debug.h"
+
 #include "vui_gc.h"
 
 #include "vui_graphviz.h"
@@ -14,109 +18,151 @@ int vui_transition_samedest(vui_state* currstate, unsigned int c, vui_transition
 	return t1 == t2 || t1->next == t2->next || (t1->func == t2->func && t1->data == t2->data && vui_next_t(currstate, c, t1, VUI_ACT_TEST) == vui_next_t(currstate, c, t2, VUI_ACT_TEST));
 }
 
-void vui_gv_putc(FILE* f, int c)
-{
-	if (c >= 32 && c < 127)
-	{
-		if (c == '\'')
-		{
-			fprintf(f, "'\\''");
-		}
-		else if (c == '"')
-		{
-			fprintf(f, "\\\"");
-		}
-		else if (c == '\\')
-		{
-			fprintf(f, "'\\\\'");
-		}
-		else
-		{
-			fprintf(f, "'%c'", c);
-		}
-	}
-	else if (c == '\n')
-	{
-		fprintf(f, "'\\\\n'");
-	}
-	else if (c == '\r')
-	{
-		fprintf(f, "'\\\\r'");
-	}
-	else if (c == '\t')
-	{
-		fprintf(f, "'\\\\t'");
-	}
-	else
-	{
-		fprintf(f, "%d", c);
-	}
-}
-
-void vui_gv_puts(FILE* f, char* s)
-{
-	while (*s)
-	{
-		char c = *s++;
-		if (c >= 32 && c < 127)
-		{
-			if (c == '\'')
-			{
-				fprintf(f, "'");
-			}
-			else if (c == '"')
-			{
-				fprintf(f, "\\\"");
-			}
-			else if (c == '\\')
-			{
-				fprintf(f, "\\\\");
-			}
-			else
-			{
-				fprintf(f, "%c", c);
-			}
-		}
-		else if (c == '\n')
-		{
-			fprintf(f, "\\\\n");
-		}
-		else if (c == '\r')
-		{
-			fprintf(f, "\\\\r");
-		}
-		else if (c == '\t')
-		{
-			fprintf(f, "\\\\t");
-		}
-		else
-		{
-			fprintf(f, "%d", c);
-		}
-	}
-}
 
 void vui_gv_write(FILE* f, vui_stack* roots)
+{
+	vui_string out;
+	vui_string_new_at(&out);
+
+	vui_gv_write_str(&out, roots);
+
+	fwrite(vui_string_get(&out), 1, out.n, f);
+
+	vui_string_dtor(&out);
+}
+
+void vui_gv_write_str(vui_string* out, vui_stack* roots)
 {
 	vui_iter_gen++;
 	gv_id = 0;
 
-	fprintf(f, "digraph vui\n{\n");
+	vui_string_puts(out, "digraph vui\n{\n");
 
-	fprintf(f, "\tsplines=true;\n");
-	fprintf(f, "\toverlap=scalexy;\n");
+	vui_string_puts(out, "\tsplines=true;\n");
+	vui_string_puts(out, "\toverlap=scalexy;\n");
 
 	for (size_t i=0; i < roots->n; i++)
 	{
 		vui_state* root = roots->s[i];
 
-		vui_gv_print_s(f, root);
+		vui_gv_print_s(out, root);
 	}
 
-	fprintf(f, "}\n");
+	vui_string_puts(out, "}\n");
 }
 
-void vui_gv_print_s(FILE* f, vui_state* s)
+static void vui_gv_print_set(vui_string* out, unsigned int i, int* covered)
+{
+	int state = 0;
+
+	for (unsigned int j = i; j < VUI_MAXSTATE + 1; j++)
+	{
+		if (covered[j] == i)
+		{
+			if (state == 0)
+			{
+				vui_string_putq(out, j);
+				state = 1;
+			}
+			else if (state == 1)
+			{
+				vui_string_putc(out, '-');
+				state = 2;
+			}
+		}
+		else
+		{
+			if (state == 2)
+			{
+				vui_string_putq(out, j-1);
+			}
+
+			state = 0;
+		}
+	}
+}
+
+void vui_gv_print_t(vui_string* out, vui_state* currstate, vui_transition* t)
+{
+	if (t->iter_gen == vui_iter_gen) return;
+
+	t->iter_gen = vui_iter_gen;
+
+	t->iter_id = gv_id++;
+
+	if (t->next == NULL)
+	{
+		int covered[VUI_MAXSTATE + 1];
+		for (unsigned int i = 0; i < VUI_MAXSTATE; i++) covered[i] = -1;
+
+
+		for (unsigned int i = 0; i < VUI_MAXSTATE; i++)
+		{
+			vui_state* s = vui_next_t(currstate, i, t, VUI_ACT_TEST);
+
+			if (covered[i] == -1)
+			{
+				if (s != NULL)
+				{
+					vui_gv_print_s(out, s);
+				}
+
+				for (unsigned int j = 0; j < VUI_MAXSTATE; j++)
+				{
+					vui_state* s2 = vui_next_t(currstate, j, t, VUI_ACT_TEST);
+
+					if (s == s2)
+					{
+						covered[j] = i;
+					}
+				}
+			}
+		}
+
+		vui_string_append_printf(out, "\t\"t_%d\" [width=0.2,height=0.2,fixedwidth=true,label=\"", t->iter_id);
+
+
+		vui_string tmp;
+		vui_string_new_at(&tmp);
+
+		for (unsigned int i = 0; i < VUI_MAXSTATE; i++)
+		{
+			if (covered[i] == i)
+			{
+				vui_state* s = vui_next_t(currstate, i, t, VUI_ACT_TEST);
+
+				if (s != NULL)
+				{
+					vui_string_append_printf(out, "\"];\n\t\"t_%d\" -> \"s_%d\" [label=\"", t->iter_id, s->iter_id);
+				}
+				else
+				{
+					vui_string_append_printf(out, "\"];\n\t\"t_%d\" -> \"NULL\" [label=\"", t->iter_id);
+				}
+
+				vui_string_reset(&tmp);
+				vui_gv_print_set(&tmp, i, covered);
+				vui_string_append_quote(out, &tmp);
+			}
+		}
+
+		vui_string_dtor(&tmp);
+	}
+	else
+	{
+		vui_state* s = t->next;
+
+		vui_gv_print_s(out, s);
+
+		vui_string_append_printf(out, "\t\"t_%d\" [width=0.2,height=0.2,fixedwidth=true,label=\"", t->iter_id);
+
+		vui_string_append_printf(out, "\"];\n\t\"t_%d\" -> \"s_%d\" [label=\"", t->iter_id, s->iter_id);
+	}
+
+	vui_string_puts(out, "\"];\n");
+}
+
+void vui_gv_print_s(vui_string* out, vui_state* s)
 {
 	if (s->iter_gen == vui_iter_gen) return;
 
@@ -131,89 +177,76 @@ void vui_gv_print_s(FILE* f, vui_state* s)
 
 	for (unsigned int i = 0; i < VUI_MAXSTATE; i++)
 	{
-		vui_state* next = vui_next(s, i, VUI_ACT_TEST);
+		vui_transition* t = vui_state_index(s, i);
 
-		if (next != NULL)
+		if (t != NULL)
 		{
-			vui_gv_print_s(f, next);
+			vui_gv_print_t(out, s, t);
 		}
 	}
 
-	fprintf(f, "\t\"%d\" [label=\"", s->iter_id);
+	vui_string_append_printf(out, "\t\"s_%d\" [label=\"", s->iter_id);
 
 	if (s->name.n > 0)
 	{
-		vui_gv_puts(f, vui_state_name(s));
+		vui_string_append_quote(out, &s->name);
 	}
 	else
 	{
-		fprintf(f, "%d", s->iter_id);
+		vui_string_append_printf(out, "%d", s->iter_id);
 	}
+
+	int covered[VUI_MAXSTATE + 1];
+	for (unsigned int i = 0; i < VUI_MAXSTATE; i++) covered[i] = -1;
 
 
 	for (unsigned int i = 0; i < VUI_MAXSTATE; i++)
 	{
-		vui_transition* t = vui_state_index(s, i);       // TODO: use this
-		vui_state* next = vui_next(s, i, VUI_ACT_TEST);
+		vui_transition* t = vui_state_index(s, i);
 
-		if (next == NULL || next->iter_data.st != s)
+		if (covered[i] == -1)
 		{
-			int lastj = -1;
-
-			int firstmatch = 1;
-
-			if (next != NULL)
+			if (t != NULL)
 			{
-				fprintf(f, "\"];\n\t\"%d\" -> \"%d\" [", s->iter_id, next->iter_id);
-				if (next->push != NULL || next->gc.root || next->gv_norank)
-				{
-					//fprintf(f, "constraint = false, ");
-				}
-				fprintf(f, "label=\"");
+				vui_gv_print_t(out, s, t);
 			}
 
 			for (unsigned int j = 0; j < VUI_MAXSTATE; j++)
 			{
-				if (next == vui_next(s, j, VUI_ACT_TEST)) // match
+				vui_transition* t2 = vui_state_index(s, j);
+
+				if (t == t2)
 				{
-					if (lastj == -1) // first match
-					{
-						lastj = j; // record start of range
-
-						if (!firstmatch)
-						{
-							fprintf(f, ", ");
-						}
-						firstmatch = 0;
-
-						vui_gv_putc(f, j); // print start of range
-					}
-				}
-				else if (lastj != -1) // immediately after last match
-				{
-					if (lastj != j-1) // if range has more than one element
-					{
-						fprintf(f, " - "); // print range
-						vui_gv_putc(f, j-1);
-					}
-
-					lastj = -1;
+					covered[j] = i;
 				}
 			}
-
-			if (lastj != -1 && lastj != VUI_MAXSTATE-1)
-			{
-				fprintf(f, " - "); // print range
-				vui_gv_putc(f, VUI_MAXSTATE-1);
-			}
-		}
-
-		if (next != NULL)
-		{
-			next->iter_data.st = s;
 		}
 	}
 
 
-	fprintf(f, "\"];\n");
+	vui_string tmp;
+	vui_string_new_at(&tmp);
+
+	for (unsigned int i = 0; i < VUI_MAXSTATE; i++)
+	{
+		if (covered[i] == i)
+		{
+			vui_transition* t = vui_state_index(s, i);
+
+			if (t != NULL)
+			{
+				vui_string_append_printf(out, "\"];\n\t\"s_%d\" -> \"t_%d\" [label=\"", s->iter_id, t->iter_id);
+
+				vui_string_reset(&tmp);
+				vui_gv_print_set(&tmp, i, covered);
+				vui_string_append_quote(out, &tmp);
+			}
+
+		}
+	}
+
+	vui_string_dtor(&tmp);
+
+
+	vui_string_puts(out, "\"];\n");
 }

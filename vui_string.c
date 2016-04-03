@@ -242,7 +242,7 @@ void vui_string_putq(vui_string* str, char c)
 			}
 			else
 			{
-				vui_string_append_printf(str, "\\x%2x", (unsigned char)c);
+				vui_string_append_printf(str, "\\x%02x", (unsigned char)c);
 			}
 			break;
 	}

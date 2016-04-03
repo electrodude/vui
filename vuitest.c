@@ -408,8 +408,9 @@ int main(int argc, char** argv)
 
 #if 0
 	vui_stack* gv_roots = vui_stack_new();
-	//vui_state_stack_push(gv_roots, vui_normal_mode);
+	vui_state_stack_push(gv_roots, vui_normal_mode);
 	//vui_state_stack_push(gv_roots, cmd_tr_start);
+#if 0
 	vui_state_stack_push(gv_roots, vui_frag_release(vui_frag_catv(4,
 					vui_frag_union(vui_frag_new_regexp("a[a-c\\]-_]df"),
 					vui_frag_new_string("asdg")),
@@ -419,6 +420,7 @@ int main(int argc, char** argv)
 					vui_frag_union(vui_frag_new_string("atef"),
 					vui_frag_new_string("ateg"))
 					), NULL));
+#endif
 
 	FILE* f = fopen("vui.dot", "w");
 	vui_gv_write(f, gv_roots);

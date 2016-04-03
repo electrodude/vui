@@ -41,6 +41,15 @@ typedef struct vui_transition
 
 	void* data;
 
+	int iter_id;
+	int iter_gen;
+	union
+	{
+		vui_state* st;
+		size_t off;
+		void* data;
+	} iter_data;
+
 } vui_transition;
 
 typedef struct vui_state
