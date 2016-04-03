@@ -269,7 +269,7 @@ vui_tr_obj* vui_tr_obj_cast(vui_tr_obj* obj, vui_tr_obj_type type)
 					break;
 
 				case VUI_TR_OBJ_STATE:
-					obj->obj.st = vui_state_new_s(NULL);
+					obj->obj.st = vui_state_new_t(NULL);
 					break;
 
 				case VUI_TR_OBJ_FRAG:

@@ -93,7 +93,7 @@ vui_frag* vui_frag_new_string_t(char* s, vui_transition* t)
 {
 	vui_stack* exits = vui_state_stack_new();
 
-	vui_state* st_start = vui_state_new_s(NULL);
+	vui_state* st_start = vui_state_new_t(NULL);
 
 	vui_string_reset(&st_start->name);
 	vui_string_puts(&st_start->name, "\"");
@@ -104,7 +104,7 @@ vui_frag* vui_frag_new_string_t(char* s, vui_transition* t)
 
 	for (;*s;s++)
 	{
-		vui_state* st_next = vui_state_new_s(NULL);
+		vui_state* st_next = vui_state_new_t(NULL);
 		vui_transition* t2 = vui_transition_dup(t);
 		t2->next = st_next;
 		vui_set_char_t(st_curr, *s, t2);
@@ -163,7 +163,7 @@ vui_frag* vui_frag_new_regexp_t(char* s, vui_transition* t)
 {
 	vui_stack* exits = vui_state_stack_new();
 
-	vui_state* st_start = vui_state_new_s(NULL);
+	vui_state* st_start = vui_state_new_t(NULL);
 
 	vui_string_reset(&st_start->name);
 	vui_string_puts(&st_start->name, "/");
@@ -174,7 +174,7 @@ vui_frag* vui_frag_new_regexp_t(char* s, vui_transition* t)
 
 	while (*s)
 	{
-		vui_state* st_next = vui_state_new_s(NULL);
+		vui_state* st_next = vui_state_new_t(NULL);
 		vui_transition* t2 = vui_transition_dup(t);
 		t2->next = st_next;
 
@@ -240,14 +240,14 @@ vui_frag* vui_frag_new_any_t(vui_transition* t)
 {
 	vui_stack* exits = vui_state_stack_new();
 
-	vui_state* st_start = vui_state_new_s(NULL);
+	vui_state* st_start = vui_state_new_t(NULL);
 
 	vui_string_reset(&st_start->name);
 	vui_string_puts(&st_start->name, "/./");
 
 	vui_state* st_curr = st_start;
 
-	vui_state* st_next = vui_state_new_s(NULL);
+	vui_state* st_next = vui_state_new_t(NULL);
 	vui_string_reset(&st_next->name);
 	vui_string_putc(&st_next->name, '.');
 

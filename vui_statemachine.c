@@ -648,7 +648,7 @@ vui_state* vui_lookup_s(vui_state* st, char* s)
 
 		if (nextst == NULL)
 		{
-			nextst = vui_state_new_s(NULL);
+			nextst = vui_state_new_t(NULL);
 			vui_string_reset(&st->name);
 			vui_string_puts(&st->name, "lookup ");
 			vui_string_puts(&st->name, s);
@@ -670,7 +670,7 @@ vui_state* vui_lookup_buf(vui_state* st, unsigned char* buf, size_t len)
 
 		if (nextst == NULL)
 		{
-			nextst = vui_state_new_s(NULL);
+			nextst = vui_state_new_t(NULL);
 			vui_string_reset(&st->name);
 			vui_string_puts(&st->name, "lookup ");
 			vui_string_putq(&st->name, buf[i]);
