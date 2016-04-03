@@ -27,7 +27,7 @@ vui_state* vui_normal_mode;
 vui_state* vui_count_mode;
 vui_state* vui_register_select_mode;
 
-vui_state* vui_register_container; // register container state
+vui_state* vui_register_container = NULL; // register container state
 
 vui_string* vui_register_recording;
 
@@ -292,6 +292,11 @@ void vui_deinit(void)
 
 	vui_gc_decr(vui_normal_mode);
 
+	if (vui_register_container != NULL)
+	{
+		vui_gc_decr(vui_register_container);
+	}
+
 	vui_state_stack_kill(vui_state_stack);
 
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
@@ -510,6 +515,8 @@ static vui_state* vui_tfunc_register_select(vui_state* currstate, unsigned int c
 
 void vui_register_init(void)
 {
+	if (vui_register_container != NULL) return;
+
 	vui_register_container = vui_state_new_t(NULL);
 	vui_register_recording = NULL;
 
