@@ -119,7 +119,7 @@ void vui_string_putc(vui_string* str, char c)
 	if (str->maxn < str->n + 2)
 	{
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_STRING)
-		printf("realloc: %ld, %ld\n", str->maxn, str->n);
+		printf("realloc: %zd, %zd\n", str->maxn, str->n);
 #endif
 		str->maxn = (str->n + 2)*2;
 		str->s = realloc(str->s, str->maxn);
@@ -173,7 +173,7 @@ void vui_string_append_printf(vui_string* str, const char* fmt, ...)
 	if (str->maxn < n + 1)
 	{
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_STRING)
-		printf("realloc: %ld, %ld\n", str->maxn, str->n);
+		printf("realloc: %zd, %zd\n", str->maxn, str->n);
 #endif
 		str->maxn = (n + 1)*2;
 		str->s = realloc(str->s, str->maxn);
@@ -200,7 +200,7 @@ void vui_string_append(vui_string* str, const vui_string* str2)
 	if (str->maxn < n + 1)
 	{
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_STRING)
-		printf("realloc: %ld, %ld\n", str->maxn, str->n);
+		printf("realloc: %zd, %zd\n", str->maxn, str->n);
 #endif
 		str->maxn = (n + 1)*2;
 		str->s = realloc(str->s, str->maxn);

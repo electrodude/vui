@@ -123,7 +123,7 @@ static void quit(void)
 	vui_deinit();
 
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_TEST)
-	vui_debugf("live GC objects: %ld\n", vui_gc_nlive);
+	vui_debugf("live GC objects: %zd\n", vui_gc_nlive);
 #endif
 
 	vui_debugf("Quitting!\n");
@@ -192,11 +192,11 @@ static vui_state* tfunc_gc(vui_state* currstate, unsigned int c, int act, void* 
 
 	vui_reset();
 
-	vui_debugf("pre  gc objects: %ld\n", vui_gc_nlive);
+	vui_debugf("pre  gc objects: %zd\n", vui_gc_nlive);
 
 	vui_gc_run();
 
-	vui_debugf("post gc objects: %ld\n", vui_gc_nlive);
+	vui_debugf("post gc objects: %zd\n", vui_gc_nlive);
 
 	return vui_return(act);
 }
@@ -443,7 +443,7 @@ int main(int argc, char** argv)
 	}
 #endif
 
-	vui_debugf("live GC objects: %ld\n", vui_gc_nlive);
+	vui_debugf("live GC objects: %zd\n", vui_gc_nlive);
 
 	while (1)
 	{

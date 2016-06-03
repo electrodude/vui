@@ -148,7 +148,7 @@ void vui_stack_push(vui_stack* stk, void* s)
 	if (stk->maxn < stk->n + 1)
 	{
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_STACK)
-		printf("realloc: %ld, %ld\n", stk->maxn, stk->n);
+		printf("realloc: %zd, %zd\n", stk->maxn, stk->n);
 #endif
 		stk->maxn = stk->n*2;
 		stk->s = realloc(stk->s, stk->maxn*sizeof(void*));
@@ -180,7 +180,7 @@ void vui_stack_append(vui_stack* stk, vui_stack* stk2)
 	if (stk->maxn < n)
 	{
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_STACK)
-		printf("realloc: %ld, %ld\n", stk->maxn, stk->n);
+		printf("realloc: %zd, %zd\n", stk->maxn, stk->n);
 #endif
 		stk->maxn = n*2;
 		stk->s = realloc(stk->s, stk->maxn);
@@ -249,14 +249,14 @@ void* vui_stack_index_end(vui_stack* stk, size_t i)
 	if (i >= stk->n)
 	{
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_STACK)
-		vui_debugf("Index rev [-%ld = %ld] def\n", i, i2);
+		vui_debugf("Index rev [-%zd = %zd] def\n", i, i2);
 #endif
 
 		return stk->def;
 	}
 
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_STACK)
-	vui_debugf("Index rev [-%ld = %ld]\n", i, i2, stk->s[i2]);
+	vui_debugf("Index rev [-%zd = %zd]\n", i, i2, stk->s[i2]);
 #endif
 
 	return stk->s[i2];
@@ -272,7 +272,7 @@ void* vui_stack_index(vui_stack* stk, size_t i)
 		return NULL;
 	}
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_STACK)
-	vui_debugf("Index [%ld] = %p\n", i, stk->s[i]);
+	vui_debugf("Index [%zd] = %p\n", i, stk->s[i]);
 #endif
 
 	return stk->s[i];

@@ -1245,7 +1245,7 @@ void vui_input(unsigned int c)
 	if (vui_register_recording != NULL)
 	{
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
-		vui_debugf("register_putc('%c' 0x%02x)\n", c, c);
+		vui_debugf("register_putc('%c' %#02x)\n", c, c);
 #endif
 		vui_string_put(vui_register_recording, c);
 	}
