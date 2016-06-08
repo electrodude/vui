@@ -209,7 +209,7 @@ static vui_state* tfunc_graphviz(vui_state* currstate, unsigned int c, int act, 
 	vui_reset();
 
 	vui_stack* gv_roots = vui_state_stack_new();
-	vui_state_stack_push(gv_roots, vui_normal_mode);
+	vui_state_stack_push(gv_roots, vui_normal_mode->state);
 	//vui_state_stack_push(gv_roots, cmd_tr_start);
 
 	FILE* f = fopen("vui.dot", "w");

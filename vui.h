@@ -26,6 +26,19 @@ extern int VUI_KEY_MODIFIER_CONTROL;
 
 #include "vui_statemachine.h"
 
+
+typedef struct vui_mode
+{
+	vui_string name;
+	vui_string label;
+
+	vui_state* state_internal;
+	vui_state* state;
+
+	vui_state* state_curr; // current internal state
+} vui_mode;
+
+
 typedef struct hist_entry
 {
 	struct hist_entry* prev;
@@ -38,14 +51,12 @@ typedef void vui_cmdline_submit_callback(vui_stack* cmd);
 
 typedef struct vui_cmdline
 {
-	vui_state* cmdline_state;
+	vui_mode* mode;
 	vui_cmdline_submit_callback* on_submit;
 
 	vui_tr* tr;
 
 	int cmd_modified;
-
-	vui_string label;
 
 	hist_entry* hist_curr_entry;
 	hist_entry* hist_last_entry;
@@ -60,7 +71,7 @@ extern vui_stack* vui_state_stack;
 
 extern vui_state* vui_curr_state;
 
-extern vui_state* vui_normal_mode;	// normal mode state
+extern vui_mode* vui_normal_mode;	// normal mode
 extern vui_state* vui_count_mode;	// count mode
 
 extern vui_state* vui_register_container; // macro container state
@@ -147,19 +158,26 @@ vui_state* vui_register_execute(vui_state* currstate, unsigned int c, int act);
 
 
 // keybinds
+// internal
+void vui_bind_u(vui_mode* mode, unsigned int c, vui_transition* t);
+void vui_bind(vui_mode* mode, char* s, vui_transition* t);
+void vui_bind_str(vui_mode* mode, vui_string* s, vui_transition* t);
 
-void vui_bind_u(vui_state* mode, unsigned int c, vui_transition* t);
-void vui_bind(vui_state* mode, char* s, vui_transition* t);
-void vui_bind_str(vui_state* mode, vui_string* s, vui_transition* t);
+// external
+void vui_bind_external_u(vui_mode* mode, unsigned int c, vui_transition* t);
+void vui_bind_external(vui_mode* mode, char* s, vui_transition* t);
+void vui_bind_external_str(vui_mode* mode, vui_string* s, vui_transition* t);
 
-void vui_map(vui_state* mode, vui_string* action, vui_string* reaction);
-void vui_map2(vui_state* mode, vui_string* action, vui_state* reaction_st, vui_string* reaction_str);
+// mappings
+void vui_map(vui_mode* mode, vui_string* action, vui_string* reaction);
+void vui_noremap(vui_mode* mode, vui_string* action, vui_string* reaction);
+
 
 // misc callbacks
 vui_state* vui_tfunc_normal(vui_state* currstate, unsigned int c, int act, void* data);
 static inline vui_transition* vui_transition_new_normal(void)
 {
-	return vui_transition_new3(vui_normal_mode, vui_tfunc_normal, NULL);
+	return vui_transition_new3(vui_normal_mode->state, vui_tfunc_normal, NULL);
 }
 
 vui_state* vui_tfunc_status_set(vui_state* currstate, unsigned int c, int act, void* data);
@@ -175,14 +193,13 @@ static inline vui_transition* vui_transition_new_clear(vui_state* next)
 }
 
 // new modes
-#define VUI_MODE_NEW_MANUAL_IN 0x1
-#define VUI_MODE_NEW_INHERIT   0x2
+#define VUI_MODE_NEW_INHERIT   0x1
 
-vui_state* vui_mode_new(                                           // create new mode
-                        char* cmd,                                 // default command to get to this mode
-                        char* name,                                // mode name
-                        char* label,                               // mode label (e.g. -- INSERT --)
-                        int mode,                                  // flags
+vui_mode* vui_mode_new(                                            // create new mode
+                        char* cmd,                                 // default command to get to this mode from normal mode, or NULL if none
+                        char* name,                                // mode name (e.g. "insert")
+                        char* label,                               // mode label (e.g. "-- INSERT --"), or NULL if none
+                        int flags,                                 // flags
                         vui_transition* func_enter,                // transition on entry into mode
                         vui_transition* func_in,                   // transition while in mode
                         vui_transition* func_exit                  // transition on exit from mode via escape
@@ -195,6 +212,8 @@ vui_cmdline* vui_cmdline_new(                                      // create new
                         vui_tr* tr,                                // parser
                         vui_cmdline_submit_callback on_submit      // callback to call on submission
 );
+
+void vui_mode_kill(vui_mode* mode);
 
 void vui_cmdline_kill(vui_cmdline* cmdline);
 

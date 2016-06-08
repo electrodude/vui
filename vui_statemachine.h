@@ -50,6 +50,8 @@ typedef struct vui_transition
 		void* data;
 	} iter_data;
 
+	int running;
+
 } vui_transition;
 
 typedef struct vui_state
@@ -136,12 +138,22 @@ vui_state* vui_tfunc_run_s_s(vui_state* currstate, unsigned int c, int act, void
 vui_transition* vui_transition_run_str_s(vui_state* st, vui_string* str);
 vui_transition* vui_transition_run_s_s(vui_state* st, char* str);
 
+// do what another state would do
 vui_state* vui_tfunc_run_c_s(vui_state* currstate, unsigned int c, int act, void* data);
 static inline vui_transition* vui_transition_run_c_s(vui_state* other)
 {
 	return vui_transition_new2(vui_tfunc_run_c_s, other);
 }
 
+// advance a different state machine
+vui_state* vui_tfunc_run_c_p(vui_state* currstate, unsigned int c, int act, void* data);
+static inline vui_transition* vui_transition_run_c_p(vui_state** other)
+{
+	return vui_transition_new2(vui_tfunc_run_c_p, other);
+}
+
+
+// useless?
 vui_state* vui_tfunc_run_c_t(vui_state* currstate, unsigned int c, int act, void* data);
 static inline vui_transition* vui_transition_run_c_t(vui_transition* t)
 {

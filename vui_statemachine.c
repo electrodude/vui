@@ -204,6 +204,8 @@ vui_transition* vui_transition_new(vui_state* next, vui_transition_callback func
 	t->func = func;
 	t->data = data;
 
+	t->running = 0;
+
 	return t;
 }
 
@@ -227,17 +229,16 @@ void vui_transition_gc_dtor(void* obj, vui_gc_dtor_mode mode)
 
 	if (mode == VUI_GC_DTOR_MARK)
 	{
-		for (unsigned int i=0; i < VUI_MAXSTATE; i++)
+		if (t->next != NULL)
 		{
-			if (t->next != NULL)
-			{
-				vui_gc_mark(t->next);
-			}
+			vui_gc_mark(t->next);
+		}
 
-			if (t->func != NULL)
-			{
-				t->func(NULL, 0, VUI_ACT_GC, t->data);
-			}
+		if (t->func != NULL)
+		{
+			t->running++; // probably not necessary, just for consistency
+			t->func(NULL, 0, VUI_ACT_GC, t->data);
+			t->running--;
 		}
 	}
 	else if (mode == VUI_GC_DTOR_SWEEP)
@@ -370,19 +371,49 @@ vui_state* vui_tfunc_run_c_s(vui_state* currstate, unsigned int c, int act, void
 		vui_gc_mark(other);
 	}
 
-	if (other == currstate) // evade stack overflow
+	vui_transition* t = vui_state_index(other, c);
+
+	if (t->running)
 	{
-		return currstate;
+		return currstate; // don't get stuck in infinite recursion
 	}
 
 	if (act <= 0)
 	{
-		return vui_next_t(currstate, c, vui_state_index(other, c), act);
+		return vui_next_t(currstate, c, t, act);
 	}
 	else
 	{
-		return vui_next_t(currstate, c, vui_state_index(other, c), VUI_ACT_EMUL);
+		return vui_next_t(currstate, c, t, VUI_ACT_EMUL);
 	}
+}
+
+vui_state* vui_tfunc_run_c_p(vui_state* currstate, unsigned int c, int act, void* data)
+{
+	vui_state** other_ptr = data;
+
+	vui_state* other = *other_ptr;
+
+	if (act == VUI_ACT_GC)
+	{
+		vui_gc_mark(other);
+	}
+
+	vui_transition* t = vui_state_index(other, c);
+
+	if (t->running)
+	{
+		return currstate; // don't get stuck in infinite recursion
+	}
+
+	other = vui_next_t(other, c, t, act);
+
+	if (act > 0)
+	{
+		*other_ptr = other;
+	}
+
+	return other;
 }
 
 
@@ -392,10 +423,12 @@ vui_state* vui_tfunc_run_c_t(vui_state* currstate, unsigned int c, int act, void
 
 	if (act == VUI_ACT_GC)
 	{
-		if (t->next != NULL)
-		{
-			vui_gc_mark(t->next);
-		}
+		vui_gc_mark(t);
+	}
+
+	if (t->running)
+	{
+		return currstate; // don't get stuck in infinite recursion
 	}
 
 	if (act <= 0)
@@ -582,7 +615,9 @@ vui_state* vui_next_t(vui_state* currstate, unsigned int c, vui_transition* t, i
 	{
 		if (t->func != NULL && (act > 0 || t->next == NULL))
 		{
+			t->running++;
 			vui_state* retnext = t->func(currstate, c, act, t->data);
+			t->running--;
 			nextstate =  t->next != NULL ? t->next : retnext;
 		}
 		else

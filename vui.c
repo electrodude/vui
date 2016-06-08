@@ -25,7 +25,7 @@ vui_stack* vui_state_stack;
 
 vui_state* vui_curr_state;
 
-vui_state* vui_normal_mode;
+vui_mode* vui_normal_mode;
 vui_state* vui_count_mode;
 vui_state* vui_register_select_mode;
 
@@ -253,28 +253,26 @@ vui_state* vui_tfunc_status_clear(vui_state* currstate, unsigned int c, int act,
 // init/resize
 void vui_init(int width)
 {
-	vui_normal_mode = vui_curr_state = vui_state_new();
-	vui_string_reset(&vui_normal_mode->name);
-	vui_string_puts(&vui_normal_mode->name, "vui_normal_mode");
+	vui_normal_mode = vui_mode_new(NULL, "normal", NULL, 0, NULL, NULL, NULL);
+	vui_curr_state = vui_normal_mode->state;
 
-	vui_gc_incr(vui_normal_mode);
 
 	vui_transition* transition_normal = vui_transition_new_normal();
 
 	for (unsigned int i=0; i<VUI_MAXSTATE; i++)
 	{
-		vui_set_char_t(vui_normal_mode, i, transition_normal);
+		vui_set_char_t(vui_normal_mode->state, i, transition_normal);
 	}
 
 	vui_state_stack = vui_state_stack_new();
-	vui_state_stack_set_def(vui_state_stack, vui_normal_mode);
+	vui_state_stack_set_def(vui_state_stack, vui_normal_mode->state);
 
-	vui_normal_mode->push = vui_state_stack;
+	vui_normal_mode->state->push = vui_state_stack;
 
 	cols = width;
 
-	vui_cmd = malloc((cols+1)*sizeof(char));
-	vui_status = malloc((cols+1)*sizeof(char));
+	vui_cmd = vui_new_array(char, cols+1);
+	vui_status = vui_new_array(char, cols+1);
 
 	memset(vui_cmd, ' ', cols);
 	memset(vui_status, ' ', cols);
@@ -292,8 +290,6 @@ void vui_deinit(void)
 	vui_crsrx = -1;
 	vui_bar = NULL;
 
-	vui_gc_decr(vui_normal_mode);
-
 	if (vui_register_container != NULL)
 	{
 		vui_gc_decr(vui_register_container);
@@ -302,9 +298,12 @@ void vui_deinit(void)
 	vui_state_stack_kill(vui_state_stack);
 
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
-	vui_debugf("vui_normal_mode->root = %d\n", vui_normal_mode->gc.root);
+	vui_debugf("vui_normal_mode->state->root = %d\n", vui_normal_mode->state->gc.root);
 #endif
 
+	vui_mode_kill(vui_normal_mode);
+
+	vui_gc_run();
 	vui_gc_run();
 
 	vui_free(vui_cmd);
@@ -371,7 +370,7 @@ static vui_state* vui_tfunc_count(vui_state* currstate, unsigned int c, int act,
 
 void vui_count_init(void)
 {
-	vui_transition* transition_count_leave = vui_transition_run_c_s(vui_normal_mode);
+	vui_transition* transition_count_leave = vui_transition_run_c_s(vui_normal_mode->state);
 
 	vui_count_mode = vui_state_new_t(transition_count_leave);
 	vui_string_reset(&vui_count_mode->name);
@@ -381,7 +380,7 @@ void vui_count_init(void)
 	vui_set_range_t(vui_count_mode, '0', '9', transition_count);
 
 	vui_transition* transition_count_enter = vui_transition_new3(vui_count_mode, vui_tfunc_count_enter, &vui_count);
-	vui_set_range_t(vui_normal_mode, '1', '9', transition_count_enter);
+	vui_set_range_t(vui_normal_mode->state, '1', '9', transition_count_enter);
 }
 
 // macros
@@ -479,7 +478,7 @@ static vui_state* vui_tfunc_record_enter(vui_state* currstate, unsigned int c, i
 
 void vui_macro_init(const char* record, const char* execute)
 {
-	vui_transition* transition_macro_record = vui_transition_new3(vui_normal_mode, vui_tfunc_macro_record, NULL);
+	vui_transition* transition_macro_record = vui_transition_new3(vui_normal_mode->state, vui_tfunc_macro_record, NULL);
 	state_macro_record = vui_state_new_t(transition_macro_record);
 
 	vui_string_reset(&state_macro_record->name);
@@ -487,16 +486,16 @@ void vui_macro_init(const char* record, const char* execute)
 
 	vui_transition* transition_record_enter = vui_transition_new2(vui_tfunc_record_enter, NULL);
 
-	vui_set_string_t(vui_normal_mode, record, transition_record_enter);
+	vui_set_string_t(vui_normal_mode->state, record, transition_record_enter);
 
-	vui_transition* transition_macro_execute = vui_transition_new3(vui_normal_mode, vui_tfunc_macro_execute, NULL);
+	vui_transition* transition_macro_execute = vui_transition_new3(vui_normal_mode->state, vui_tfunc_macro_execute, NULL);
 
 	vui_state* state_macro_execute = vui_state_new_t(transition_macro_execute);
 
 	vui_string_reset(&state_macro_execute->name);
 	vui_string_puts(&state_macro_execute->name, execute);
 
-	vui_set_string_t(vui_normal_mode, execute, vui_transition_new_showcmd_put(state_macro_execute));
+	vui_set_string_t(vui_normal_mode->state, execute, vui_transition_new_showcmd_put(state_macro_execute));
 }
 
 
@@ -528,7 +527,7 @@ void vui_register_init(void)
 	vui_string_reset(&vui_register_select_mode->name);
 	vui_string_puts(&vui_register_select_mode->name, "vui_register_select_mode");
 
-	vui_set_char_t(vui_normal_mode, '"', vui_transition_new_showcmd_put(vui_register_select_mode));
+	vui_set_char_t(vui_normal_mode->state, '"', vui_transition_new_showcmd_put(vui_register_select_mode));
 }
 
 vui_string* vui_variable_check(char* s)
@@ -653,83 +652,129 @@ vui_state* vui_register_execute(vui_state* currstate, unsigned int c, int act)
 
 // keybinds
 
-void vui_bind_u(vui_state* mode, unsigned int c, vui_transition* t)
+// internal
+void vui_bind_u(vui_mode* mode, unsigned int c, vui_transition* t)
 {
-	vui_set_char_t_u(mode, c, t);
+	vui_set_char_t_u(mode->state_internal, c, t);
 }
 
-void vui_bind(vui_state* mode, char* s, vui_transition* t)
+void vui_bind(vui_mode* mode, char* s, vui_transition* t)
 {
-	vui_set_string_t_mid(mode, s, vui_transition_new_showcmd_put(NULL), t);
+	vui_set_string_t_mid(mode->state_internal, s, vui_transition_new_showcmd_put(NULL), t);
 }
 
-void vui_bind_str(vui_state* mode, vui_string* s, vui_transition* t)
+void vui_bind_str(vui_mode* mode, vui_string* s, vui_transition* t)
 {
-	vui_set_string_t_mid(mode, vui_string_get(s), vui_transition_new_showcmd_put(NULL), t);
+	vui_set_string_t_mid(mode->state_internal, vui_string_get(s), vui_transition_new_showcmd_put(NULL), t);
+}
+
+// external
+void vui_bind_external_u(vui_mode* mode, unsigned int c, vui_transition* t)
+{
+	vui_set_char_t_u(mode->state, c, t);
+}
+
+void vui_bind_external(vui_mode* mode, char* s, vui_transition* t)
+{
+	vui_set_string_t_mid(mode->state, s, vui_transition_new_showcmd_put(NULL), t);
+}
+
+void vui_bind_external_str(vui_mode* mode, vui_string* s, vui_transition* t)
+{
+	vui_set_string_t_mid(mode->state, vui_string_get(s), vui_transition_new_showcmd_put(NULL), t);
 }
 
 
-void vui_map(vui_state* mode, vui_string* action, vui_string* reaction)
+// mappings
+void vui_map(vui_mode* mode, vui_string* action, vui_string* reaction)
 {
-	vui_bind_str(mode, action, vui_transition_run_str_s(mode, reaction));
+	vui_bind_external_str(mode, action, vui_transition_run_str_s(mode->state, reaction));
 }
 
-void vui_map2(vui_state* mode, vui_string* action, vui_state* reaction_st, vui_string* reaction_str)
+void vui_noremap(vui_mode* mode, vui_string* action, vui_string* reaction)
 {
-	vui_bind_str(mode, action, vui_transition_run_str_s(reaction_st, reaction_str));
+	vui_bind_external_str(mode, action, vui_transition_run_str_s(mode->state_internal, reaction));
 }
 
 
 
 // new modes
 
-vui_state* vui_mode_new(char* cmd, char* name, char* label, int mode, vui_transition* func_enter, vui_transition* func_in, vui_transition* func_exit)
+vui_mode* vui_mode_new(char* cmd, char* name, char* label, int flags, vui_transition* func_enter, vui_transition* func_in, vui_transition* func_exit)
 {
-	vui_state* state;
+	vui_mode* mode = vui_new(vui_mode);
 
-	if (mode & VUI_MODE_NEW_INHERIT)
+	vui_state* state_internal;
+
+	if (flags & VUI_MODE_NEW_INHERIT)
 	{
-		state = vui_state_dup(vui_normal_mode);
+		state_internal = vui_state_dup(vui_normal_mode->state);
 	}
 	else
 	{
-		state = vui_state_new();
+		state_internal = vui_state_new();
 	}
+
+	vui_string_reset(&state_internal->name);
+	vui_string_puts(&state_internal->name, name);
+	vui_string_puts(&state_internal->name, "_internal");
+	vui_string_get(&state_internal->name); // append NULL terminator
+
+	vui_gc_incr(state_internal);
+
+	mode->state_internal = state_internal;
+
+	mode->state_curr = state_internal;
+
+	vui_state* state = vui_state_new_t_self(vui_transition_run_c_p(&mode->state_curr));
 
 	vui_string_reset(&state->name);
 	vui_string_puts(&state->name, name);
+	vui_string_get(&state->name); // append NULL terminator
 
-	if (func_enter->next == NULL) func_enter->next = state;
+	vui_gc_incr(state);
 
-	if (func_enter->func == NULL)
+	mode->state = state;
+
+	vui_string_new_str_at(&mode->name, name);
+	vui_string_new_str_at(&mode->label, label);
+
+	if (func_in != NULL)
 	{
-		func_enter->func = vui_tfunc_status_set;
-		func_enter->data = label;
+		for (unsigned int i=0; i<VUI_MAXSTATE; i++)
+		{
+			vui_set_char_t(state_internal, i, func_in);
+		}
 	}
 
-	if (!(mode & VUI_MODE_NEW_MANUAL_IN))
+	if (func_enter != NULL)
 	{
-		if (func_in->next == NULL) func_in->next = state;
+		if (func_enter->next == NULL) func_enter->next = state;
+
+		if (func_enter->func == NULL)
+		{
+			func_enter->func = vui_tfunc_status_set;
+			func_enter->data = label;
+		}
+
+		vui_set_string_t(state_internal, cmd, func_enter);
 	}
 
-	if (func_exit->next == NULL) func_exit->next = vui_normal_mode;
-
-	if (func_exit->func == NULL)
+	if (func_exit != NULL)
 	{
-		func_exit->func = vui_tfunc_status_clear;
-	}
+		if (func_exit->next == NULL) func_exit->next = vui_normal_mode->state;
 
-	for (unsigned int i=0; i<VUI_MAXSTATE; i++)
-	{
-		vui_set_char_t(state, i, func_in);
-	}
+		if (func_exit->func == NULL)
+		{
+			func_exit->func = vui_tfunc_status_clear;
+		}
 
-	vui_set_string_t(vui_normal_mode, cmd, func_enter);
-	vui_set_char_t_u(state, VUI_KEY_ESCAPE, func_exit);
+		vui_set_char_t_u(state_internal, VUI_KEY_ESCAPE, func_exit);
+	}
 
 	state->push = vui_state_stack;
 
-	return state;
+	return mode;
 }
 
 
@@ -738,16 +783,16 @@ static vui_state* vui_tfunc_normal_to_cmd(vui_state* currstate, unsigned int c, 
 {
 	vui_cmdline* cmdline = data;
 
-	if (act <= 0) return cmdline->cmdline_state;
+	if (act <= 0) return currstate;
 
 
 	vui_cmd_base = vui_cmd;
 	cmd_base = 0;
 
-	char* label = cmdline->label.s;
-	while (*label)
+	vui_string* label = &cmdline->mode->label;
+	for (size_t i = 0; i < label->n; i++)
 	{
-		*vui_cmd_base++ = *label++;
+		*vui_cmd_base++ = label->s[i];
 		cmd_base++;
 	}
 
@@ -764,7 +809,7 @@ static vui_state* vui_tfunc_normal_to_cmd(vui_state* currstate, unsigned int c, 
 	vui_bar = vui_cmd;
 	vui_crsrx = cmd_base + cmd_crsrx;
 
-	return cmdline->cmdline_state;
+	return currstate;
 }
 
 static vui_state* vui_tfunc_cmd_key(vui_state* currstate, unsigned int c, int act, void* data)
@@ -1135,9 +1180,14 @@ vui_cmdline* vui_cmdline_new(char* cmd, char* name, char* label, vui_tr* tr, vui
 	cmdline->on_submit = on_submit;
 	cmdline->hist_last_entry = NULL;
 
-	vui_string_new_at(&cmdline->label);
-	vui_string_puts(&cmdline->label, label);
-	vui_string_get(&cmdline->label);
+	vui_mode* cmdline_mode = vui_mode_new(cmd, name, label, 0, NULL, NULL, NULL);
+
+	cmdline->mode = cmdline_mode;
+
+	vui_state* cmdline_state = cmdline_mode->state_internal;
+	vui_state* mode_state = cmdline_mode->state;
+
+	cmdline_state->push = vui_state_stack;
 
 	if (tr != NULL)
 	{
@@ -1148,17 +1198,9 @@ vui_cmdline* vui_cmdline_new(char* cmd, char* name, char* label, vui_tr* tr, vui
 		cmdline->tr = vui_tr_new_identity();
 	}
 
-	vui_state* cmdline_state = vui_state_new();
-	vui_string_reset(&cmdline_state->name);
-	vui_string_puts(&cmdline_state->name, name);
-
-	vui_gc_incr(cmdline_state);
-
-	cmdline_state->push = vui_state_stack;
-
 	vui_transition* transition_normal_to_cmd = vui_transition_new3(cmdline_state, vui_tfunc_normal_to_cmd, cmdline);
 
-	vui_set_string_t(vui_normal_mode, cmd, transition_normal_to_cmd);
+	vui_set_string_t(vui_normal_mode->state, cmd, transition_normal_to_cmd);
 
 	vui_transition* transition_cmd_key = vui_transition_new3(cmdline_state, vui_tfunc_cmd_key, cmdline);
 	vui_transition* transition_cmd_escape = vui_transition_new3(NULL, vui_tfunc_cmd_escape, cmdline);
@@ -1207,17 +1249,25 @@ vui_cmdline* vui_cmdline_new(char* cmd, char* name, char* label, vui_tr* tr, vui
 	vui_set_char_s_u(cmdline_state, 22, keyescapestate);
 #endif
 
-	cmdline->cmdline_state = cmdline_state;
-
 	hist_entry_new(cmdline);
 
 	return cmdline;
 }
 
+void vui_mode_kill(vui_mode* mode)
+{
+	vui_gc_decr(mode->state);
+	vui_gc_decr(mode->state_internal);
+
+	vui_string_dtor(&mode->name);
+	vui_string_dtor(&mode->label);
+
+	vui_free(mode);
+}
+
 void vui_cmdline_kill(vui_cmdline* cmdline)
 {
-	vui_gc_decr(cmdline->cmdline_state);
-	vui_string_dtor(&cmdline->label);
+	vui_mode_kill(cmdline->mode);
 	vui_tr_kill(cmdline->tr);
 	vui_free(cmdline);
 }
