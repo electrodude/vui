@@ -5,6 +5,8 @@
 
 #include "vui_debug.h"
 
+#include "vui_mem.h"
+
 #include "vui_utf8.h"
 #include "vui_gc.h"
 
@@ -52,7 +54,7 @@ size_t cmd_len;
 // cmdline history functions
 static hist_entry* hist_entry_new(vui_cmdline* cmdline)
 {
-	hist_entry* entry = malloc(sizeof(hist_entry));
+	hist_entry* entry = vui_new(hist_entry);
 
 	entry->prev = cmdline->hist_last_entry;
 
@@ -90,7 +92,7 @@ static void hist_entry_kill(hist_entry* entry)
 	vui_string_dtor(&entry->line);
 
 	// free entry
-	free(entry);
+	vui_free(entry);
 }
 
 static void hist_entry_set(hist_entry* entry, char* str, size_t len)
@@ -305,8 +307,8 @@ void vui_deinit(void)
 
 	vui_gc_run();
 
-	free(vui_cmd);
-	free(vui_status);
+	vui_free(vui_cmd);
+	vui_free(vui_status);
 }
 
 void vui_resize(int width)
@@ -314,8 +316,8 @@ void vui_resize(int width)
 	// if the number of columns actually changed
 	if (width != cols)
 	{
-		vui_cmd = realloc(vui_cmd, (width+1)*sizeof(char));
-		vui_status = realloc(vui_status, (width+1)*sizeof(char));
+		vui_cmd = vui_resize_array(vui_cmd, char, width + 1);
+		vui_status = vui_resize_array(vui_status, char, width + 1);
 
 		int minw, maxw;
 		if (width > cols)
@@ -1129,7 +1131,7 @@ static vui_state* vui_tfunc_cmd_paste_cancel(vui_state* currstate, unsigned int 
 
 vui_cmdline* vui_cmdline_new(char* cmd, char* name, char* label, vui_tr* tr, vui_cmdline_submit_callback on_submit)
 {
-	vui_cmdline* cmdline = malloc(sizeof(vui_cmdline));
+	vui_cmdline* cmdline = vui_new(vui_cmdline);
 	cmdline->on_submit = on_submit;
 	cmdline->hist_last_entry = NULL;
 
@@ -1217,7 +1219,7 @@ void vui_cmdline_kill(vui_cmdline* cmdline)
 	vui_gc_decr(cmdline->cmdline_state);
 	vui_string_dtor(&cmdline->label);
 	vui_tr_kill(cmdline->tr);
-	free(cmdline);
+	vui_free(cmdline);
 }
 
 void vui_status_set(const char* s)

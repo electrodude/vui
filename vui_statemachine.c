@@ -4,6 +4,8 @@
 
 #include "vui_debug.h"
 
+#include "vui_mem.h"
+
 #include "vui_utf8.h"
 #include "vui_string.h"
 
@@ -15,7 +17,7 @@ void vui_state_gc_dtor(void* obj, vui_gc_dtor_mode mode);
 
 static inline vui_state* vui_state_new_raw(void)
 {
-	vui_state* state = malloc(sizeof(vui_state));
+	vui_state* state = vui_new(vui_state);
 
 	state->gv_norank = 0;
 
@@ -110,7 +112,7 @@ static void vui_state_kill(vui_state* state)
 
 	vui_string_dtor(&state->name);
 
-	free(state);
+	vui_free(state);
 }
 
 void vui_state_gc_dtor(void* obj, vui_gc_dtor_mode mode)
@@ -124,7 +126,8 @@ void vui_state_gc_dtor(void* obj, vui_gc_dtor_mode mode)
 			vui_gc_mark(vui_state_index(st, i));
 		}
 
-		// if the gc is running, this state's name is probably final
+		// Since the gc is running, this state's name is probably final and
+		//  not going to grow ever again, so shrink it to its minimum length
 		vui_string_shrink(&st->name);
 	}
 	else if (mode == VUI_GC_DTOR_SWEEP)
@@ -193,7 +196,7 @@ void vui_transition_gc_dtor(void* obj, vui_gc_dtor_mode mode);
 
 vui_transition* vui_transition_new(vui_state* next, vui_transition_callback func, void* data)
 {
-	vui_transition* t = malloc(sizeof(vui_transition));
+	vui_transition* t = vui_new(vui_transition);
 
 	vui_gc_register(t, vui_transition_gc_dtor);
 
@@ -246,7 +249,7 @@ void vui_transition_gc_dtor(void* obj, vui_gc_dtor_mode mode)
 		}
 		*/
 
-		free(t);
+		vui_free(t);
 	}
 	else if (mode == VUI_GC_DTOR_DESCRIBE)
 	{
@@ -302,7 +305,7 @@ vui_transition* vui_transition_multi(vui_stack* funcs, vui_state* next)
 
 vui_transition* vui_transition_multi_stage(vui_transition* t)
 {
-	vui_transition* t2 = malloc(sizeof(vui_transition));
+	vui_transition* t2 = vui_new(vui_transition);
 
 	t2->next = NULL;
 	t2->func = t->func;
@@ -339,7 +342,7 @@ vui_state* vui_tfunc_run_s_s(vui_state* currstate, unsigned int c, int act, void
 
 vui_transition* vui_transition_run_str_s(vui_state* st, vui_string* str)
 {
-	vui_transition_run_s_data* data = malloc(sizeof(vui_transition_run_s_data));
+	vui_transition_run_s_data* data = vui_new(vui_transition_run_s_data);
 	data->st = st;
 	vui_string_dup_at(&data->str, str);
 	vui_string_shrink(&data->str);
@@ -349,7 +352,7 @@ vui_transition* vui_transition_run_str_s(vui_state* st, vui_string* str)
 
 vui_transition* vui_transition_run_s_s(vui_state* st, char* str)
 {
-	vui_transition_run_s_data* data = malloc(sizeof(vui_transition_run_s_data));
+	vui_transition_run_s_data* data = vui_new(vui_transition_run_s_data);
 	data->st = st;
 	vui_string_new_str_at(&data->str, str);
 	vui_string_shrink(&data->str);

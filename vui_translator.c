@@ -5,6 +5,8 @@
 
 #include "vui_debug.h"
 
+#include "vui_mem.h"
+
 #include "vui_utf8.h"
 #include "vui.h"
 
@@ -24,7 +26,7 @@ vui_tr* vui_tr_new_at(vui_tr* tr)
 {
 	if (tr == NULL)
 	{
-		tr = malloc(sizeof(vui_tr));
+		tr = vui_new(vui_tr);
 	}
 
 	tr->st_start = vui_state_new_deadend();
@@ -45,7 +47,7 @@ void vui_tr_kill(vui_tr* tr)
 
 	vui_stack_kill(tr->stk);	// kills tr->tos, which is vui_stack_peek(tr->stk)
 
-	free(tr);
+	vui_free(tr);
 }
 
 vui_stack* vui_tr_run(vui_tr* tr, char* s)
@@ -108,7 +110,7 @@ vui_stack* vui_tr_run_str(vui_tr* tr, vui_string* str)
 
 vui_tr_obj* vui_tr_obj_new(vui_tr_obj_type type, void* data)
 {
-	vui_tr_obj* obj = malloc(sizeof(vui_tr_obj));
+	vui_tr_obj* obj = vui_new(vui_tr_obj);
 
 	obj->type = type;
 	obj->obj.ptr = data;
@@ -153,7 +155,7 @@ static inline vui_tr_obj_union vui_tr_obj_release(vui_tr_obj* obj)
 {
 	vui_tr_obj_union data = obj->obj;
 
-	free(obj);
+	vui_free(obj);
 
 	return data;
 }

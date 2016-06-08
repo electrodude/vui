@@ -1,3 +1,5 @@
+#include "vui_mem.h"
+
 #include "vui_fragment.h"
 
 // much credit goes to https://swtch.com/~rsc/regexp/regexp1.html
@@ -6,7 +8,7 @@
 // basic fragment functions
 vui_frag* vui_frag_new(vui_state* entry, vui_stack* exits)
 {
-	vui_frag* frag = malloc(sizeof(vui_frag));
+	vui_frag* frag = vui_new(vui_frag);
 
 	frag->entry = entry;
 
@@ -26,7 +28,7 @@ void vui_frag_kill(vui_frag* frag)
 
 	vui_state_stack_kill(frag->exits);
 
-	free(frag);
+	vui_free(frag);
 }
 
 static vui_state* vui_frag_state_dup(vui_state* orig)

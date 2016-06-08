@@ -29,24 +29,24 @@ depend:
 
 # output of `make depend`
 
-vuitest.o: vuitest.c vui_debug.h vui.h vui_string.h vui_translator.h \
+uitest.o: vuitest.c vui_debug.h vui.h vui_string.h vui_translator.h \
  vui_stack.h vui_statemachine.h vui_gc.h vui_fragment.h vui_combinator.h \
  vui_graphviz.h
-vui.o: vui.c vui_debug.h vui_utf8.h vui_string.h vui_gc.h vui_stack.h \
- vui_fragment.h vui_statemachine.h vui_combinator.h vui.h \
+vui.o: vui.c vui_debug.h vui_mem.h vui_utf8.h vui_string.h vui_gc.h \
+ vui_stack.h vui_fragment.h vui_statemachine.h vui_combinator.h vui.h \
  vui_translator.h
-vui_fragment.o: vui_fragment.c vui_fragment.h vui_stack.h \
+vui_fragment.o: vui_fragment.c vui_mem.h vui_fragment.h vui_stack.h \
  vui_statemachine.h vui_string.h vui_gc.h
 vui_combinator.o: vui_combinator.c vui_statemachine.h vui_string.h \
  vui_stack.h vui_gc.h vui_combinator.h vui_fragment.h
-vui_translator.o: vui_translator.c vui_debug.h vui_utf8.h vui_string.h \
- vui.h vui_translator.h vui_stack.h vui_statemachine.h vui_gc.h \
- vui_fragment.h vui_combinator.h
-vui_statemachine.o: vui_statemachine.c vui_debug.h vui_utf8.h \
+vui_translator.o: vui_translator.c vui_debug.h vui_mem.h vui_utf8.h \
+ vui_string.h vui.h vui_translator.h vui_stack.h vui_statemachine.h \
+ vui_gc.h vui_fragment.h vui_combinator.h
+vui_statemachine.o: vui_statemachine.c vui_debug.h vui_mem.h vui_utf8.h \
  vui_string.h vui_statemachine.h vui_stack.h vui_gc.h
 vui_gc.o: vui_gc.c vui_debug.h vui_gc.h vui_stack.h
-vui_stack.o: vui_stack.c vui_debug.h vui_stack.h
-vui_string.o: vui_string.c vui_utf8.h vui_string.h vui_debug.h
+vui_stack.o: vui_stack.c vui_debug.h vui_mem.h vui_stack.h
+vui_string.o: vui_string.c vui_debug.h vui_mem.h vui_utf8.h vui_string.h
 vui_utf8.o: vui_utf8.c vui_debug.h vui_utf8.h vui_string.h
 vui_graphviz.o: vui_graphviz.c vui_debug.h vui_gc.h vui_stack.h \
  vui_graphviz.h vui_string.h vui_statemachine.h

@@ -3,18 +3,20 @@
 
 #include "vui_debug.h"
 
+#include "vui_mem.h"
+
 #include "vui_stack.h"
 
 vui_stack* vui_stack_new_prealloc_at(vui_stack* stk, size_t maxn)
 {
 	if (stk == NULL)
 	{
-		stk = malloc(sizeof(vui_stack));
+		stk = vui_new(vui_stack);
 	}
 
 	stk->n = 0;
 	stk->maxn = maxn;
-	stk->s = malloc(stk->maxn*sizeof(void*));
+	stk->s = vui_new_array(void*, stk->maxn);
 	stk->def = NULL;
 	stk->dtor = NULL;
 
@@ -66,7 +68,7 @@ void vui_stack_kill(vui_stack* stk)
 
 	vui_stack_dtor(stk);
 
-	free(stk);
+	vui_free(stk);
 }
 
 void vui_stack_dtor(vui_stack* stk)
@@ -84,7 +86,7 @@ void vui_stack_dtor(vui_stack* stk)
 
 	if (stk->s == NULL) return;
 
-	free(stk->s);
+	vui_free(stk->s);
 
 	stk->s = NULL;
 }
@@ -119,19 +121,26 @@ void** vui_stack_release(vui_stack* stk, size_t* n)
 	void** s = stk->s;
 	*n = stk->n;
 
-	free(stk);
+	vui_free(stk);
 
 	return s;
 }
 
 
+static inline void vui_stack_grow(vui_stack* stk, size_t maxn_new)
+{
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_STRING)
+	printf("realloc: %zd, %zd -> %zd\n", stk->n, stk->maxn, maxn_new);
+#endif
+	stk->maxn = maxn_new;
+	stk->s = vui_resize_array(stk->s, void*, stk->maxn);
+}
+
 void* vui_stack_shrink(vui_stack* stk)
 {
 	if (stk == NULL) return NULL;
 
-	stk->maxn = stk->n;
-
-	stk->s = realloc(stk->s, stk->maxn*sizeof(void*));
+	vui_stack_grow(stk, stk->n);
 
 	return stk->s;
 }
@@ -147,11 +156,7 @@ void vui_stack_push(vui_stack* stk, void* s)
 
 	if (stk->maxn < stk->n + 1)
 	{
-#if defined(VUI_DEBUG) && defined(VUI_DEBUG_STACK)
-		printf("realloc: %zd, %zd\n", stk->maxn, stk->n);
-#endif
-		stk->maxn = stk->n*2;
-		stk->s = realloc(stk->s, stk->maxn*sizeof(void*));
+		vui_stack_grow(stk, stk->n*2);
 	}
 
 	stk->s[stk->n++] = s;
@@ -179,11 +184,7 @@ void vui_stack_append(vui_stack* stk, vui_stack* stk2)
 	// make room for stk2
 	if (stk->maxn < n)
 	{
-#if defined(VUI_DEBUG) && defined(VUI_DEBUG_STACK)
-		printf("realloc: %zd, %zd\n", stk->maxn, stk->n);
-#endif
-		stk->maxn = n*2;
-		stk->s = realloc(stk->s, stk->maxn);
+		vui_stack_grow(stk, n*2);
 	}
 
 	memcpy(&stk->s[stk->n], stk2->s, stk2->n*sizeof(void*));

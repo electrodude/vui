@@ -4,9 +4,11 @@
 // for vsnprintf
 #include <stdio.h>
 
-#include "vui_utf8.h"
-
 #include "vui_debug.h"
+
+#include "vui_mem.h"
+
+#include "vui_utf8.h"
 
 #include "vui_string.h"
 
@@ -15,12 +17,12 @@ vui_string* vui_string_new_prealloc_at(vui_string* str, size_t maxn)
 {
 	if (str == NULL)
 	{
-		str = malloc(sizeof(vui_string));
+		str = vui_new(vui_string);
 	}
 
 	str->n = 0;
 	str->maxn = maxn;
-	str->s = malloc(str->maxn);
+	str->s = vui_new_array(char, str->maxn);
 	str->s[0] = 0;
 
 	return str;
@@ -61,7 +63,7 @@ void vui_string_kill(vui_string* str)
 
 	vui_string_dtor(str);
 
-	free(str);
+	vui_free(str);
 }
 
 void vui_string_dtor(vui_string* str)
@@ -72,7 +74,7 @@ void vui_string_dtor(vui_string* str)
 
 	if (str->s == NULL) return;
 
-	free(str->s);
+	vui_free(str->s);
 
 	str->s = NULL;
 }
@@ -85,9 +87,19 @@ char* vui_string_release(vui_string* str)
 
 	char* s = str->s;
 
-	free(str);
+	vui_free(str);
 
 	return s;
+}
+
+
+static inline void vui_string_grow(vui_string* str, size_t maxn_new)
+{
+#if defined(VUI_DEBUG) && defined(VUI_DEBUG_STRING)
+	printf("realloc: %zd, %zd -> %zd\n", str->n, str->maxn, maxn_new);
+#endif
+	str->maxn = maxn_new;
+	str->s = vui_resize_array(str->s, char, str->maxn);
 }
 
 
@@ -99,9 +111,7 @@ char* vui_string_shrink(vui_string* str)
 	vui_debugf("shrink(\"%s\")\n", vui_string_get(str));
 #endif
 
-	str->maxn = str->n+1;
-
-	str->s = realloc(str->s, str->maxn);
+	vui_string_grow(str, str->n + 1);
 
 	return vui_string_get(str);
 }
@@ -118,11 +128,7 @@ void vui_string_putc(vui_string* str, char c)
 	// make room for two more chars: c and null terminator
 	if (str->maxn < str->n + 2)
 	{
-#if defined(VUI_DEBUG) && defined(VUI_DEBUG_STRING)
-		printf("realloc: %zd, %zd\n", str->maxn, str->n);
-#endif
-		str->maxn = (str->n + 2)*2;
-		str->s = realloc(str->s, str->maxn);
+		vui_string_grow(str, (str->n + 2)*2);
 	}
 
 	str->s[str->n++] = c;
@@ -172,11 +178,8 @@ void vui_string_append_printf(vui_string* str, const char* fmt, ...)
 	// make room for new stuff and null terminator
 	if (str->maxn < n + 1)
 	{
-#if defined(VUI_DEBUG) && defined(VUI_DEBUG_STRING)
-		printf("realloc: %zd, %zd\n", str->maxn, str->n);
-#endif
 		str->maxn = (n + 1)*2;
-		str->s = realloc(str->s, str->maxn);
+		vui_string_grow(str, (n + 1)*2);
 	}
 
 	va_start(argp, fmt);
@@ -199,11 +202,7 @@ void vui_string_append(vui_string* str, const vui_string* str2)
 	// make room for str2 and null terminator
 	if (str->maxn < n + 1)
 	{
-#if defined(VUI_DEBUG) && defined(VUI_DEBUG_STRING)
-		printf("realloc: %zd, %zd\n", str->maxn, str->n);
-#endif
-		str->maxn = (n + 1)*2;
-		str->s = realloc(str->s, str->maxn);
+		vui_string_grow(str, (n + 1)*2);
 	}
 
 	memcpy(&str->s[str->n], str2->s, str2->n);
@@ -286,6 +285,6 @@ void vui_string_get_replace(vui_string* str, char** s)
 
 	if (s_old != NULL)
 	{
-		free(s_old);
+		vui_free(s_old);
 	}
 }
