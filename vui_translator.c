@@ -7,6 +7,8 @@
 
 #include "vui_mem.h"
 
+#include "vui_stack_refcount.h"
+
 #include "vui_utf8.h"
 #include "vui.h"
 
@@ -33,10 +35,12 @@ vui_tr* vui_tr_new_at(vui_tr* tr)
 	vui_gc_incr(tr->st_start);
 
 	tr->stk = vui_stack_new();
-	tr->tos = vui_stack_peek(tr->stk);
-	tr->stk->dtor = (void (*)(void*))vui_tr_obj_kill;
+	tr->stk->on_drop = (void (*)(void*))vui_tr_obj_kill;
 
-	tr->st_stk = vui_state_stack_new();
+	tr->tos = vui_stack_peek(tr->stk);
+
+
+	tr->st_stk = vui_stack_refcount_new();
 
 	return tr;
 }
@@ -45,6 +49,7 @@ void vui_tr_kill(vui_tr* tr)
 {
 	vui_gc_decr(tr->st_start);
 
+	vui_stack_kill(tr->st_stk);
 	vui_stack_kill(tr->stk);	// kills tr->tos, which is vui_stack_peek(tr->stk)
 
 	vui_free(tr);
@@ -267,7 +272,7 @@ vui_tr_obj* vui_tr_obj_cast(vui_tr_obj* obj, vui_tr_obj_type type)
 
 				case VUI_TR_OBJ_STACK:
 					obj->obj.stk = vui_stack_new();
-					obj->obj.stk->dtor = (void(*)(void*))vui_tr_obj_kill;
+					obj->obj.stk->on_drop = (void(*)(void*))vui_tr_obj_kill;
 					break;
 
 				case VUI_TR_OBJ_STATE:
@@ -355,7 +360,7 @@ vui_tr_obj* vui_tr_obj_cast(vui_tr_obj* obj, vui_tr_obj_type type)
 					break;
 
 				case VUI_TR_OBJ_FRAG:
-					obj->obj.frag = vui_frag_new(obj->obj.st, vui_state_stack_new());
+					obj->obj.frag = vui_frag_new(obj->obj.st, vui_stack_refcount_new());
 					break;
 
 				case VUI_TR_OBJ_TRANSLATOR:
@@ -447,6 +452,7 @@ vui_tr* vui_tr_new_identity(void)
 	return tr;
 }
 
+// TODO
 vui_tr* vui_tr_new_tr(char* from, char* to, char* delete)
 {
 	vui_tr* tr = vui_tr_new();
@@ -462,7 +468,7 @@ vui_tr* vui_tr_new_tr(char* from, char* to, char* delete)
 
 			if (f != t)
 			{
-				
+				// TODO
 			}
 		}
 	}
@@ -471,7 +477,7 @@ vui_tr* vui_tr_new_tr(char* from, char* to, char* delete)
 	{
 		for (; *delete; delete++)
 		{
-			
+			// TODO
 		}
 	}
 
@@ -618,7 +624,7 @@ vui_state* vui_tr_tfunc_call(vui_state* currstate, unsigned int c, int act, void
 
 	if (act <= 0) return NULL;
 
-	//vui_state_stack_push(tr->stk, /* what? */);
+	//vui_stack_push(tr->stk, /* what? */);
 
 	return NULL;
 }
@@ -627,9 +633,9 @@ vui_state* vui_tr_tfunc_return(vui_state* currstate, unsigned int c, int act, vo
 {
 	vui_tr* tr = data;
 
-	if (act <= 0) return vui_state_stack_peek(tr->st_stk);
+	if (act <= 0) return vui_stack_peek(tr->st_stk);
 
-	return vui_state_stack_pop(tr->st_stk);
+	return vui_stack_pop(tr->st_stk);
 }
 
 vui_state* vui_tr_tfunc_apply(vui_state* currstate, unsigned int c, int act, void* data)
@@ -648,9 +654,9 @@ static inline void t_escaper_end(vui_state* lt, vui_tr* tr, vui_state* returnto,
 {
 	vui_transition* lt_mid = vui_transition_tr_append(tr, NULL);
 
-	vui_stack* lt_end_funcs = vui_stack_new_v(2,
+	vui_gc_ptr* lt_end_funcs = vui_gc_ptr_new_stack(vui_stack_new_v(2,
 			vui_transition_multi_stage(vui_transition_tr_drop(tr, NULL)),
-			vui_transition_multi_stage(vui_transition_run_s_s(vui_state_new_t_self(vui_transition_tr_append(tr, NULL)), reaction)));
+			vui_transition_multi_stage(vui_transition_run_s_s(vui_state_new_t_self(vui_transition_tr_append(tr, NULL)), reaction))));
 
 	vui_set_string_t_mid(lt, action, lt_mid, vui_transition_multi(lt_end_funcs, returnto));
 }
@@ -659,12 +665,11 @@ vui_frag* vui_frag_accept_escaped(vui_tr* tr)
 {
 	vui_state* escaper = vui_state_new_putc(tr);
 
-	vui_string_reset(&escaper->name);
-	vui_string_puts(&escaper->name, "escaper");
+	vui_string_sets(&escaper->name, "escaper");
 
 	escaper->gv_norank = 1;
 
-	vui_stack* exits = vui_state_stack_new();
+	vui_stack* exits = vui_stack_refcount_new();
 
 	vui_state* exit = vui_state_new();
 
@@ -672,17 +677,18 @@ vui_frag* vui_frag_accept_escaped(vui_tr* tr)
 	vui_set_char_t(escaper, ' ', leave);
 	vui_set_char_t(escaper, 0, leave);
 
-	vui_state_stack_push(exits, exit);
+	vui_stack_push(exits, exit);
 
-	vui_stack* lt_abort_funcs = vui_stack_new_v(2,
+	vui_gc_ptr* lt_abort_funcs = vui_gc_ptr_new_stack(vui_stack_new_v(2,
 		vui_transition_multi_stage(vui_transition_tr_append(tr, NULL)),
-		vui_transition_multi_stage(vui_transition_tr_cat(tr, NULL)));
+		vui_transition_multi_stage(vui_transition_tr_cat(tr, NULL))));
 
-	vui_stack* lt_enter_funcs = vui_stack_new_v(2,
+	vui_gc_ptr* lt_enter_funcs = vui_gc_ptr_new_stack(vui_stack_new_v(2,
 		vui_transition_multi_stage(vui_transition_tr_new_string(tr, NULL)),
-		vui_transition_multi_stage(vui_transition_tr_append(tr, NULL)));
+		vui_transition_multi_stage(vui_transition_tr_append(tr, NULL))));
 
-	vui_state* lt = vui_state_new_t(vui_transition_multi(lt_abort_funcs, escaper));
+	vui_transition* t_abort = vui_transition_multi(lt_abort_funcs, escaper);
+	vui_state* lt = vui_state_new_t(t_abort);
 	vui_set_char_t(escaper, '<', vui_transition_multi(lt_enter_funcs, lt));
 
 	t_escaper_end(lt, tr, escaper, "cr>", "\n");
@@ -708,7 +714,7 @@ vui_frag* vui_frag_accept_escaped(vui_tr* tr)
 	t_escaper_end(lt, tr, escaper, "space>", " ");
 	t_escaper_end(lt, tr, escaper, "sp>", " ");
 
-	vui_state* bsl = vui_state_new_t(vui_transition_multi(lt_abort_funcs, escaper));
+	vui_state* bsl = vui_state_new_t(t_abort);
 	vui_set_char_t(escaper, '\\', vui_transition_multi(lt_enter_funcs, bsl));
 
 	t_escaper_end(bsl, tr, escaper, "n", "\n");

@@ -12,12 +12,16 @@ extern "C"
 
 typedef struct vui_stack
 {
-	size_t n;                  // current size of stack
-	size_t maxn;               // number of allocated slots
-	void** s;                  // pointer to stack buffer
-	void* def;                 // default in case of underflow
-	void (*dtor)(void* elem);  // element destructor function
-	                           //  (on trunc or reset)
+	size_t n;                                               // current size of stack
+	size_t maxn;                                            // number of allocated slots
+	void** s;                                               // pointer to stack buffer
+	void* def;                                              // default in case of underflow
+	                                                        //  you must not set this manually - use vui_stack_def_set
+
+	void (*on_push)(void* elem);                            // element push hook
+	void (*on_pop)(void* elem);                             // element pop hook
+	void (*on_def_set)(struct vui_stack* stk, void* elem);  // default changed hook
+	void (*on_drop)(void* elem);                            // element destructor function on trunc, reset, or kill
 } vui_stack;
 
 // Create a new stack, given how many slots to preallocate
@@ -54,13 +58,14 @@ void vui_stack_kill(vui_stack* stk);
 // Use this for non-dynamically-allocated vui_stacks
 void vui_stack_dtor(vui_stack* stk);
 
-static inline void vui_stack_def_set(vui_stack* stk, void* def)
-{
-	if (stk == NULL) return;
+// Sets the default value that should be returned on underflow
+// Calls stk->on_def_set, which by default calls stk->on_pop on the old default
+//  and calls stk->on_push on the new default
+// Returns the old default value
+void* vui_stack_def_set(vui_stack* stk, void* def);
 
-	stk->def = def;
-}
-
+// gets stk->def
+// mostly useless, tentatively deprecated
 static inline void* vui_stack_def_get(vui_stack* stk)
 {
 	if (stk == NULL) return NULL;

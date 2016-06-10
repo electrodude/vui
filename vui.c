@@ -7,6 +7,8 @@
 
 #include "vui_mem.h"
 
+#include "vui_stack_refcount.h"
+
 #include "vui_utf8.h"
 #include "vui_gc.h"
 
@@ -52,9 +54,9 @@ size_t cmd_crsrx;
 size_t cmd_len;
 
 // cmdline history functions
-static hist_entry* hist_entry_new(vui_cmdline* cmdline)
+static vui_cmdline_hist_entry* vui_cmdline_hist_entry_new(vui_cmdline* cmdline)
 {
-	hist_entry* entry = vui_new(hist_entry);
+	vui_cmdline_hist_entry* entry = vui_new(vui_cmdline_hist_entry);
 
 	entry->prev = cmdline->hist_last_entry;
 
@@ -72,11 +74,11 @@ static hist_entry* hist_entry_new(vui_cmdline* cmdline)
 	return entry;
 }
 
-static void hist_entry_kill(hist_entry* entry)
+static void vui_cmdline_hist_entry_kill(vui_cmdline_hist_entry* entry)
 {
 	// make prev and next point to each other instead of entry
-	hist_entry* oldprev = entry->prev;
-	hist_entry* oldnext = entry->next;
+	vui_cmdline_hist_entry* oldprev = entry->prev;
+	vui_cmdline_hist_entry* oldnext = entry->next;
 
 	if (oldnext != NULL)
 	{
@@ -95,14 +97,13 @@ static void hist_entry_kill(hist_entry* entry)
 	vui_free(entry);
 }
 
-static void hist_entry_set(hist_entry* entry, char* str, size_t len)
+static void vui_cmdline_hist_entry_set(vui_cmdline_hist_entry* entry, char* str, size_t len)
 {
-	vui_string_reset(&entry->line);
-	vui_string_putn(&entry->line, len, str);
+	vui_string_setn(&entry->line, len, str);
 	vui_string_get(&entry->line);
 }
 
-static void hist_entry_get(hist_entry* entry, char* str, size_t *len)
+static void vui_cmdline_hist_entry_get(vui_cmdline_hist_entry* entry, char* str, size_t *len)
 {
 	size_t n = entry->line.n;
 	memcpy(str, entry->line.s, n);
@@ -110,7 +111,7 @@ static void hist_entry_get(hist_entry* entry, char* str, size_t *len)
 	*len = n;
 }
 
-static void hist_entry_shrink(hist_entry* entry)
+static void vui_cmdline_hist_entry_shrink(vui_cmdline_hist_entry* entry)
 {
 	vui_string_shrink(&entry->line);
 }
@@ -124,7 +125,7 @@ static void hist_last_entry_edit(vui_cmdline* cmdline)
 		return;
 	}
 
-	hist_entry_set(cmdline->hist_last_entry, cmdline->hist_curr_entry->line.s, cmdline->hist_curr_entry->line.n);
+	vui_cmdline_hist_entry_set(cmdline->hist_last_entry, cmdline->hist_curr_entry->line.s, cmdline->hist_curr_entry->line.n);
 
 	cmdline->hist_curr_entry = cmdline->hist_last_entry;
 }
@@ -264,8 +265,8 @@ void vui_init(int width)
 		vui_set_char_t(vui_normal_mode->state, i, transition_normal);
 	}
 
-	vui_state_stack = vui_state_stack_new();
-	vui_state_stack_set_def(vui_state_stack, vui_normal_mode->state);
+	vui_state_stack = vui_stack_refcount_new();
+	vui_stack_def_set(vui_state_stack, vui_normal_mode->state);
 
 	vui_normal_mode->state->push = vui_state_stack;
 
@@ -295,7 +296,7 @@ void vui_deinit(void)
 		vui_gc_decr(vui_register_container);
 	}
 
-	vui_state_stack_kill(vui_state_stack);
+	vui_stack_refcount_deconvert(vui_state_stack);
 
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
 	vui_debugf("vui_normal_mode->state->root = %d\n", vui_normal_mode->state->gc.root);
@@ -305,6 +306,8 @@ void vui_deinit(void)
 
 	vui_gc_run();
 	vui_gc_run();
+
+	vui_stack_kill(vui_state_stack);
 
 	vui_free(vui_cmd);
 	vui_free(vui_status);
@@ -373,8 +376,7 @@ void vui_count_init(void)
 	vui_transition* transition_count_leave = vui_transition_run_c_s(vui_normal_mode->state);
 
 	vui_count_mode = vui_state_new_t(transition_count_leave);
-	vui_string_reset(&vui_count_mode->name);
-	vui_string_puts(&vui_count_mode->name, "vui_count_mode");
+	vui_string_sets(&vui_count_mode->name, "vui_count_mode");
 
 	vui_transition* transition_count = vui_transition_new3(vui_count_mode, vui_tfunc_count, &vui_count);
 	vui_set_range_t(vui_count_mode, '0', '9', transition_count);
@@ -451,7 +453,7 @@ static vui_state* vui_tfunc_record_enter(vui_state* currstate, unsigned int c, i
 	{
 		vui_showcmd_put(c);
 	}
-	else if (act == VUI_ACT_GC)
+	else if (act == VUI_ACT_GC_MARK)
 	{
 		vui_gc_mark(state_macro_record);
 	}
@@ -481,8 +483,7 @@ void vui_macro_init(const char* record, const char* execute)
 	vui_transition* transition_macro_record = vui_transition_new3(vui_normal_mode->state, vui_tfunc_macro_record, NULL);
 	state_macro_record = vui_state_new_t(transition_macro_record);
 
-	vui_string_reset(&state_macro_record->name);
-	vui_string_puts(&state_macro_record->name, record);
+	vui_string_sets(&state_macro_record->name, record);
 
 	vui_transition* transition_record_enter = vui_transition_new2(vui_tfunc_record_enter, NULL);
 
@@ -492,8 +493,7 @@ void vui_macro_init(const char* record, const char* execute)
 
 	vui_state* state_macro_execute = vui_state_new_t(transition_macro_execute);
 
-	vui_string_reset(&state_macro_execute->name);
-	vui_string_puts(&state_macro_execute->name, execute);
+	vui_string_sets(&state_macro_execute->name, execute);
 
 	vui_set_string_t(vui_normal_mode->state, execute, vui_transition_new_showcmd_put(state_macro_execute));
 }
@@ -524,8 +524,7 @@ void vui_register_init(void)
 	vui_gc_incr(vui_register_container);
 
 	vui_register_select_mode = vui_state_new_t(vui_transition_new2(vui_tfunc_register_select, &vui_register_curr));
-	vui_string_reset(&vui_register_select_mode->name);
-	vui_string_puts(&vui_register_select_mode->name, "vui_register_select_mode");
+	vui_string_sets(&vui_register_select_mode->name, "vui_register_select_mode");
 
 	vui_set_char_t(vui_normal_mode->state, '"', vui_transition_new_showcmd_put(vui_register_select_mode));
 }
@@ -715,8 +714,7 @@ vui_mode* vui_mode_new(char* cmd, char* name, char* label, int flags, vui_transi
 		state_internal = vui_state_new();
 	}
 
-	vui_string_reset(&state_internal->name);
-	vui_string_puts(&state_internal->name, name);
+	vui_string_sets(&state_internal->name, name);
 	vui_string_puts(&state_internal->name, "_internal");
 	vui_string_get(&state_internal->name); // append NULL terminator
 
@@ -724,12 +722,13 @@ vui_mode* vui_mode_new(char* cmd, char* name, char* label, int flags, vui_transi
 
 	mode->state_internal = state_internal;
 
-	mode->state_curr = state_internal;
+	vui_state* state = vui_state_new_t_self(vui_transition_run_c_p(&mode->state_curr_ptr));
 
-	vui_state* state = vui_state_new_t_self(vui_transition_run_c_p(&mode->state_curr));
+	mode->state_curr_ptr->next = state_internal;
 
-	vui_string_reset(&state->name);
-	vui_string_puts(&state->name, name);
+	vui_gc_incr(mode->state_curr_ptr);
+
+	vui_string_sets(&state->name, name);
 	vui_string_get(&state->name); // append NULL terminator
 
 	vui_gc_incr(state);
@@ -958,7 +957,7 @@ static vui_state* vui_tfunc_cmd_up(vui_state* currstate, unsigned int c, int act
 
 		cmdline->hist_curr_entry = cmdline->hist_curr_entry->prev;
 
-		hist_entry_get(cmdline->hist_curr_entry, vui_cmd_base, &cmd_len);
+		vui_cmdline_hist_entry_get(cmdline->hist_curr_entry, vui_cmd_base, &cmd_len);
 
 		cmd_crsrx = cmd_len;
 		memset(&vui_cmd_base[cmd_crsrx], ' ', cols - cmd_base);
@@ -994,7 +993,7 @@ static vui_state* vui_tfunc_cmd_down(vui_state* currstate, unsigned int c, int a
 
 		cmdline->hist_curr_entry = cmdline->hist_curr_entry->next;
 
-		hist_entry_get(cmdline->hist_curr_entry, vui_cmd_base, &cmd_len);
+		vui_cmdline_hist_entry_get(cmdline->hist_curr_entry, vui_cmd_base, &cmd_len);
 
 		cmd_crsrx = cmd_len;
 		memset(&vui_cmd_base[cmd_crsrx], ' ', cols - cmd_base);
@@ -1053,14 +1052,14 @@ static vui_state* vui_tfunc_cmd_escape(vui_state* currstate, unsigned int c, int
 
 	if (cmdline->hist_curr_entry != cmdline->hist_last_entry && !cmdline->cmd_modified)
 	{
-		hist_entry_kill(cmdline->hist_curr_entry);
+		vui_cmdline_hist_entry_kill(cmdline->hist_curr_entry);
 		cmdline->hist_curr_entry = cmdline->hist_last_entry;
 	}
 
-	hist_entry_set(cmdline->hist_curr_entry, vui_cmd_base, cmd_len);
+	vui_cmdline_hist_entry_set(cmdline->hist_curr_entry, vui_cmd_base, cmd_len);
 
 
-	hist_entry_shrink(cmdline->hist_curr_entry);
+	vui_cmdline_hist_entry_shrink(cmdline->hist_curr_entry);
 
 	if (cmdline->hist_curr_entry->line.n > 0)
 	{
@@ -1068,7 +1067,7 @@ static vui_state* vui_tfunc_cmd_escape(vui_state* currstate, unsigned int c, int
 		vui_debugf("new entry\n");
 #endif
 
-		hist_entry_new(cmdline);
+		vui_cmdline_hist_entry_new(cmdline);
 	}
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
 	else
@@ -1092,16 +1091,16 @@ static vui_state* vui_tfunc_cmd_enter(vui_state* currstate, unsigned int c, int 
 
 	if (cmdline->hist_curr_entry != cmdline->hist_last_entry && !cmdline->cmd_modified)
 	{
-		hist_entry_kill(cmdline->hist_curr_entry);
+		vui_cmdline_hist_entry_kill(cmdline->hist_curr_entry);
 		cmdline->hist_curr_entry = cmdline->hist_last_entry;
 	}
 
-	hist_entry_set(cmdline->hist_curr_entry, vui_cmd_base, cmd_len);
+	vui_cmdline_hist_entry_set(cmdline->hist_curr_entry, vui_cmd_base, cmd_len);
 
 	cmdline->on_submit(vui_tr_run_str(cmdline->tr, &cmdline->hist_curr_entry->line));
 
 
-	hist_entry_shrink(cmdline->hist_curr_entry);
+	vui_cmdline_hist_entry_shrink(cmdline->hist_curr_entry);
 
 	if (cmdline->hist_curr_entry->line.n > 0)
 	{
@@ -1109,7 +1108,7 @@ static vui_state* vui_tfunc_cmd_enter(vui_state* currstate, unsigned int c, int 
 		vui_debugf("new entry\n");
 #endif
 
-		hist_entry_new(cmdline);
+		vui_cmdline_hist_entry_new(cmdline);
 	}
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_VUI)
 	else
@@ -1249,7 +1248,7 @@ vui_cmdline* vui_cmdline_new(char* cmd, char* name, char* label, vui_tr* tr, vui
 	vui_set_char_s_u(cmdline_state, 22, keyescapestate);
 #endif
 
-	hist_entry_new(cmdline);
+	vui_cmdline_hist_entry_new(cmdline);
 
 	return cmdline;
 }
@@ -1259,6 +1258,8 @@ void vui_mode_kill(vui_mode* mode)
 	vui_gc_decr(mode->state);
 	vui_gc_decr(mode->state_internal);
 
+	vui_gc_decr(mode->state_curr_ptr);
+
 	vui_string_dtor(&mode->name);
 	vui_string_dtor(&mode->label);
 
@@ -1267,8 +1268,20 @@ void vui_mode_kill(vui_mode* mode)
 
 void vui_cmdline_kill(vui_cmdline* cmdline)
 {
+	vui_cmdline_hist_entry* hist_entry = cmdline->hist_last_entry;
+
+	while (hist_entry != NULL)
+	{
+		vui_cmdline_hist_entry* last = hist_entry;
+
+		hist_entry = last->prev;
+
+		vui_cmdline_hist_entry_kill(last);
+	}
+
 	vui_mode_kill(cmdline->mode);
 	vui_tr_kill(cmdline->tr);
+
 	vui_free(cmdline);
 }
 
@@ -1311,7 +1324,7 @@ void vui_input(unsigned int c)
 
 	if (vui_curr_state->push != NULL)
 	{
-		vui_state_stack_push_nodup(vui_curr_state->push, vui_curr_state);
+		vui_stack_push_nodup(vui_curr_state->push, vui_curr_state);
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_STATEMACHINE)
 		vui_debugf("push %d\n", vui_curr_state->push->n);
 #endif

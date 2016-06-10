@@ -131,8 +131,7 @@ vui_frag* vui_frag_cat(vui_frag* lhs, vui_frag* rhs)
 
 	vui_gc_incr(rhs->entry);
 
-	vui_string_reset(&rhs->entry->name);
-	vui_string_append(&rhs->entry->name, &newname);
+	vui_string_setstr(&rhs->entry->name, &newname);
 	vui_string_dtor(&newname);
 
 	return rhs;

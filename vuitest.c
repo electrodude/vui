@@ -13,10 +13,13 @@
 
 #include "vui_debug.h"
 
+#include "vui_stack_refcount.h"
+
+#include "vui_gc.h"
+
 #include "vui.h"
 #include "vui_combinator.h"
 #include "vui_translator.h"
-#include "vui_gc.h"
 
 #include "vui_graphviz.h"
 
@@ -128,7 +131,10 @@ static void quit(void)
 
 	vui_debugf("Quitting!\n");
 
+	fclose(dbgf);
+
 	endwin();
+
 	printf("Quitting!\n");
 
 	exit(0);
@@ -208,15 +214,15 @@ static vui_state* tfunc_graphviz(vui_state* currstate, unsigned int c, int act, 
 
 	vui_reset();
 
-	vui_stack* gv_roots = vui_state_stack_new();
-	vui_state_stack_push(gv_roots, vui_normal_mode->state);
-	//vui_state_stack_push(gv_roots, cmd_tr_start);
+	vui_stack* gv_roots = vui_stack_refcount_new();
+	vui_stack_push(gv_roots, vui_normal_mode->state);
+	//vui_stack_push(gv_roots, cmd_tr_start);
 
 	FILE* f = fopen("vui.dot", "w");
 	vui_gv_write(f, gv_roots);
 	fclose(f);
 
-	vui_state_stack_kill(gv_roots);
+	vui_stack_kill(gv_roots);
 
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_TEST)
 	vui_debugf("wrote vui.dot\n");
@@ -326,8 +332,6 @@ int main(int argc, char** argv)
 
 	vui_debugf("start\n");
 
-	endwin();
-
 	struct sigaction sa;
 	memset(&sa, 0, sizeof(struct sigaction));
 	sa.sa_handler = sighandler;
@@ -344,6 +348,8 @@ int main(int argc, char** argv)
 
 	keypad(statusline, TRUE);
 	meta(statusline, TRUE);
+
+	endwin();
 
 
 	vui_init(COLS);
@@ -366,7 +372,7 @@ int main(int argc, char** argv)
 	vui_tr* cmd_tr = vui_tr_new();
 
 	vui_state* cmd_tr_start = vui_state_new_putc(cmd_tr);
-	vui_string_new_str_at(&cmd_tr_start->name, "cmd_tr");
+	vui_string_sets(&cmd_tr_start->name, "cmd_tr");
 
 
 	// :q
@@ -378,7 +384,7 @@ int main(int argc, char** argv)
 	// :map a b
 	vui_state* cmd_tr_map = vui_frag_release(
 	                                         vui_frag_cat(vui_frag_accept_escaped(cmd_tr), vui_frag_accept_escaped(cmd_tr)),
-						 vui_state_new_deadend());
+	                                         vui_state_new_deadend());
 
 	vui_set_string_t_mid(cmd_tr_start, "map ", vui_transition_tr_append(cmd_tr, NULL), vui_transition_tr_new_string(cmd_tr, cmd_tr_map));
 
@@ -408,18 +414,18 @@ int main(int argc, char** argv)
 
 #if 0
 	vui_stack* gv_roots = vui_stack_new();
-	vui_state_stack_push(gv_roots, vui_normal_mode);
-	//vui_state_stack_push(gv_roots, cmd_tr_start);
+	vui_stack_push(gv_roots, vui_normal_mode);
+	//vui_stack_push(gv_roots, cmd_tr_start);
 #if 0
-	vui_state_stack_push(gv_roots, vui_frag_release(vui_frag_catv(4,
-					vui_frag_union(vui_frag_new_regexp("a[a-c\\]-_]df"),
-					vui_frag_new_string("asdg")),
-					vui_frag_union(vui_frag_new_string("asef"),
-					vui_frag_new_string("aseg")),
-					vui_frag_new_any(),
-					vui_frag_union(vui_frag_new_string("atef"),
-					vui_frag_new_string("ateg"))
-					), NULL));
+	vui_stack_push(gv_roots, vui_frag_release(vui_frag_catv(4,
+	                          vui_frag_union(vui_frag_new_regexp("a[a-c\\]-_]df"),
+	                          vui_frag_new_string("asdg")),
+	                          vui_frag_union(vui_frag_new_string("asef"),
+	                          vui_frag_new_string("aseg")),
+	                          vui_frag_new_any(),
+	                          vui_frag_union(vui_frag_new_string("atef"),
+	                          vui_frag_new_string("ateg"))
+	                         ), NULL));
 #endif
 
 	FILE* f = fopen("vui.dot", "w");

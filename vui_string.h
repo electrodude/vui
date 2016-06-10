@@ -63,6 +63,8 @@ void vui_string_dtor(vui_string* str);
 // Appends null terminator
 char* vui_string_release(vui_string* str);
 
+void vui_string_release_replace(vui_string* str, char** s);
+
 
 // Reset a string to zero length
 // This does nothing but `str->n = 0`; it neither null-terminates it
@@ -109,6 +111,39 @@ static inline void vui_string_append_stretch(vui_string* str, const char* start,
 
 // Append a codepoint to be encoded as UTF-8
 void vui_string_put(vui_string* str, unsigned int c);
+
+
+// Set a string to a character, clearing it first
+// Is equivalent to vui_reset_string followed by vui_string_putc.
+static inline void vui_string_setc(vui_string* str, char c)
+{
+	vui_string_reset(str);
+	vui_string_putc(str, c);
+}
+
+// Set a string to a null-terminated string, clearing it first
+// Is equivalent to vui_reset_string followed by vui_string_puts.
+static inline void vui_string_sets(vui_string* str, const char* s)
+{
+	vui_string_reset(str);
+	vui_string_puts(str, s);
+}
+
+// Set a string to a string that is n characters long, clearing it first
+// Is equivalent to vui_reset_string followed by vui_string_putn.
+static inline void vui_string_setn(vui_string* str, size_t n, const char* s)
+{
+	vui_string_reset(str);
+	vui_string_putn(str, n, s);
+}
+
+// Set a string to another string, clearing it first
+// Is equivalent to vui_reset_string followed by vui_string_append.
+static inline void vui_string_setstr(vui_string* str, const vui_string* str2)
+{
+	vui_string_reset(str);
+	vui_string_append(str, str2);
+}
 
 
 // Appends null terminator

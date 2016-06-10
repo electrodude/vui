@@ -92,6 +92,22 @@ char* vui_string_release(vui_string* str)
 	return s;
 }
 
+void vui_string_release_replace(vui_string* str, char** s)
+{
+	if (str == NULL) return;
+
+	if (s == NULL) return;
+
+	char* s_old = *s;
+
+	*s = vui_string_release(str);
+
+	if (s_old != NULL)
+	{
+		vui_free(s_old);
+	}
+}
+
 
 static inline void vui_string_grow(vui_string* str, size_t maxn_new)
 {

@@ -11,14 +11,17 @@ extern "C"
 
 #include "vui_gc.h"
 
+#include "vui_gc_ptr.h"
+
 #define VUI_STATE_BITS 8
 #define VUI_MAXSTATE (1 << VUI_STATE_BITS)
 
 
-#define VUI_ACT_GC     -1
-#define VUI_ACT_TEST    0
-#define VUI_ACT_RUN     1
-#define VUI_ACT_EMUL    2
+#define VUI_ACT_KILL    -2
+#define VUI_ACT_GC_MARK -1
+#define VUI_ACT_TEST     0
+#define VUI_ACT_RUN      1
+#define VUI_ACT_EMUL     2
 
 typedef struct vui_state vui_state;
 
@@ -129,8 +132,10 @@ static inline vui_transition* vui_transition_new3(vui_state* next, vui_transitio
 }
 
 
+// Run multiple other transitions
+// Takes a vui_gc_ptr to a vui_stack of transitions to run
 vui_state* vui_tfunc_multi(vui_state* currstate, unsigned int c, int act, void* data);
-vui_transition* vui_transition_multi(vui_stack* funcs, vui_state* next);
+vui_transition* vui_transition_multi(vui_gc_ptr* funcs, vui_state* next);
 
 vui_transition* vui_transition_multi_stage(vui_transition* t);
 
@@ -138,19 +143,23 @@ vui_state* vui_tfunc_run_s_s(vui_state* currstate, unsigned int c, int act, void
 vui_transition* vui_transition_run_str_s(vui_state* st, vui_string* str);
 vui_transition* vui_transition_run_s_s(vui_state* st, char* str);
 
-// do what another state would do
+// Do what another state would do
 vui_state* vui_tfunc_run_c_s(vui_state* currstate, unsigned int c, int act, void* data);
 static inline vui_transition* vui_transition_run_c_s(vui_state* other)
 {
 	return vui_transition_new2(vui_tfunc_run_c_s, other);
 }
 
-// advance a different state machine
+// Advance a different state machine
+// st_ptr_ptr: a pointer to where vui_transition_run_c_p should put the pointer
+//  to the transition being abused as a state pointer container
+// Transitions are garbage collected and have a pointer to a state; instead of
+//  making a new object that's garbage collected and has a pointer to a state,
+//  I'm just reusing transitions.
+// You should call vui_gc_incr, vui_gc_decr, and vui_gc_mark as appropriate if
+//  you keep a reference to the transition.
 vui_state* vui_tfunc_run_c_p(vui_state* currstate, unsigned int c, int act, void* data);
-static inline vui_transition* vui_transition_run_c_p(vui_state** other)
-{
-	return vui_transition_new2(vui_tfunc_run_c_p, other);
-}
+vui_transition* vui_transition_run_c_p(vui_transition** st_ptr_ptr);
 
 
 // useless?
@@ -260,20 +269,6 @@ static inline vui_transition* vui_transition_stack_pop(vui_stack* stk)
 	return vui_transition_new2(vui_tfunc_stack_pop, stk);
 }
 
-
-void vui_state_stack_elem_dtor(vui_state* st);
-
-vui_stack* vui_state_stack_convert(vui_stack* stk);
-#define vui_state_stack_new_at(stk) vui_state_stack_convert(vui_stack_new_at(stk))
-#define vui_state_stack_new() vui_state_stack_convert(vui_stack_new())
-#define vui_state_stack_new_v(n, ...) vui_state_stack_convert(vui_stack_new_v(n, __VA_ARGS__))
-#define vui_state_stack_kill(stk) vui_stack_kill(stk)
-void vui_state_stack_push(vui_stack* stk, vui_state* st);
-void vui_state_stack_push_nodup(vui_stack* stk, vui_state* st);
-vui_state* vui_state_stack_pop(vui_stack* stk);
-#define vui_state_stack_peek(stk) vui_stack_peek(stk)
-
-void vui_state_stack_set_def(vui_stack* stk, vui_state* def);
 
 #ifdef __cplusplus
 }

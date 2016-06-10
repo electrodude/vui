@@ -7,6 +7,21 @@
 
 #include "vui_stack.h"
 
+void vui_stack_default_on_def_set(vui_stack* stk, void* def)
+{
+	void* def_old = stk->def;
+
+	if (def_old != NULL && stk->on_pop != NULL)
+	{
+		stk->on_pop(def_old);
+	}
+
+	if (def != NULL && stk->on_push != NULL)
+	{
+		stk->on_push(def);
+	}
+}
+
 vui_stack* vui_stack_new_prealloc_at(vui_stack* stk, size_t maxn)
 {
 	if (stk == NULL)
@@ -18,7 +33,11 @@ vui_stack* vui_stack_new_prealloc_at(vui_stack* stk, size_t maxn)
 	stk->maxn = maxn;
 	stk->s = vui_new_array(void*, stk->maxn);
 	stk->def = NULL;
-	stk->dtor = NULL;
+
+	stk->on_push = NULL;
+	stk->on_pop = NULL;
+	stk->on_def_set = vui_stack_default_on_def_set;
+	stk->on_drop = NULL;
 
 	return stk;
 }
@@ -51,13 +70,27 @@ vui_stack* vui_stack_new_array_at(vui_stack* stk, size_t n, void** elements)
 
 vui_stack* vui_stack_dup_at(vui_stack* stk, vui_stack* orig)
 {
-	orig->dtor = NULL;	// prevent double free
+	orig->on_drop = NULL;	// prevent double free
 
 	stk = vui_stack_new_prealloc_at(stk, orig->maxn);
 
-	memcpy(stk->s, orig->s, orig->n * sizeof(void*));
+	stk->on_push = orig->on_push;
+	stk->on_pop = orig->on_pop;
 
 	stk->n = orig->n;
+
+	for (size_t i = 0; i < orig->n; i++)
+	{
+		stk->s[i] = orig->s[i];
+	}
+
+	if (stk->on_push != NULL)
+	{
+		for (size_t i = 0; i < orig->n; i++)
+		{
+			stk->on_push(stk->s[i]);
+		}
+	}
 
 	return stk;
 }
@@ -77,9 +110,9 @@ void vui_stack_dtor(vui_stack* stk)
 
 	vui_stack_reset(stk);
 
-	if (stk->dtor != NULL && vui_stack_def_get(stk) != NULL)
+	if (stk->on_drop != NULL && vui_stack_def_get(stk) != NULL)
 	{
-		stk->dtor(vui_stack_def_get(stk));
+		stk->on_drop(vui_stack_def_get(stk));
 	}
 
 	stk->n = stk->maxn = 0;
@@ -91,15 +124,35 @@ void vui_stack_dtor(vui_stack* stk)
 	stk->s = NULL;
 }
 
+void* vui_stack_def_set(vui_stack* stk, void* def)
+{
+	if (stk == NULL) return NULL;
+
+	void* def_old = stk->def;
+
+	if (stk->on_def_set != NULL) stk->on_def_set(stk, def);
+
+	stk->def = def;
+
+	return def_old;
+}
+
 void vui_stack_trunc(vui_stack* stk, size_t n)
 {
 	if (stk == NULL) return;
 
-	if (stk->dtor != NULL)
+	if (stk->on_drop != NULL)
 	{
 		while (stk->n > n)
 		{
-			stk->dtor(stk->s[--stk->n]);
+			stk->on_drop(vui_stack_pop(stk));
+		}
+	}
+	else if (stk->on_pop != NULL)
+	{
+		while (stk->n > n)
+		{
+			vui_stack_pop(stk);
 		}
 	}
 	else
@@ -153,6 +206,8 @@ void vui_stack_push(vui_stack* stk, void* s)
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_STACK)
 	vui_debugf("Push %p\n", s);
 #endif
+
+	if (stk->on_push != NULL) stk->on_push(s);
 
 	if (stk->maxn < stk->n + 1)
 	{
@@ -214,11 +269,15 @@ void* vui_stack_pop(vui_stack* stk)
 		return stk->def;
 	}
 
+	void* p = stk->s[--stk->n];
+
 #if defined(VUI_DEBUG) && defined(VUI_DEBUG_STACK)
-	vui_debugf("Pop %p\n", stk->s[stk->n-1]);
+	vui_debugf("Pop %p\n", p);
 #endif
 
-	return stk->s[--stk->n];
+	if (stk->on_pop != NULL) stk->on_pop(p);
+
+	return p;
 }
 
 void* vui_stack_peek(vui_stack* stk)

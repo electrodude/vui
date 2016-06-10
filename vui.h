@@ -35,17 +35,17 @@ typedef struct vui_mode
 	vui_state* state_internal;
 	vui_state* state;
 
-	vui_state* state_curr; // current internal state
+	vui_transition* state_curr_ptr; // transition being abused to hold the current internal state object
 } vui_mode;
 
 
-typedef struct hist_entry
+typedef struct vui_cmdline_hist_entry
 {
-	struct hist_entry* prev;
-	struct hist_entry* next;
+	struct vui_cmdline_hist_entry* prev;
+	struct vui_cmdline_hist_entry* next;
 
 	vui_string line;
-} hist_entry;
+} vui_cmdline_hist_entry;
 
 typedef void vui_cmdline_submit_callback(vui_stack* cmd);
 
@@ -58,8 +58,8 @@ typedef struct vui_cmdline
 
 	int cmd_modified;
 
-	hist_entry* hist_curr_entry;
-	hist_entry* hist_last_entry;
+	vui_cmdline_hist_entry* hist_curr_entry;
+	vui_cmdline_hist_entry* hist_last_entry;
 } vui_cmdline;
 
 extern char* vui_bar;	// Pointer to status bar - changes, you must re-check this every time!
@@ -92,7 +92,7 @@ static inline vui_state* vui_return(int act)
 {
 	if (act > 0)
 	{
-		return vui_state_stack_pop(vui_state_stack);
+		return vui_stack_pop(vui_state_stack);
 	}
 	else
 	{
@@ -104,9 +104,9 @@ static inline vui_state* vui_return_n(int act, size_t n)
 {
 	if (act > 0)
 	{
-		while (n-- > 0) vui_state_stack_pop(vui_state_stack);
+		while (n-- > 0) vui_stack_pop(vui_state_stack);
 
-		return vui_state_stack_pop(vui_state_stack);
+		return vui_stack_pop(vui_state_stack);
 	}
 	else
 	{

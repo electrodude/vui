@@ -12,7 +12,7 @@ extern "C"
 
 // N.B. for any binary combinator: You must not use lhs or rhs after calling
 //  this; feed fragments through vui_frag_dup() before calling this function if
-//  you want to keep fragments.  
+//  you want to keep fragments.
 
 // Unions two fragments
 // rhs's transitions win any conflicts

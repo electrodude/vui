@@ -1,5 +1,7 @@
 #include "vui_mem.h"
 
+#include "vui_stack_refcount.h"
+
 #include "vui_fragment.h"
 
 // much credit goes to https://swtch.com/~rsc/regexp/regexp1.html
@@ -26,7 +28,7 @@ void vui_frag_kill(vui_frag* frag)
 {
 	vui_gc_decr(frag->entry);
 
-	vui_state_stack_kill(frag->exits);
+	vui_stack_kill(frag->exits);
 
 	vui_free(frag);
 }
@@ -93,7 +95,7 @@ vui_state* vui_frag_release(vui_frag* frag, vui_state* exit)
 
 vui_frag* vui_frag_new_string_t(char* s, vui_transition* t)
 {
-	vui_stack* exits = vui_state_stack_new();
+	vui_stack* exits = vui_stack_refcount_new();
 
 	vui_state* st_start = vui_state_new_t(NULL);
 
@@ -116,7 +118,7 @@ vui_frag* vui_frag_new_string_t(char* s, vui_transition* t)
 		vui_string_putc(&st_curr->name, *s);
 	}
 
-	vui_state_stack_push(exits, st_curr);
+	vui_stack_push(exits, st_curr);
 
 	return vui_frag_new(st_start, exits);
 }
@@ -163,7 +165,7 @@ static int vui_getchar_escaped(char** s, int* escaped)
 
 vui_frag* vui_frag_new_regexp_t(char* s, vui_transition* t)
 {
-	vui_stack* exits = vui_state_stack_new();
+	vui_stack* exits = vui_stack_refcount_new();
 
 	vui_state* st_start = vui_state_new_t(NULL);
 
@@ -184,7 +186,7 @@ vui_frag* vui_frag_new_regexp_t(char* s, vui_transition* t)
 
 		int escaped = 0;
 		int c = vui_getchar_escaped(&s, &escaped);
-		
+
 		if (!escaped)
 		{
 			switch (c)
@@ -233,14 +235,14 @@ vui_frag* vui_frag_new_regexp_t(char* s, vui_transition* t)
 		vui_string_append_stretch(&st_curr->name, sb, s);
 	}
 
-	vui_state_stack_push(exits, st_curr);
+	vui_stack_push(exits, st_curr);
 
 	return vui_frag_new(st_start, exits);
 }
 
 vui_frag* vui_frag_new_any_t(vui_transition* t)
 {
-	vui_stack* exits = vui_state_stack_new();
+	vui_stack* exits = vui_stack_refcount_new();
 
 	vui_state* st_start = vui_state_new_t(NULL);
 
@@ -258,7 +260,7 @@ vui_frag* vui_frag_new_any_t(vui_transition* t)
 	vui_set_range_t(st_curr, 0, 255, t2);
 	st_curr = st_next;
 
-	vui_state_stack_push(exits, st_curr);
+	vui_stack_push(exits, st_curr);
 
 	return vui_frag_new(st_start, exits);
 }
